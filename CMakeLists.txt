@@ -11,6 +11,7 @@ if (Boost_FOUND)
 endif()
 
 #set(SOURCES main.cpp)
+file(GLOB HEADERS "*.h")
 file(GLOB SOURCES "*.cpp")
 
-add_executable(HostScanner ${SOURCES})
+add_executable(HostScanner ${HEADERS} ${SOURCES})

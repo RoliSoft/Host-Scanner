@@ -8,4 +8,7 @@ if (Boost_FOUND)
 	include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 endif()
 
-add_executable(HostScanner main.cpp)
+#set(SOURCES main.cpp)
+file(GLOB SOURCES "*.cpp")
+
+add_executable(HostScanner ${SOURCES})

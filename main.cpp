@@ -19,10 +19,10 @@ int main()
 		new Service("178.62.249.168", 22),
 		new Service("178.62.249.168", 25),
 		new Service("178.62.249.168", 80),
-		new Service("178.62.249.168", 81),
-		new Service("178.62.249.168", 443),
-		new Service("178.62.249.168", 465),
-		new Service("178.62.249.168", 587)
+		new Service("2a03:b0c0:2:d0::19:6001", 81),
+		new Service("2a03:b0c0:2:d0::19:6001", 443),
+		new Service("2a03:b0c0:2:d0::19:6001", 465),
+		new Service("2a03:b0c0:2:d0::19:6001", 587)
 	};
 
 	{

@@ -19,6 +19,7 @@
 	#include <sys/ioctl.h>
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
+	#include <netdb.h>
 
 	#define ioctlsocket(x,y,z) ioctl(x,y,z)
 	#define sleep(t) usleep(t*1000)

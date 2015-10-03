@@ -1,7 +1,8 @@
 #include "tcpscanner.h"
-#include <iostream>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
+using namespace boost;
 
 void TcpScanner::Scan(Services* services)
 {
@@ -20,16 +21,19 @@ void TcpScanner::Scan(Services* services)
 
 void TcpScanner::initSocket(Service* service)
 {
-	// set-up address to probe
+	// parse address
 
-	struct sockaddr_in addr;
-	addr.sin_port = htons(service->port);
-	addr.sin_family = AF_INET;
-	inet_pton(AF_INET, service->address, &addr.sin_addr.s_addr);
+	struct addrinfo hint, *info = nullptr;
+	memset(&hint, 0, sizeof(struct addrinfo));
+	hint.ai_family = AF_UNSPEC; // allow both v4 and v6
+	hint.ai_flags = AI_NUMERICHOST; // disable DNS lookups
 
+	auto port = lexical_cast<string>(service->port);
+	getaddrinfo(service->address, port.c_str(), &hint, &info);
+	
 	// create socket
 
-	auto sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	auto sock = socket(info->ai_family, SOCK_STREAM, IPPROTO_TCP);
 
 	auto data = new ActiveTcpScanData();
 	service->data = data;
@@ -48,7 +52,7 @@ void TcpScanner::initSocket(Service* service)
 
 	// start non-blocking connection process
 
-	connect(sock, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
+	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 }
 
 void TcpScanner::pollSocket(Service* service)

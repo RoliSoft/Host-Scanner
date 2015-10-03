@@ -1,5 +1,4 @@
 #pragma once
-#include <vector>
 #include "stdafx.h"
 #include "portscanner.h"
 
@@ -14,9 +13,9 @@ struct ActiveTcpScanData
 	SOCKET socket;
 
 	/*!
-	 * List of file descriptor sets.
+	 * File descriptor set for writability.
 	 */
-	std::vector<fd_set*>* fdsets;
+	fd_set* fdset;
 };
 
 /*!

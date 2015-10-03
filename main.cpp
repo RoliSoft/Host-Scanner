@@ -25,14 +25,16 @@ int main()
 		new Service("178.62.249.168", 587)
 	};
 
-	auto tcps = new TcpScanner();
-	tcps->Scan(&servs);
-	tcps->DumpResults(&servs);
+	{
+		auto tcps = new TcpScanner();
+		tcps->Scan(&servs);
+		tcps->DumpResults(&servs);
+	}
 
 #if Windows
 	WSACleanup();
+	system("pause");
 #endif
 
-	system("pause");
 	return EXIT_SUCCESS;
 }

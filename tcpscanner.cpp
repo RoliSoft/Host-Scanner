@@ -34,32 +34,17 @@ void TcpScanner::initSocket(Service* service)
 	auto data = new ActiveTcpScanData();
 	service->data = data;
 	data->socket = sock;
-	data->fdsets = new vector<fd_set*>();
 
 	// set it to non-blocking
 
 	u_long mode = 1;
 	ioctlsocket(sock, FIONBIO, &mode);
 
-	// allocate file descriptor sets
+	// allocate file descriptor set
 
-	auto rdset = new fd_set();
-	FD_ZERO(rdset);
-	FD_SET(sock, rdset);
-
-	data->fdsets->push_back(rdset); // 0 -> read
-
-	auto wrset = new fd_set();
-	FD_ZERO(wrset);
-	FD_SET(sock, wrset);
-
-	data->fdsets->push_back(wrset); // 1 -> write
-
-	auto exset = new fd_set();
-	FD_ZERO(exset);
-	FD_SET(sock, exset);
-
-	data->fdsets->push_back(exset); // 2 -> error
+	data->fdset = new fd_set();
+	FD_ZERO(data->fdset);
+	FD_SET(sock, data->fdset);
 
 	// start non-blocking connection process
 
@@ -68,6 +53,11 @@ void TcpScanner::initSocket(Service* service)
 
 void TcpScanner::pollSocket(Service* service)
 {
+	if (service->data == nullptr)
+	{
+		return;
+	}
+
 	TIMEVAL tv = { 0, 0 };
 	auto data = reinterpret_cast<ActiveTcpScanData*>(service->data);
 
@@ -81,12 +71,12 @@ void TcpScanner::pollSocket(Service* service)
 #if Linux
 			+ 1
 #endif
-		, data->fdsets->at(0), data->fdsets->at(1), data->fdsets->at(2), &tv
+		, nullptr, data->fdset, nullptr, &tv
 	);
 
 	// check if the writable flag is set
 
-	auto isOpen = FD_ISSET(data->socket, data->fdsets->at(1));
+	auto isOpen = FD_ISSET(data->socket, data->fdset);
 
 #if Linux
 	if (isOpen)
@@ -105,5 +95,10 @@ void TcpScanner::pollSocket(Service* service)
 
 	// clean-up
 
+	service->data = nullptr;
+
 	closesocket(data->socket);
+
+	delete data->fdset;
+	delete data;
 }

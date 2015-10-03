@@ -7,6 +7,7 @@
 class Service
 {
 public:
+
 	/*!
 	 * Remote address.
 	 */
@@ -41,10 +42,6 @@ public:
 	 */
 	Service(char* address, unsigned short port);
 
-	/*!
-	 * Frees up the resources allocated during the lifetime of this instance.
-	 */
-	~Service();
 };
 
 /*!

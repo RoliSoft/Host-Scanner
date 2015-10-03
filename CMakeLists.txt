@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(HostScanner)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-write-strings -std=c++14")
 endif()
 
 find_package(Boost 1.55.0 REQUIRED)

@@ -7,8 +7,10 @@
 
 #if Windows
 	#include <winsock2.h>
+	#include <ws2tcpip.h>
 
-	#define sleep(t) Sleep(t)
+	#define sleep(t) Sleep(t)
+
 	#pragma comment(lib, "ws2_32.lib")
 #elif Linux
 	#include <unistd.h>
@@ -46,7 +48,7 @@ void initService(struct service* serv)
 	struct sockaddr_in addr;
 	addr.sin_port = htons(serv->port);
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr(serv->address);
+	inet_pton(AF_INET, serv->address, &addr.sin_addr.s_addr);
 
 	// create socket
 
@@ -103,7 +105,7 @@ void evalService(struct service *serv)
 
 	// check if the writable flag is set
 
-	bool isOpen = FD_ISSET(serv->socket, serv->fdsets->at(1));
+	auto isOpen = FD_ISSET(serv->socket, serv->fdsets->at(1));
 
 #if Linux
 	if (isOpen)
@@ -116,7 +118,8 @@ void evalService(struct service *serv)
 		getsockopt(serv->socket, SOL_SOCKET, SO_ERROR, &serr, &slen);
 		isOpen = serr == 0;
 	}
-#endif
+#endif
+
 	if (isOpen)
 	{
 		cout << "Port " << serv->port << " is open." << endl;

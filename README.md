@@ -2,6 +2,11 @@
 
 The purpose of this project is to discover hosts on a network and then port scan them.
 
+## Implemented features
+
+* TCP scanner
+  * A high-performance TCP scanner which initiates the three-way handshake by multiplexing non-blocking sockets.
+
 ## Planned features
 
 * Network mapping
@@ -27,3 +32,26 @@ The purpose of this project is to discover hosts on a network and then port scan
 
 * Reporting
   * Results will be forwarded to agent for further processing
+
+## How to run
+
+To compile and run the project, first you must install the dependencies, which on Debian (and on its derivatives) can be done with:
+
+    apt-get install build-essential cmake libboost-dev
+
+After the dependencies have been installed, you can check out the repository and compile it with the following commands:
+
+    git clone https://github.com/RoliSoft/Host-Scanner.git
+    cd Host-Scanner
+    cmake .
+    make
+
+If the compilation was successful, you can run it with the `./HostScanner` command.
+
+Tested on:
+
+ * Windows 10 / Visual Studio 2015
+ * Debian Sid / gcc 5.2.1, clang 3.5.0
+ * Kali Linux 2 / gcc 4.9.2, clang 3.5.0
+
+Other platforms are not supported at this time.

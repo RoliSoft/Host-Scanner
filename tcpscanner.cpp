@@ -159,6 +159,11 @@ void TcpScanner::pollSocket(Service* service, bool last)
 		socklen_t slen = sizeof(serr);
 		getsockopt(data->socket, SOL_SOCKET, SO_ERROR, &serr, &slen);
 		isOpen = serr == 0;
+
+		if (serr == ECONNREFUSED)
+		{
+			service->reason = AR_IcmpUnreachable;
+		}
 	}
 #endif
 
@@ -178,7 +183,7 @@ void TcpScanner::pollSocket(Service* service, bool last)
 		{
 			service->reason = AR_TimedOut;
 		}
-		else
+		else if (service->reason == AR_InProgress)
 		{
 			FD_ZERO(data->fdset);
 			FD_SET(data->socket, data->fdset);

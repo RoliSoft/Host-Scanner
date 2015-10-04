@@ -21,6 +21,10 @@
 	#include <arpa/inet.h>
 	#include <netdb.h>
 
+	#define SD_RECEIVE SHUT_RD
+	#define SD_SEND SHUT_WR
+	#define SD_BOTH SHUT_RDWR
+
 	#define ioctlsocket(x,y,z) ioctl(x,y,z)
 	#define sleep(t) usleep(t*1000)
 	#define closesocket(s) close(s)

@@ -1,5 +1,7 @@
-#include "tcpscanner.h"
 #include <iostream>
+#include "stdafx.h"
+#include "udpscanner.h"
+#include "tcpscanner.h"
 
 using namespace std;
 
@@ -14,7 +16,7 @@ int main()
 	}
 #endif
 
-	Services servs = {
+	/*Services servs = {
 		new Service("178.62.249.168", 21),
 		new Service("178.62.249.168", 22),
 		new Service("178.62.249.168", 25),
@@ -29,6 +31,17 @@ int main()
 		auto tcps = new TcpScanner();
 		tcps->Scan(&servs);
 		tcps->DumpResults(&servs);
+	}*/
+	
+	Services servs = {
+		new Service("178.62.249.168", 53),
+		new Service("208.67.222.222", 53)
+	};
+
+	{
+		auto udps = new UdpScanner();
+		udps->Scan(&servs);
+		udps->DumpResults(&servs);
 	}
 
 #if Windows

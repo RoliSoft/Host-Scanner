@@ -3,33 +3,28 @@
 #include "portscanner.h"
 
 /*!
- * Represents scan data for the TCP scanner.
+ * Represents scan data for the UDP scanner.
  */
-struct TcpScanData
+struct UdpScanData
 {
 	/*!
-	 * Active non-blocking socket.
+	 * "Connected" socket.
 	 */
 	SOCKET socket;
-
-	/*!
-	 * File descriptor set for writability.
-	 */
-	fd_set* fdset;
 };
 
 /*!
- * Implements an active TCP port scanner.
+ * Implements an UDP port scanner.
  * 
  * This will try to initiate the three-way handshake with all the requested services.
  * It is not a stealthy method, and does not include any trickery to bypass firewalls.
  */
-class TcpScanner : public PortScanner
+class UdpScanner : public PortScanner
 {
 public:
 	
 	/*!
-	 * Number of milliseconds to wait for connections to finish.
+	 * Number of milliseconds to wait for response.
 	 */
 	unsigned long timeout = 1000;
 
@@ -43,14 +38,14 @@ public:
 private:
 
 	/*!
-	 * Initializes the sockets and starts the non-blocking connection.
+	 * Sends a datagram to each requested service, with crafted packet, when available.
 	 * 
 	 * \param services List of services.
 	 */
 	void initSocket(Service* service);
 
 	/*!
-	 * Collects the results of the socket connections.
+	 * Receives the responses.
 	 * 
 	 * \param services List of services.
 	 */

@@ -35,7 +35,7 @@ void TcpScanner::initSocket(Service* service)
 
 	auto sock = socket(info->ai_family, SOCK_STREAM, IPPROTO_TCP);
 
-	auto data = new ActiveTcpScanData();
+	auto data = new TcpScanData();
 	service->data = data;
 	data->socket = sock;
 
@@ -63,7 +63,7 @@ void TcpScanner::pollSocket(Service* service)
 	}
 
 	TIMEVAL tv = { 0, 0 };
-	auto data = reinterpret_cast<ActiveTcpScanData*>(service->data);
+	auto data = reinterpret_cast<TcpScanData*>(service->data);
 
 	// check if socket is writable, which basically means the connection was successful
 

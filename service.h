@@ -21,13 +21,13 @@ public:
 	/*!
 	 * Whether the service is alive at this host.
 	 */
-	bool alive;
+	bool alive = false;
 	
 	/*!
 	 * Reason for the value specified in `alive`.
 	 * Negative values are errors, positive values are scanner-dependent reasons.
 	 */
-	int reason;
+	int reason = -1;
 
 	/*!
 	 * Service banner, if any.

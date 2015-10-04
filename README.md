@@ -8,7 +8,7 @@ The purpose of this project is to discover hosts on a network and then port scan
   * A high-performance TCP scanner which initiates the three-way handshake by multiplexing non-blocking sockets and grabs the service banner.
 
 * UDP scanner
-  * Uses a list of known port numbers and sends a specifically crafted packet in order to try and get an answer if a server is listening.
+  * Uses a list of known port numbers and sends a specifically crafted payload in order to try and get an answer from the server, if there are any listening.
 
 ## Planned features
 
@@ -38,7 +38,7 @@ The purpose of this project is to discover hosts on a network and then port scan
 
 ## How to run
 
-To compile and run the project, first you must install the dependencies, which on Debian (and on its derivatives) can be done with:
+To compile and run the project, you must first install the dependencies, which on Debian (and on its derivatives) can be done with:
 
     apt-get install build-essential cmake libboost-dev
 
@@ -58,3 +58,7 @@ Tested on:
  * Kali Linux 2 / gcc 4.9.2, clang 3.5.0
 
 Other platforms are not supported at this time.
+
+## Known issues
+
+* Neither the `TcpScanner` nor the `UdpScanner` classes receive the `WSAECONNREFUSED` (`ECONNREFUSED` on Linux) error on Windows. There is little documentation on non-blocking sockets and this particular error. The [783052b](https://github.com/RoliSoft/Host-Scanner/commit/783052b49d39c3f2833e93c9bc183088eaec8797) commit tried using native `WSA*()` calls, as the documentation says `WSAECONNREFUSED` would be signalled on `FD_CONNECT`, but that is not happening, `WSAWaitForMultipleEvents()` returns either `WSA_WAIT_EVENT_0` or the undocumented `258` value, while `WSAGetLastError()` either returns `0` or `WSAEWOULDBLOCK`. The result of this issue is that on Windows, connections to non-listening ports will only be marked as dead after the timeout period has elapsed, while on Linux, the scan returns as soon as the ICMP packet is received.

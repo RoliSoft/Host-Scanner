@@ -5,6 +5,13 @@
 using namespace std;
 using namespace boost;
 
+void UdpScanner::Scan(Service* service)
+{
+	initSocket(service);
+	sleep(timeout);
+	pollSocket(service);
+}
+
 void UdpScanner::Scan(Services* services)
 {
 	for (auto service : *services)

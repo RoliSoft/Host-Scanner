@@ -9,6 +9,13 @@ class PortScanner
 public:
 
 	/*!
+	 * Scans a service to determine aliveness.
+	 * 
+	 * \param service Service.
+	 */
+	virtual void Scan(Service* service) = 0;
+
+	/*!
 	 * Scans a list of services to determine aliveness.
 	 * 
 	 * \param services List of services.

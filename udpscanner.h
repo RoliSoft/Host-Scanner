@@ -29,6 +29,13 @@ public:
 	unsigned long timeout = 1000;
 
 	/*!
+	 * Scans a service to determine aliveness.
+	 * 
+	 * \param service Service.
+	 */
+	void Scan(Service* service) override;
+
+	/*!
 	 * Scans a list of services to determine aliveness.
 	 * 
 	 * \param services List of services.

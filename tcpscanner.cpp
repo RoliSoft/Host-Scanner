@@ -4,6 +4,13 @@
 using namespace std;
 using namespace boost;
 
+void TcpScanner::Scan(Service* service)
+{
+	initSocket(service);
+	sleep(timeout);
+	pollSocket(service);
+}
+
 void TcpScanner::Scan(Services* services)
 {
 	for (auto service : *services)

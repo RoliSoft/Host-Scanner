@@ -1,12 +1,23 @@
 #include "udpscanner.h"
-#include <boost/lexical_cast.hpp>
 #include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <string>
+#include <regex>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace boost;
 
+unordered_map<unsigned short, struct Payload*> UdpScanner::payloads = unordered_map<unsigned short, struct Payload*>();
+
 void UdpScanner::Scan(Service* service)
 {
+	if (payloads.size() == 0)
+	{
+		loadPayloads();
+	}
+
 	initSocket(service);
 
 	int iters = timeout / 10;
@@ -29,6 +40,11 @@ void UdpScanner::Scan(Service* service)
 
 void UdpScanner::Scan(Services* services)
 {
+	if (payloads.size() == 0)
+	{
+		loadPayloads();
+	}
+
 	for (auto service : *services)
 	{
 		initSocket(service);
@@ -93,16 +109,26 @@ void UdpScanner::initSocket(Service* service)
 	u_long mode = 1;
 	ioctlsocket(sock, FIONBIO, &mode);
 	
-	// allocate buffer
+	// select payload based on port
 
-	char* buf = "\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00"; // DNS status request
+	struct Payload* pld;
+
+	auto iter = payloads.find(service->port);
+	if (iter != payloads.end())
+	{
+		pld = (*iter).second;
+	}
+	else
+	{
+		pld = payloads[0];
+	}
 
 	// "connect", then send probe packet
 	// the connect function in case of UDP just stores the address and port,
 	// so send()/recv() will work without them, no need to store the addrinfo
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
-	send(sock, buf, 13, 0);
+	send(sock, pld->data, pld->datlen, 0);
 }
 
 void UdpScanner::pollSocket(Service* service, bool last)
@@ -155,6 +181,171 @@ void UdpScanner::pollSocket(Service* service, bool last)
 	closesocket(data->socket);
 
 	delete data;
+}
+
+void UdpScanner::loadPayloads()
+{
+	// insert generic payload
+
+	auto pld = new struct Payload();
+	unsigned short port = 0;
+
+	pld->data = new char[16] { 0 };
+	pld->datlen = 16;
+
+	payloads.emplace(port, pld);
+
+	// open payloads file
+
+	ifstream plfs("payloads");
+	if (!plfs.good())
+	{
+		cerr << "UDP payloads database not found!" << endl;
+#if Windows
+		cerr << "Download https://svn.nmap.org/nmap/nmap-payloads to the working directory and rename it to `payloads`." << endl;
+#elif Linux
+		cerr << "Run `wget https://svn.nmap.org/nmap/nmap-payloads -O payloads` in the working directory." << endl;
+#endif
+	}
+
+	// define regexes for parsing the file
+
+	regex skiprgx("^\\s*((#|source).*|$)");
+	regex newprgx("^\\s*udp\\s+([\\d,]+)(?:\\s+\"(.+)\")?.*");
+	regex datlrgx("^\\s*\"(.+)\".*");
+	regex hexcrgx("\\\\x([a-fA-F0-9]{2})");
+
+	// start parsing the file line-by-line
+
+	string line;
+	while (getline(plfs, line))
+	{
+		// skip comments and empty lines
+
+		if (regex_match(line, skiprgx))
+		{
+			continue;
+		}
+
+		// check for "udp" and port enumeration lines
+
+		smatch sm;
+		if (regex_match(line, sm, newprgx))
+		{
+			pld = new struct Payload();
+
+			// parse port enumeration
+
+			if (sm[1].str().find(',') != string::npos)
+			{
+				// multiple ports, parse one by one
+
+				string str = string(sm[1].str());
+				size_t pos = 0;
+				string token;
+				while ((pos = str.find(',')) != string::npos)
+				{
+					token = str.substr(0, pos);
+					port = stoi(token);
+					payloads.emplace(port, pld);
+					str.erase(0, pos + 1);
+				}
+
+				// parse last port
+
+				token = str.substr(0, pos);
+				port = stoi(token);
+				payloads.emplace(port, pld);
+			}
+			else
+			{
+				// single port
+
+				port = stoi(sm[1].str());
+				payloads.emplace(port, pld);
+			}
+
+			// parse payload, if starts on this line
+
+			if (sm[2].matched)
+			{
+				// resolve hexadecimals
+
+				string data;
+				auto callback = [&](string const& m)
+					{
+						auto mc = m.c_str();
+						if (mc[0] == '\\')
+						{
+							data += char(stoul(string(1, mc[2]) + mc[3], nullptr, 16));
+						}
+						else
+						{
+							data += m;
+						}
+					};
+
+				string input = sm[2].str();
+				sregex_token_iterator begin(input.begin(), input.end(), hexcrgx, { -1, 0 }), end;
+				for_each(begin, end, callback);
+
+				// copy to payload
+
+				pld->datlen = data.length();
+				pld->data = new char[pld->datlen];
+
+				memcpy(pld->data, data.c_str(), pld->datlen);
+			}
+
+			continue;
+		}
+
+		// check for lines that start or continue payload data
+
+		if (pld != nullptr && regex_match(line, sm, datlrgx))
+		{
+			string data;
+			if (pld->data != nullptr)
+			{
+				data += string(pld->data, pld->datlen);
+			}
+
+			// resolve hexadecimals
+
+			auto callback = [&](string const& m)
+				{
+					auto mc = m.c_str();
+					if (mc[0] == '\\' && mc[1] == 'x')
+					{
+						data += char(stoul(string(1, mc[2]) + mc[3], nullptr, 16));
+					}
+					else
+					{
+						data += m;
+					}
+				};
+
+			string input = sm[1].str();
+			sregex_token_iterator begin(input.begin(), input.end(), hexcrgx, { -1, 0 }), end;
+			for_each(begin, end, callback);
+
+			// copy to payload
+
+			if (pld->data != nullptr)
+			{
+				delete pld->data;
+			}
+
+			pld->datlen = data.length();
+			pld->data = new char[pld->datlen];
+
+			memcpy(pld->data, data.c_str(), pld->datlen);
+		}
+	}
+
+	// clean up
+
+	plfs.close();
 }
 
 UdpScanner::~UdpScanner()

@@ -1,4 +1,5 @@
 #pragma once
+#include <unordered_map>
 #include "stdafx.h"
 #include "portscanner.h"
 
@@ -16,6 +17,24 @@ struct UdpScanData
 };
 
 /*!
+ * Represents a payload.
+ */
+struct Payload
+{
+
+	/*!
+	 * Data in the payload.
+	 */
+	char* data = nullptr;
+
+	/*!
+	 * Length of the data.
+	 */
+	int datlen = 0;
+
+};
+
+/*!
  * Implements an UDP port scanner.
  * 
  * This will try to initiate the three-way handshake with all the requested services.
@@ -29,6 +48,11 @@ public:
 	 * Number of milliseconds to wait for response.
 	 */
 	unsigned long timeout = 1000;
+
+	/*!
+	 * Map of well-known ports and their example payload.
+	 */
+	static std::unordered_map<unsigned short, struct Payload*> payloads;
 
 	/*!
 	 * Scans a service to determine aliveness.
@@ -65,5 +89,10 @@ private:
 	 * \param last Whether this is the last iteration.
 	 */
 	void pollSocket(Service* service, bool last = false);
+
+	/*!
+	 * Loads the payload database from external file.
+	 */
+	void loadPayloads();
 
 };

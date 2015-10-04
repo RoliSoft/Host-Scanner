@@ -7,10 +7,12 @@
  */
 struct UdpScanData
 {
+
 	/*!
 	 * "Connected" socket.
 	 */
 	SOCKET socket;
+
 };
 
 /*!
@@ -60,7 +62,8 @@ private:
 	 * Receives the responses.
 	 * 
 	 * \param services List of services.
+	 * \param last Whether this is the last iteration.
 	 */
-	void pollSocket(Service* service);
+	void pollSocket(Service* service, bool last = false);
 
 };

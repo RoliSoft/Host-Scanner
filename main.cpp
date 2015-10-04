@@ -37,7 +37,7 @@ int main()
 	
 	// test UDP scanner
 
-	{
+	/*{
 		Services servs = {
 			new Service("178.62.249.168", 53, IPPROTO_UDP),
 			new Service("208.67.222.222", 53, IPPROTO_UDP)
@@ -47,7 +47,7 @@ int main()
 		scan->Scan(&servs);
 		scan->DumpResults(&servs);
 		delete scan;
-	}
+	}*/
 
 #if Windows
 	WSACleanup();

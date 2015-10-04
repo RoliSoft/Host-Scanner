@@ -8,8 +8,20 @@ using namespace boost;
 void UdpScanner::Scan(Service* service)
 {
 	initSocket(service);
-	sleep(timeout);
-	pollSocket(service);
+
+	int iters = timeout / 10;
+
+	for (int i = 0; i < iters; i++)
+	{
+		pollSocket(service, i == iters - 1);
+
+		if (service->reason != AR_InProgress)
+		{
+			break;
+		}
+
+		sleep(10);
+	}
 }
 
 void UdpScanner::Scan(Services* services)
@@ -19,11 +31,32 @@ void UdpScanner::Scan(Services* services)
 		initSocket(service);
 	}
 
-	sleep(timeout);
+	int iters = timeout / 10;
+	int left = services->size();
 
-	for (auto service : *services)
+	for (int i = 0; i < iters; i++)
 	{
-		pollSocket(service);
+		for (auto service : *services)
+		{
+			if (service->reason != AR_InProgress)
+			{
+				continue;
+			}
+
+			pollSocket(service, i == iters - 1);
+
+			if (service->reason != AR_InProgress)
+			{
+				left--;
+			}
+		}
+
+		if (left <= 0)
+		{
+			break;
+		}
+
+		sleep(10);
 	}
 }
 
@@ -47,6 +80,8 @@ void UdpScanner::initSocket(Service* service)
 	service->data = data;
 	data->socket = sock;
 
+	service->reason = AR_InProgress;
+
 	// set it to non-blocking
 
 	u_long mode = 1;
@@ -64,9 +99,9 @@ void UdpScanner::initSocket(Service* service)
 	send(sock, buf, 13, 0);
 }
 
-void UdpScanner::pollSocket(Service* service)
+void UdpScanner::pollSocket(Service* service, bool last)
 {
-	if (service->data == nullptr)
+	if (service->reason != AR_InProgress || service->data == nullptr)
 	{
 		return;
 	}
@@ -86,12 +121,25 @@ void UdpScanner::pollSocket(Service* service)
 
 	if (res > 0)
 	{
+		service->reason = AR_ReplyReceived;
+
 		// save service banner
 
 		service->banlen = res;
 		service->banner = new char[res];
 
 		memcpy(service->banner, buf, res);
+	}
+	else
+	{
+		if (last)
+		{
+			service->reason = AR_TimedOut;
+		}
+		else
+		{
+			return;
+		}
 	}
 
 	// clean-up

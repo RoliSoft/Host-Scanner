@@ -7,8 +7,20 @@ using namespace boost;
 void TcpScanner::Scan(Service* service)
 {
 	initSocket(service);
-	sleep(timeout);
-	pollSocket(service);
+
+	int iters = timeout / 10;
+
+	for (int i = 0; i < iters; i++)
+	{
+		pollSocket(service, i == iters - 1);
+
+		if (service->reason != AR_InProgress)
+		{
+			break;
+		}
+
+		sleep(10);
+	}
 }
 
 void TcpScanner::Scan(Services* services)
@@ -18,11 +30,32 @@ void TcpScanner::Scan(Services* services)
 		initSocket(service);
 	}
 
-	sleep(timeout);
+	int iters = timeout / 10;
+	int left = services->size();
 
-	for (auto service : *services)
+	for (int i = 0; i < iters; i++)
 	{
-		pollSocket(service);
+		for (auto service : *services)
+		{
+			if (service->reason != AR_InProgress)
+			{
+				continue;
+			}
+
+			pollSocket(service, i == iters - 1);
+
+			if (service->reason != AR_InProgress)
+			{
+				left--;
+			}
+		}
+
+		if (left <= 0)
+		{
+			break;
+		}
+
+		sleep(10);
 	}
 }
 
@@ -46,6 +79,8 @@ void TcpScanner::initSocket(Service* service)
 	service->data = data;
 	data->socket = sock;
 
+	service->reason = AR_InProgress;
+
 	// set it to non-blocking
 
 	u_long mode = 1;
@@ -62,9 +97,9 @@ void TcpScanner::initSocket(Service* service)
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 }
 
-void TcpScanner::pollSocket(Service* service)
+void TcpScanner::pollSocket(Service* service, bool last)
 {
-	if (service->data == nullptr)
+	if (service->reason != AR_InProgress || service->data == nullptr)
 	{
 		return;
 	}
@@ -108,6 +143,8 @@ void TcpScanner::pollSocket(Service* service)
 
 	if (isOpen)
 	{
+		service->reason = AR_ReplyReceived;
+
 		char buf[1024];
 		int buflen = 1024;
 
@@ -125,6 +162,19 @@ void TcpScanner::pollSocket(Service* service)
 		// TODO run further protocol probes
 
 		shutdown(data->socket, SD_BOTH);
+	}
+	else
+	{
+		if (last)
+		{
+			service->reason = AR_TimedOut;
+		}
+		else
+		{
+			FD_ZERO(data->fdset);
+			FD_SET(data->socket, data->fdset);
+			return;
+		}
 	}
 
 	// clean-up

@@ -7,6 +7,7 @@
  */
 struct TcpScanData
 {
+
 	/*!
 	 * Active non-blocking socket.
 	 */
@@ -16,6 +17,7 @@ struct TcpScanData
 	 * File descriptor set for writability.
 	 */
 	fd_set* fdset;
+
 };
 
 /*!
@@ -65,7 +67,8 @@ private:
 	 * Collects the results of the socket connections.
 	 * 
 	 * \param services List of services.
+	 * \param last Whether this is the last iteration.
 	 */
-	void pollSocket(Service* service);
+	void pollSocket(Service* service, bool last = false);
 
 };

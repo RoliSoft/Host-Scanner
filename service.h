@@ -3,6 +3,44 @@
 #include "stdafx.h"
 
 /*!
+ * List of reasons which caused the host to be determined as it is.
+ */
+typedef enum
+{
+
+	/*!
+	 * Error occurred during scan.
+	 */
+	AR_ScanFailed = -1,
+
+	/*!
+	 * Service hasn't yet been scanned.
+	 */
+	AR_NotScanned = 0,
+
+	/*!
+	 * Service is being scanned.
+	 */
+	AR_InProgress = 1,
+
+	/*!
+	 * Service didn't reply within specified timeframe.
+	 */
+	AR_TimedOut = 2,
+
+	/*!
+	 * ICMP Destination Unreachable received.
+	 */
+	AR_IcmpUnreachable = 3,
+
+	/*!
+	 * Service replied within specified timeframe.
+	 */
+	AR_ReplyReceived = 5
+
+} AliveReason;
+
+/*!
  * Represents a service in the form of an IP/port.
  */
 class Service
@@ -33,7 +71,7 @@ public:
 	 * Reason for the value specified in `alive`.
 	 * Negative values are errors, positive values are scanner-dependent reasons.
 	 */
-	int reason = -1;
+	AliveReason reason = AR_NotScanned;
 
 	/*!
 	 * Service banner, if any.

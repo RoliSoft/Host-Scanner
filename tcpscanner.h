@@ -13,10 +13,21 @@ struct TcpScanData
 	 */
 	SOCKET socket;
 
+#if Windows
+
 	/*!
-	 * File descriptor set for writability.
+	 * Event object to be signalled on connection.
 	 */
+	WSAEVENT event;
+
+#elif Linux
+
+	/*!
+	* File descriptor set to determine writability.
+	*/
 	fd_set* fdset;
+
+#endif
 
 };
 

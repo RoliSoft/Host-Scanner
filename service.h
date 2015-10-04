@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "stdafx.h"
 
 /*!
  * Represents a service in the form of an IP/port.
@@ -17,6 +18,11 @@ public:
 	 * Remote port.
 	 */
 	unsigned short port;
+
+	/*!
+	 * Remote protocol.
+	 */
+	IPPROTO protocol;
 	
 	/*!
 	 * Whether the service is alive at this host.
@@ -49,8 +55,9 @@ public:
 	 * 
 	 * \param address Remote address.
 	 * \param port Remote port.
+	 * \param protocol Remote protocol, otherwise TCP.
 	 */
-	Service(char* address, unsigned short port);
+	Service(char* address, unsigned short port, IPPROTO protocl = IPPROTO_TCP);
 
 };
 

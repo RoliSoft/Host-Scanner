@@ -26,5 +26,5 @@ public:
 	 * Dumps the scan results into the standard output.
 	 */
 	void DumpResults(Services* services);
-
+	
 };

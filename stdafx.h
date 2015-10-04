@@ -30,5 +30,6 @@
 	#define closesocket(s) close(s)
 
 	typedef int SOCKET;
+	typedef int IPPROTO;
 	typedef struct timeval TIMEVAL;
 #endif

@@ -47,6 +47,11 @@ public:
 	 */
 	void Scan(Services* services) override;
 
+	/*!
+	 * Frees up the resources allocated during the lifetime of this instance.
+	 */
+	~TcpScanner() override;
+
 private:
 
 	/*!

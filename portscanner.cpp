@@ -40,3 +40,7 @@ void PortScanner::DumpResults(Services* services)
 		}
 	}
 }
+
+PortScanner::~PortScanner()
+{
+}

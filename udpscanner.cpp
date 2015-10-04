@@ -102,3 +102,7 @@ void UdpScanner::pollSocket(Service* service)
 
 	delete data;
 }
+
+UdpScanner::~UdpScanner()
+{
+}

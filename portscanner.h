@@ -26,5 +26,10 @@ public:
 	 * Dumps the scan results into the standard output.
 	 */
 	void DumpResults(Services* services);
+
+	/*!
+	 * Frees up the resources allocated during the lifetime of this instance.
+	 */
+	virtual ~PortScanner();
 	
 };

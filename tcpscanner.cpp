@@ -136,3 +136,7 @@ void TcpScanner::pollSocket(Service* service)
 	delete data->fdset;
 	delete data;
 }
+
+TcpScanner::~TcpScanner()
+{
+}

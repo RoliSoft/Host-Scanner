@@ -5,7 +5,10 @@ The purpose of this project is to discover hosts on a network and then port scan
 ## Implemented features
 
 * TCP scanner
-  * A high-performance TCP scanner which initiates the three-way handshake by multiplexing non-blocking sockets.
+  * A high-performance TCP scanner which initiates the three-way handshake by multiplexing non-blocking sockets and grabs the service banner.
+
+* UDP scanner
+  * Uses a list of known port numbers and sends a specifically crafted packet in order to try and get an answer if a server is listening.
 
 ## Planned features
 
@@ -22,9 +25,9 @@ The purpose of this project is to discover hosts on a network and then port scan
   * Send UDP packet to port 53, if response or ICMP "port unreachable", host is alive
   * _Otherwise assume host is offline or heavily firewalled_
 
-* Port scanning
-  * Send TCP SYN to all or popular ports, get service banner on ACK
-  * Send crafted UDP packets to known ports
+* <strike>Port scanning</strike> &#x2713;
+  * <strike>Send TCP SYN to all or popular ports, get service banner on ACK</strike> &#x2713;
+  * <strike>Send crafted UDP packets to known ports</strike> &#x2713;
 
 * External tools
   * Integrate with external tools for failover/preference

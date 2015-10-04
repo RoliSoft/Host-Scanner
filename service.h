@@ -24,14 +24,19 @@ typedef enum
 	AR_InProgress = 1,
 
 	/*!
+	 * Service is alive, but still being scanned.
+	 */
+	AR_InProgress2 = 2,
+
+	/*!
 	 * Service didn't reply within specified timeframe.
 	 */
-	AR_TimedOut = 2,
+	AR_TimedOut = 3,
 
 	/*!
 	 * ICMP Destination Unreachable received.
 	 */
-	AR_IcmpUnreachable = 3,
+	AR_IcmpUnreachable = 4,
 
 	/*!
 	 * Service replied within specified timeframe.

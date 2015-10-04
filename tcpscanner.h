@@ -58,17 +58,26 @@ private:
 
 	/*!
 	 * Initializes the sockets and starts the non-blocking connection.
-	 * 
-	 * \param services List of services.
+	 *
+	 * \param service Service.
 	 */
 	void initSocket(Service* service);
 
 	/*!
 	 * Collects the results of the socket connections.
-	 * 
-	 * \param services List of services.
+	 *
+	 * \param service Service.
 	 * \param last Whether this is the last iteration.
 	 */
 	void pollSocket(Service* service, bool last = false);
+
+	/*!
+	 * Reads the banner from the specified service.
+	 * This requires that the service have a connected socket.
+	 *
+	 * \param service Service.
+	 * \param last Whether this is the last iteration.
+	 */
+	void readBanner(Service* service, bool last = false);
 
 };

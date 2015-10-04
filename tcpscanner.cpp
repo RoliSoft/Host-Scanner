@@ -10,16 +10,31 @@ void TcpScanner::Scan(Service* service)
 
 	int iters = timeout / 10;
 
-	for (int i = 0; i < iters; i++)
+	for (int i = 0; i <= iters; i++)
 	{
-		pollSocket(service, i == iters - 1);
+		if (i != 0)
+		{
+			sleep(10);
+		}
 
-		if (service->reason != AR_InProgress)
+		switch (service->reason)
+		{
+		case AR_InProgress:
+			pollSocket(service, i == iters - 1);
+			break;
+
+		case AR_InProgress2:
+			readBanner(service, i == iters - 1);
+			break;
+
+		default:
+			continue;
+		}
+
+		if (service->reason != AR_InProgress && service->reason != AR_InProgress2)
 		{
 			break;
 		}
-
-		sleep(10);
 	}
 }
 
@@ -33,18 +48,30 @@ void TcpScanner::Scan(Services* services)
 	int iters = timeout / 10;
 	int left = services->size();
 
-	for (int i = 0; i < iters; i++)
+	for (int i = 0; i <= iters; i++)
 	{
+		if (i != 0)
+		{
+			sleep(10);
+		}
+
 		for (auto service : *services)
 		{
-			if (service->reason != AR_InProgress)
+			switch (service->reason)
 			{
+			case AR_InProgress:
+				pollSocket(service, i == iters - 1);
+				break;
+
+			case AR_InProgress2:
+				readBanner(service, i == iters - 1);
+				break;
+
+			default:
 				continue;
 			}
 
-			pollSocket(service, i == iters - 1);
-
-			if (service->reason != AR_InProgress)
+			if (service->reason != AR_InProgress && service->reason != AR_InProgress2)
 			{
 				left--;
 			}
@@ -54,8 +81,6 @@ void TcpScanner::Scan(Services* services)
 		{
 			break;
 		}
-
-		sleep(10);
 	}
 }
 
@@ -139,29 +164,13 @@ void TcpScanner::pollSocket(Service* service, bool last)
 
 	service->alive = isOpen == 1;
 
-	// read service banner
+	// mark service accordingly
 
 	if (isOpen)
 	{
-		service->reason = AR_ReplyReceived;
-
-		char buf[1024];
-		int buflen = 1024;
-
-		auto res = recv(data->socket, buf, buflen, 0);
-		if (res > 0)
-		{
-			// received a service banner
-
-			service->banlen = res;
-			service->banner = new char[res];
-
-			memcpy(service->banner, buf, res);
-		}
-
-		// TODO run further protocol probes
-
-		shutdown(data->socket, SD_BOTH);
+		service->reason = AR_InProgress2;
+		readBanner(service, last);
+		return;
 	}
 	else
 	{
@@ -181,6 +190,54 @@ void TcpScanner::pollSocket(Service* service, bool last)
 
 	service->data = nullptr;
 
+	closesocket(data->socket);
+
+	delete data->fdset;
+	delete data;
+}
+
+void TcpScanner::readBanner(Service* service, bool last)
+{
+	if (service->reason != AR_InProgress2 || service->data == nullptr)
+	{
+		return;
+	}
+
+	if (service->banlen > 0)
+	{
+		service->reason = AR_ReplyReceived;
+		return;
+	}
+
+	auto data = reinterpret_cast<TcpScanData*>(service->data);
+
+	char buf[1024];
+	int buflen = 1024;
+
+	auto res = recv(data->socket, buf, buflen, 0);
+	if (res > 0)
+	{
+		// received a service banner
+
+		service->banlen = res;
+		service->banner = new char[res];
+
+		memcpy(service->banner, buf, res);
+
+		// TODO run further protocol probes
+	}
+	else if (!last)
+	{
+		return;
+	}
+
+	service->reason = AR_ReplyReceived;
+
+	// clean-up
+
+	service->data = nullptr;
+
+	shutdown(data->socket, SD_BOTH);
 	closesocket(data->socket);
 
 	delete data->fdset;

@@ -53,15 +53,15 @@ private:
 
 	/*!
 	 * Sends a datagram to each requested service, with crafted packet, when available.
-	 * 
-	 * \param services List of services.
+	 *
+	 * \param service Service.
 	 */
 	void initSocket(Service* service);
 
 	/*!
 	 * Receives the responses.
-	 * 
-	 * \param services List of services.
+	 *
+	 * \param service Service.
 	 * \param last Whether this is the last iteration.
 	 */
 	void pollSocket(Service* service, bool last = false);

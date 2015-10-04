@@ -11,16 +11,19 @@ void UdpScanner::Scan(Service* service)
 
 	int iters = timeout / 10;
 
-	for (int i = 0; i < iters; i++)
+	for (int i = 0; i <= iters; i++)
 	{
+		if (i != 0)
+		{
+			sleep(10);
+		}
+
 		pollSocket(service, i == iters - 1);
 
 		if (service->reason != AR_InProgress)
 		{
 			break;
 		}
-
-		sleep(10);
 	}
 }
 
@@ -34,8 +37,13 @@ void UdpScanner::Scan(Services* services)
 	int iters = timeout / 10;
 	int left = services->size();
 
-	for (int i = 0; i < iters; i++)
+	for (int i = 0; i <= iters; i++)
 	{
+		if (i != 0)
+		{
+			sleep(10);
+		}
+
 		for (auto service : *services)
 		{
 			if (service->reason != AR_InProgress)
@@ -55,8 +63,6 @@ void UdpScanner::Scan(Services* services)
 		{
 			break;
 		}
-
-		sleep(10);
 	}
 }
 

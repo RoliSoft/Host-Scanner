@@ -1,6 +1,5 @@
 #include "tcpscanner.h"
 #include <boost/lexical_cast.hpp>
-#include <iostream>
 
 using namespace std;
 using namespace boost;
@@ -112,22 +111,11 @@ void TcpScanner::initSocket(Service* service)
 	u_long mode = 1;
 	ioctlsocket(sock, FIONBIO, &mode);
 
-	// set up the OS's choice of signaling for non-blocking sockets
-
-#if Windows
-
-	WSAEVENT evt = WSACreateEvent();
-	WSAEventSelect(sock, evt, FD_WRITE);
-	WSAResetEvent(evt);
-	data->event = evt;
-
-#elif Linux
+	// allocate file descriptor set
 
 	data->fdset = new fd_set();
 	FD_ZERO(data->fdset);
 	FD_SET(sock, data->fdset);
-
-#endif
 
 	// start non-blocking connection process
 
@@ -141,57 +129,49 @@ void TcpScanner::pollSocket(Service* service, bool last)
 		return;
 	}
 
+	TIMEVAL tv = { 0, 0 };
 	auto data = reinterpret_cast<TcpScanData*>(service->data);
 
-#if Windows
+	// check if socket is writable, which basically means the connection was successful
 
-	// check if the event was signalled
+	// for some reason, Linux requires the first parameter to be counterintuitively socket+1, while Windows doesn't
+	// time spent searching for this error: ~1.5 hours
 
-	auto sigr = WSAWaitForMultipleEvents(1, &data->event, false, 0, false);
-	auto serr = WSAGetLastError();
+	select(
+		data->socket
+#if Linux
+			+ 1
+#endif
+		, nullptr, data->fdset, nullptr, &tv
+	);
 
-	// the return value 258 is not documented in MSDN, however this
-	// is what seems to be returned in case of errors
+	// check if the writable flag is set
 
-	if (sigr == 258 && serr != WSAEWOULDBLOCK)
+	auto isOpen = FD_ISSET(data->socket, data->fdset);
+
+#if Linux
+	if (isOpen)
 	{
-		service->alive = false;
-		service->reason = AR_IcmpUnreachable;
-	}
-	else if (sigr == 0)
-	{
-		service->alive = true;
-	}
-
-#elif Linux
-
-	// check if socket is writable
-
-	TIMEVAL tv = { 0, 0 };
-	select(data->socket + 1, nullptr, data->fdset, nullptr, &tv);
-
-	if (FD_ISSET(data->socket, data->fdset))
-	{
-		// since it seems writability bit will be set on connection refused errors,
-		// check if this is a legit instance of writable socket or an error
+		// yet again Linux decided to troll me. all select() requests will become "writable", and you have
+		// to check if there was an error or not, to actually determine if the connect() was successful
 
 		int serr;
 		socklen_t slen = sizeof(serr);
 		getsockopt(data->socket, SOL_SOCKET, SO_ERROR, &serr, &slen);
-		
-		service->alive = serr == 0;
+		isOpen = serr == 0;
 
 		if (serr == ECONNREFUSED)
 		{
 			service->reason = AR_IcmpUnreachable;
 		}
 	}
-
 #endif
+
+	service->alive = isOpen == 1;
 
 	// mark service accordingly
 
-	if (service->alive)
+	if (isOpen)
 	{
 		service->reason = AR_InProgress2;
 		readBanner(service, last);
@@ -205,10 +185,8 @@ void TcpScanner::pollSocket(Service* service, bool last)
 		}
 		else if (service->reason == AR_InProgress)
 		{
-#if Linux
 			FD_ZERO(data->fdset);
 			FD_SET(data->socket, data->fdset);
-#endif
 			return;
 		}
 	}
@@ -219,12 +197,7 @@ void TcpScanner::pollSocket(Service* service, bool last)
 
 	closesocket(data->socket);
 
-#if Windows
-	WSACloseEvent(data->event);
-#elif Linux
 	delete data->fdset;
-#endif
-
 	delete data;
 }
 
@@ -272,12 +245,7 @@ void TcpScanner::readBanner(Service* service, bool last)
 	shutdown(data->socket, SD_BOTH);
 	closesocket(data->socket);
 
-#if Windows
-	WSACloseEvent(data->event);
-#elif Linux
 	delete data->fdset;
-#endif
-
 	delete data;
 }
 

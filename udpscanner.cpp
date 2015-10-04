@@ -168,6 +168,12 @@ void UdpScanner::pollSocket(Service* service, bool last)
 		{
 			service->reason = AR_TimedOut;
 		}
+#if Linux
+		else if (res == -1 && errno == ECONNREFUSED)
+		{
+			service->reason = AR_IcmpUnreachable;
+		}
+#endif
 		else
 		{
 			return;

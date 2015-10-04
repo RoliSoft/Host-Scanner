@@ -97,6 +97,29 @@ void TcpScanner::pollSocket(Service* service)
 
 	service->alive = isOpen == 1;
 
+	// read service banner
+
+	if (isOpen)
+	{
+		char buf[1024];
+		int buflen = 1024;
+
+		auto res = recv(data->socket, buf, buflen, 0);
+		if (res > 0)
+		{
+			// received a service banner
+
+			service->banlen = res;
+			service->banner = new char[res];
+
+			memcpy(service->banner, buf, res);
+		}
+
+		// TODO run further protocol probes
+
+		shutdown(data->socket, SD_BOTH);
+	}
+
 	// clean-up
 
 	service->data = nullptr;

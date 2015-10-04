@@ -31,7 +31,7 @@ public:
 	/*!
 	 * Number of milliseconds to wait for connections to finish.
 	 */
-	unsigned long timeout = 100;
+	unsigned long timeout = 1000;
 
 	/*!
 	 * Scans a list of services to determine aliveness.

@@ -30,6 +30,16 @@ public:
 	int reason;
 
 	/*!
+	 * Service banner, if any.
+	 */
+	char* banner = nullptr;
+
+	/*!
+	 * Length of the service banner.
+	 */
+	int banlen = 0;
+
+	/*!
 	 * Object store reserved for the scanner.
 	 */
 	void* data = nullptr;

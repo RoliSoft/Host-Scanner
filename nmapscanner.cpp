@@ -314,9 +314,9 @@ void NmapScanner::parseXml(string xml, Services* services)
 								if (banner.length() != 0)
 								{
 									service->banlen = banner.length();
-									service->banner = new char[service->banlen + 1];
+									service->banner = new char[service->banlen];
 
-									copy(banner.begin(), banner.end(), service->banner);
+									memcpy(service->banner, banner.c_str(), service->banlen);
 								}
 
 								break;

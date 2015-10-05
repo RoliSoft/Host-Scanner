@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "stdafx.h"
 #include "portscanner.h"
 

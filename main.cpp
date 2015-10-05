@@ -5,7 +5,7 @@
 
 using namespace std;
 
-void testTcpScanner()
+static void testTcpScanner()
 {
 	Services servs = {
 		new Service("178.62.249.168", 21),
@@ -24,7 +24,7 @@ void testTcpScanner()
 	delete scan;
 }
 
-void testUdpScanner()
+static void testUdpScanner()
 {
 	Services servs = {
 		new Service("178.62.249.168", 53, IPPROTO_UDP),

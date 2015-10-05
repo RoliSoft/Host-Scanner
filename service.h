@@ -100,7 +100,7 @@ public:
 	 * \param port Remote port.
 	 * \param protocol Remote protocol, otherwise TCP.
 	 */
-	Service(char* address, unsigned short port, IPPROTO protocl = IPPROTO_TCP);
+	Service(char* address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
 
 };
 

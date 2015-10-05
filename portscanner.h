@@ -24,6 +24,8 @@ public:
 
 	/*!
 	 * Dumps the scan results into the standard output.
+	 *
+	 * \param services List of services.
 	 */
 	void DumpResults(Services* services);
 

@@ -7,6 +7,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace boost;
@@ -19,14 +20,66 @@ void NmapScanner::Scan(Service* service)
 
 void NmapScanner::Scan(Services* services)
 {
+	// separate IPv4 and IPv6, since Nmap supports them, but can't dual-stack
+
+	Services serv4, serv6;
+
+	for (auto& service : *services)
+	{
+		struct addrinfo hint, *info = nullptr;
+		memset(&hint, 0, sizeof(struct addrinfo));
+		hint.ai_family = AF_UNSPEC; // allow both v4 and v6
+		hint.ai_flags = AI_NUMERICHOST; // disable DNS lookups
+
+		auto port = lexical_cast<string>(service->port);
+		getaddrinfo(service->address, port.c_str(), &hint, &info);
+
+		switch (info->ai_family)
+		{
+		case AF_INET:
+			serv4.push_back(service);
+			break;
+
+		case AF_INET6:
+			serv6.push_back(service);
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	// run the separated tests
+
+	if (serv4.size() != 0)
+	{
+		auto xml = runNmap(&serv4);
+		parseXml(xml, &serv4);
+	}
+
+	if (serv6.size() != 0)
+	{
+		auto xml = runNmap(&serv6, true);
+		parseXml(xml, &serv6);
+	}
+}
+
+string NmapScanner::runNmap(Services* services, bool v6)
+{
 	// -oX -	XML output to standard output
 	// -Pn		Don't probe, assume host is alive
 	// -sU		Scan UDP, when specified in port list
 	// -sS		Scan TCP with SYN method, when requested
 	// -sV		Run service detection function
 	// -sc..er	Run service banner grabber NSE script
+	// -6		Turn on IPv6 support, if v6 parameter is set
 	// -p		Port list to scan
 	string cmd = "nmap -oX - -Pn -sU -sS -sV --script=banner";
+
+	if (v6)
+	{
+		cmd += " -6";
+	}
 
 	string ports = " -p ";
 	string hosts = "";
@@ -95,11 +148,18 @@ void NmapScanner::Scan(Services* services)
 	cmd += "2>/dev/null";
 #endif
 
+	// execute the command
+
 	auto xml = execute(cmd.c_str());
 
-	// parse the XML output from Nmap
+	return xml;
+}
 
+void NmapScanner::parseXml(string xml, Services* services)
+{
 	using property_tree::ptree;
+
+	// parse the XML output from Nmap
 
 	istringstream xstr(xml);
 	ptree pt;
@@ -287,12 +347,16 @@ void NmapScanner::Scan(Services* services)
 
 string NmapScanner::execute(const char* cmd)
 {
+	// run the process
+
 	auto pipe = popen(cmd, "r");
 
 	if (!pipe)
 	{
 		return "Failed to execute command: `" + string(cmd) + "`";
 	}
+
+	// read what it writes to the standard output during its lifetime
 
 	string result;
 
@@ -304,6 +368,8 @@ string NmapScanner::execute(const char* cmd)
 			result += buffer;
 		}
 	}
+
+	// clean up and return
 
 	pclose(pipe);
 

@@ -11,6 +11,8 @@
 	#include <ws2tcpip.h>
 
 	#define sleep(t) Sleep(t)
+	#define popen(c,m) _popen(c,m)
+	#define pclose(s) _pclose(s)
 
 	#pragma comment(lib, "ws2_32.lib")
 #elif Linux
@@ -25,7 +27,7 @@
 	#define SD_SEND SHUT_WR
 	#define SD_BOTH SHUT_RDWR
 
-	#define ioctlsocket(x,y,z) ioctl(x,y,z)
+	#define ioctlsocket(s,c,a) ioctl(s,c,a)
 	#define sleep(t) usleep(t*1000)
 	#define closesocket(s) close(s)
 

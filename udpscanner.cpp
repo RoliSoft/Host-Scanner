@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string>
 #include <regex>
+#include <mutex>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -191,6 +192,15 @@ void UdpScanner::pollSocket(Service* service, bool last)
 
 void UdpScanner::loadPayloads()
 {
+	static mutex pldmtx;
+	auto locked = pldmtx.try_lock();
+	if (!locked)
+	{
+		// wait until running parser finishes before returning
+		lock_guard<mutex> guard(pldmtx);
+		return;
+	}
+
 	// insert generic payload
 
 	auto pld = new struct Payload();
@@ -212,6 +222,10 @@ void UdpScanner::loadPayloads()
 #elif Linux
 		cerr << "Run `wget https://svn.nmap.org/nmap/nmap-payloads -O payloads` in the working directory." << endl;
 #endif
+
+		plfs.close();
+		pldmtx.unlock();
+		return;
 	}
 
 	// define regexes for parsing the file
@@ -252,7 +266,7 @@ void UdpScanner::loadPayloads()
 				while ((pos = str.find(',')) != string::npos)
 				{
 					token = str.substr(0, pos);
-					port = stoi(token);
+					port = (unsigned short)stoi(token);
 					payloads.emplace(port, pld);
 					str.erase(0, pos + 1);
 				}
@@ -260,14 +274,14 @@ void UdpScanner::loadPayloads()
 				// parse last port
 
 				token = str.substr(0, pos);
-				port = stoi(token);
+				port = (unsigned short)stoi(token);
 				payloads.emplace(port, pld);
 			}
 			else
 			{
 				// single port
 
-				port = stoi(sm[1].str());
+				port = (unsigned short)stoi(sm[1].str());
 				payloads.emplace(port, pld);
 			}
 
@@ -337,10 +351,7 @@ void UdpScanner::loadPayloads()
 
 			// copy to payload
 
-			if (pld->data != nullptr)
-			{
-				delete pld->data;
-			}
+			delete pld->data;
 
 			pld->datlen = data.length();
 			pld->data = new char[pld->datlen];
@@ -352,6 +363,7 @@ void UdpScanner::loadPayloads()
 	// clean up
 
 	plfs.close();
+	pldmtx.unlock();
 }
 
 UdpScanner::~UdpScanner()

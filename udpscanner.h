@@ -93,6 +93,6 @@ private:
 	/*!
 	 * Loads the payload database from external file.
 	 */
-	void loadPayloads();
+	static void loadPayloads();
 
 };

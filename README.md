@@ -10,6 +10,9 @@ The purpose of this project is to discover hosts on a network and then port scan
 * UDP scanner
   * Uses a list of known port numbers and sends a specifically crafted payload in order to try and get an answer from the server, if there are any listening.
 
+* External scanners
+  * Ability to use external tools for all the scanning needs, instead of the built-in scanners. Currently Nmap support is implemented, more to follow if needed.
+
 ## Planned features
 
 * Network mapping
@@ -29,9 +32,9 @@ The purpose of this project is to discover hosts on a network and then port scan
   * <strike>Send TCP SYN to all or popular ports, get service banner on ACK</strike> &#x2713;
   * <strike>Send crafted UDP packets to known ports</strike> &#x2713;
 
-* External tools
-  * Integrate with external tools for failover/preference
-    * nmap, msfscan
+* <strike>External tools</strike> &#x2713;
+  * <strike>Integrate with external tools for failover/preference</strike> &#x2713;
+    * <strike>nmap</strike> &#x2713;
 
 * Reporting
   * Results will be forwarded to agent for further processing

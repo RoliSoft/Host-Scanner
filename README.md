@@ -43,7 +43,7 @@ The purpose of this project is to discover hosts on a network and then port scan
 
 To compile and run the project, you must first install the dependencies, which on Debian (and on its derivatives) can be done with:
 
-    apt-get install build-essential cmake libboost-dev
+    apt-get install build-essential cmake libboost-dev libboost-test-dev libboost-program-options-dev
 
 After the dependencies have been installed, you can check out the repository and compile it with the following commands:
 

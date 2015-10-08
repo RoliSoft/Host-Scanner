@@ -1,10 +1,12 @@
 #include <iostream>
 #include <string>
 #include <tuple>
+#include <boost/program_options.hpp>
 #include "stdafx.h"
 #include "utils.h"
 
 using namespace std;
+namespace po = boost::program_options;
 
 int main()
 {
@@ -17,6 +19,11 @@ int main()
 	}
 #endif
 
+	po::options_description desc("arguments");
+	desc.add_options()
+		("help,h", "Shows this message.")
+		;
+
 	auto app = get<1>(splitPath(getAppPath()));
 	cout << "   _   _           _     _____                                 " << endl;
 	cout << "  | | | |         | |   /  ___|                                " << endl;
@@ -27,11 +34,8 @@ int main()
 	cout << "                                                               " << endl;
 	cout << "           https://github.com/RoliSoft/Host-Scanner" << endl;
 	cout << endl;
-	cout << "usage: " << app << endl;
-	cout << "help: " << endl;
-	cout << endl;
-	cout << "  ! CLI is not yet implemented." << endl;
-	cout << endl;
+	cout << "usage: " << app << " [args]" << endl;
+	cout << desc << endl;
 
 #if Windows
 	WSACleanup();

@@ -5,7 +5,7 @@
 #include "tcpscanner.h"
 #include "nmapscanner.h"
 #include "udpscanner.h"
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #ifndef BOOST_TEST_WARN
 #define BOOST_TEST_WARN(a,m) BOOST_CHECK(a)

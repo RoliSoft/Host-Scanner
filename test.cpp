@@ -3,9 +3,19 @@
 #include "service.h"
 #include "portscannerfactory.h"
 #include "tcpscanner.h"
-#include <boost/test/included/unit_test.hpp>
 #include "nmapscanner.h"
 #include "udpscanner.h"
+#include <boost/test/included/unit_test.hpp>
+
+#ifndef BOOST_TEST_WARN
+#define BOOST_TEST_WARN(a,m) BOOST_CHECK(a)
+#endif
+#ifndef BOOST_TEST_CHECK
+#define BOOST_TEST_CHECK(a,m) BOOST_CHECK(a)
+#endif
+#ifndef BOOST_TEST_REQUIRE
+#define BOOST_TEST_REQUIRE(a,m) BOOST_CHECK(a)
+#endif
 
 using namespace std;
 
@@ -91,6 +101,18 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
 }
 
+BOOST_AUTO_TEST_CASE(UdpPayloadLoader)
+{
+	UdpScanner udp;
+
+	auto payloads = udp.GetPayloads();
+
+	BOOST_TEST_CHECK((payloads.size() >= 2), "Payloads list should contain at least two entries.");
+
+	BOOST_TEST_CHECK((payloads.find(0) != payloads.end()), "Payloads list should contain generic payload.");
+	BOOST_TEST_CHECK((payloads.find(53) != payloads.end()), "Payloads list should contain DNS payload.");
+}
+
 BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 {
 	Services servs = {
@@ -98,11 +120,13 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 		new Service("208.67.222.222", 53, IPPROTO_UDP)
 	};
 
-	TcpScanner scan;
+	UdpScanner scan;
 	scan.Scan(&servs);
 
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 53 on 178.* should not answer.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 208.* should answer.");
+
+	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
 }
 
 BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
@@ -112,11 +136,13 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 		new Service("2620:0:ccc::2", 53, IPPROTO_UDP)
 	};
 
-	TcpScanner scan;
+	UdpScanner scan;
 	scan.Scan(&servs);
 
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 53 on 2a03.* should not answer.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 2620.* should answer.");
+
+	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
 }
 
 BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)

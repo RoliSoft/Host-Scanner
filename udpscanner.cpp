@@ -1,10 +1,12 @@
 #include "udpscanner.h"
+#include "utils.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <string>
 #include <regex>
 #include <mutex>
+#include <tuple>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -190,6 +192,16 @@ void UdpScanner::pollSocket(Service* service, bool last)
 	delete data;
 }
 
+unordered_map<unsigned short, Payload*> UdpScanner::GetPayloads()
+{
+	if (payloads.size() == 0)
+	{
+		loadPayloads();
+	}
+
+	return payloads;
+}
+
 void UdpScanner::loadPayloads()
 {
 	static mutex pldmtx;
@@ -213,7 +225,37 @@ void UdpScanner::loadPayloads()
 
 	// open payloads file
 
-	ifstream plfs("payloads");
+	ifstream plfs;
+
+	auto expth = get<0>(splitPath(getAppPath()));
+	plfs.open(expth + PATH_SEPARATOR + "payloads");
+
+	if (!plfs.good())
+	{
+		auto nxpth = splitPath(expth);
+
+		if (get<1>(nxpth) == "build")
+		{
+			plfs.open(get<0>(nxpth) + PATH_SEPARATOR + "payloads");
+		}
+	}
+
+	if (!plfs.good())
+	{
+		expth = getWorkDir();
+		plfs.open(expth + PATH_SEPARATOR + "payloads");
+
+		if (!plfs.good())
+		{
+			auto nxpth = splitPath(expth);
+
+			if (get<1>(nxpth) == "build")
+			{
+				plfs.open(get<0>(nxpth) + PATH_SEPARATOR + "payloads");
+			}
+		}
+	}
+	cerr << getAppPath() << endl << getWorkDir() << endl;
 	if (!plfs.good())
 	{
 		cerr << "UDP payloads database not found!" << endl;

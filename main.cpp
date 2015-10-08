@@ -1,5 +1,8 @@
 #include <iostream>
+#include <string>
 #include "stdafx.h"
+#include "utils.h"
+#include "udpscanner.h"
 
 using namespace std;
 

@@ -14,6 +14,8 @@
 	#define popen(c,m) _popen(c,m)
 	#define pclose(s) _pclose(s)
 
+	#define PATH_SEPARATOR "\\"
+
 	#pragma comment(lib, "ws2_32.lib")
 #elif Linux
 	#include <unistd.h>
@@ -30,6 +32,8 @@
 	#define ioctlsocket(s,c,a) ioctl(s,c,a)
 	#define sleep(t) usleep(t*1000)
 	#define closesocket(s) close(s)
+
+	#define PATH_SEPARATOR "/"
 
 	typedef int SOCKET;
 	typedef int IPPROTO;

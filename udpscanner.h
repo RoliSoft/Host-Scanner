@@ -50,11 +50,6 @@ public:
 	unsigned long timeout = 1000;
 
 	/*!
-	 * Map of well-known ports and their example payload.
-	 */
-	static std::unordered_map<unsigned short, struct Payload*> payloads;
-
-	/*!
 	 * Scans a service to determine aliveness.
 	 * 
 	 * \param service Service.
@@ -69,11 +64,23 @@ public:
 	void Scan(Services* services) override;
 
 	/*!
+	 * Gets the port-mapped protocol payloads.
+	 *
+	 * \return List of payloads.
+	 */
+	static std::unordered_map<unsigned short, struct Payload*> GetPayloads();
+
+	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~UdpScanner() override;
 
 private:
+
+	/*!
+	 * Map of well-known ports and their example payload.
+	 */
+	static std::unordered_map<unsigned short, struct Payload*> payloads;
 
 	/*!
 	 * Sends a datagram to each requested service, with crafted packet, when available.

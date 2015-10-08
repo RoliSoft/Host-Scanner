@@ -102,6 +102,11 @@ public:
 	 */
 	Service(char* address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
 
+	/*!
+	 * Frees up the resources allocated during the lifetime of this instance.
+	 */
+	~Service();
+
 };
 
 /*!

@@ -51,11 +51,4 @@ private:
 	 */
 	void parseXml(std::string xml, Services* services);
 
-	/*!
-	 * Executes a command and returns its output.
-	 *
-	 * \param cmd Command to execute.
-	 */
-	static std::string execute(const char* cmd);
-
 };

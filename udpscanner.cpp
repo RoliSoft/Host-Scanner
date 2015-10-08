@@ -255,7 +255,7 @@ void UdpScanner::loadPayloads()
 			}
 		}
 	}
-	cerr << getAppPath() << endl << getWorkDir() << endl;
+
 	if (!plfs.good())
 	{
 		cerr << "UDP payloads database not found!" << endl;

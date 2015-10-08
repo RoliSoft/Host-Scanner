@@ -57,7 +57,7 @@ string getWorkDir()
 	GetCurrentDirectory(MAX_PATH, result);
 #elif Linux
 	char result[PATH_MAX];
-	getcwd(result, PATH_MAX)
+	getcwd(result, PATH_MAX);
 #endif
 	return string(result);
 }

@@ -14,8 +14,14 @@ if (Boost_FOUND)
 	include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 endif()
 
-#set(SOURCES main.cpp)
 file(GLOB HEADERS "*.h")
 file(GLOB SOURCES "*.cpp")
 
-add_executable(HostScanner ${HEADERS} ${SOURCES})
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/test.cpp")
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+
+add_executable(HostScanner ${HEADERS} ${SOURCES} main.cpp)
+add_executable(TestScanner ${HEADERS} ${SOURCES} test.cpp)
+
+enable_testing()
+add_test(ScannerTest TestScanner)

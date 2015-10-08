@@ -48,11 +48,11 @@ To compile and run the project, you must first install the dependencies, which o
 After the dependencies have been installed, you can check out the repository and compile it with the following commands:
 
     git clone https://github.com/RoliSoft/Host-Scanner.git
-    cd Host-Scanner
-    cmake .
+    cd Host-Scanner/build
+    cmake ..
     make
 
-If the compilation was successful, you can run it with the `./HostScanner` command.
+If the compilation was successful, you can run it with the `./HostScanner` command. Tests are also available, you may run them through `make test` or directly, by executing `./TestScanner`.
 
 Tested on:
 

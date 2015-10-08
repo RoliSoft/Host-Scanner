@@ -2,10 +2,14 @@
 #include "portscannerfactory.h"
 #include "tcpscanner.h"
 #include "udpscanner.h"
+#include "nmapscanner.h"
 
-PortScanner* PortScannerFactory::Get(IPPROTO protocol)
+PortScanner* PortScannerFactory::Get(IPPROTO protocol, bool external)
 {
-	// TODO over-engineer this part with templates and auto-registering classes
+	if (external)
+	{
+		return new NmapScanner();
+	}
 
 	switch (protocol)
 	{

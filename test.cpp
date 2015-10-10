@@ -3,8 +3,9 @@
 #include "service.h"
 #include "portscannerfactory.h"
 #include "tcpscanner.h"
-#include "nmapscanner.h"
 #include "udpscanner.h"
+#include "icmppinger.h"
+#include "nmapscanner.h"
 #include <boost/test/unit_test.hpp>
 
 #ifndef BOOST_TEST_WARN
@@ -57,16 +58,24 @@ BOOST_GLOBAL_FIXTURE(TestSetup);
 BOOST_AUTO_TEST_CASE(PortScanFactory)
 {
 	auto tcp = PortScannerFactory::Get(IPPROTO_TCP);
-	BOOST_TEST_CHECK((typeid(*tcp) == typeid(TcpScanner)), "Factory should have spawned TcpScanner.");
+	BOOST_TEST_CHECK((typeid(*tcp) == typeid(TcpScanner)), "Factory should have spawned TcpScanner for IPPROTO_TCP.");
 	delete tcp;
 
 	auto udp = PortScannerFactory::Get(IPPROTO_UDP);
-	BOOST_TEST_CHECK((typeid(*udp) == typeid(UdpScanner)), "Factory should have spawned UdpScanner.");
+	BOOST_TEST_CHECK((typeid(*udp) == typeid(UdpScanner)), "Factory should have spawned UdpScanner for IPPROTO_UDP.");
 	delete udp;
 
-	auto nmp = PortScannerFactory::Get(IPPROTO_NONE, true);
-	BOOST_TEST_CHECK((typeid(*nmp) == typeid(NmapScanner)), "Factory should have spawned NmapScanner.");
-	delete nmp;
+	auto icmp = PortScannerFactory::Get(IPPROTO_ICMP);
+	BOOST_TEST_CHECK((typeid(*icmp) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMP.");
+	delete icmp;
+
+	auto icmp6 = PortScannerFactory::Get(IPPROTO_ICMPV6);
+	BOOST_TEST_CHECK((typeid(*icmp6) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMPV6.");
+	delete icmp6;
+
+	auto nmap = PortScannerFactory::Get(IPPROTO_NONE, true);
+	BOOST_TEST_CHECK((typeid(*nmap) == typeid(NmapScanner)), "Factory should have spawned NmapScanner for <IPPROTO_NONE,external>.");
+	delete nmap;
 }
 
 BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
@@ -143,6 +152,34 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 2620.* should answer.");
 
 	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+}
+
+BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
+{
+	Services servs = {
+		new Service("178.62.249.168", 0, IPPROTO_ICMP),
+		new Service("0.0.0.0", 0, IPPROTO_ICMP)
+	};
+
+	IcmpPinger scan;
+	scan.Scan(&servs);
+
+	BOOST_TEST_CHECK( servs[0]->alive, "178.* should answer.");
+	BOOST_TEST_CHECK(!servs[1]->alive, "0.* should not answer.");
+}
+
+BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
+{
+	Services servs = {
+		new Service("2a03:b0c0:2:d0::19:6001", 0, IPPROTO_ICMPV6),
+		new Service("0100::1", 0, IPPROTO_ICMPV6)
+	};
+
+	IcmpPinger scan;
+	scan.Scan(&servs);
+
+	BOOST_TEST_CHECK( servs[0]->alive, "2a03.* should answer.");
+	BOOST_TEST_CHECK(!servs[1]->alive, "0100.* should not answer.");
 }
 
 BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)

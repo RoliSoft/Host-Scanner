@@ -10,7 +10,7 @@ struct UdpScanData
 {
 
 	/*!
-	 * "Connected" socket.
+	 * Connected socket.
 	 */
 	SOCKET socket;
 

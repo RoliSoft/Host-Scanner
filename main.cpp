@@ -4,7 +4,7 @@
 #include <boost/program_options.hpp>
 #include "stdafx.h"
 #include "utils.h"
-#include "color.h"
+#include "format.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -20,7 +20,7 @@ int main()
 	}
 #endif
 
-	Color::Init();
+	Format::Init();
 
 	po::options_description desc("arguments");
 	desc.add_options()
@@ -28,7 +28,7 @@ int main()
 	;
 
 	auto app = get<1>(splitPath(getAppPath()));
-	cout << Color::Green;
+	cout << Format::Green;
 	cout << "   _   _           _     _____                                 " << endl;
 	cout << "  | | | |         | |   /  ___|                                " << endl;
 	cout << "  | |_| | ___  ___| |_  \\ `--.  ___ __ _ _ __  _ __   ___ _ __ " << endl;
@@ -36,9 +36,8 @@ int main()
 	cout << "  | | | | (_) \\__ \\ |_  /\\__/ / (_| (_| | | | | | | |  __/ |   " << endl;
 	cout << "  \\_| |_/\\___/|___/\\__| \\____/ \\___\\__,_|_| |_|_| |_|\\___|_|   " << endl;
 	cout << "                                                               " << endl;
-	cout << "           https://github.com/RoliSoft/Host-Scanner" << endl;
-	cout << Color::Default;
-	cout << endl;
+	cout << "           " << Format::Underline << "https://github.com/RoliSoft/Host-Scanner" << Format::Normal << endl;
+	cout << Format::Default << endl;
 	cout << "usage: " << app << " [args]" << endl;
 	cout << desc << endl;
 

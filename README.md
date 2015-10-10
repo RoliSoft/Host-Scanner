@@ -28,13 +28,13 @@ The purpose of this project is to discover hosts on a network and then port scan
   * Send UDP packet to port 53, if response or ICMP "port unreachable", host is alive
   * _Otherwise assume host is offline or heavily firewalled_
 
-* <strike>Port scanning</strike> &#x2713;
-  * <strike>Send TCP SYN to all or popular ports, get service banner on ACK</strike> &#x2713;
-  * <strike>Send crafted UDP packets to known ports</strike> &#x2713;
+* ~~Port scanning~~ ✓
+  * ~~Send TCP SYN to all or popular ports, get service banner on ACK~~ ✓
+  * ~~Send crafted UDP packets to known ports~~ ✓
 
-* <strike>External tools</strike> &#x2713;
-  * <strike>Integrate with external tools for failover/preference</strike> &#x2713;
-    * <strike>nmap</strike> &#x2713;
+* ~~External tools~~ ✓
+  * ~~Integrate with external tools for failover/preference~~ ✓
+    * ~~nmap~~ ✓
 
 * Reporting
   * Results will be forwarded to agent for further processing

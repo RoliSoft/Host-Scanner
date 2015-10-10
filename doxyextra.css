@@ -1,0 +1,16 @@
+#nav-sync, .navpath li.footer img {
+	display: none;
+}
+
+.navpath li.footer a:after {
+	content: 'Doxygen';
+}
+
+#titlearea {
+	padding-bottom: 13px;
+}
+
+#projectalign {
+	padding-left: 10px !important;
+    padding-top: 2px;
+}

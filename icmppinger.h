@@ -36,9 +36,9 @@ struct IcmpHeader
 };
 
 /*!
- * Structure of an ICMP packet for echo request.
+ * Structure of an ICMP packet for echo request/reply.
  */
-struct IcmpEchoRequest : IcmpHeader
+struct IcmpEcho : IcmpHeader
 {
 
 	/*!

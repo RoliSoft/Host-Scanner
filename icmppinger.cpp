@@ -81,9 +81,11 @@ void IcmpPinger::initSocket(Service* service)
 
 	getaddrinfo(service->address, "echo", &hint, &info);
 
+	service->protocol = info->ai_family == AF_INET6 ? IPPROTO(IPPROTO_ICMPV6) : IPPROTO(IPPROTO_ICMP);
+
 	// create raw socket
 
-	auto sock = socket(info->ai_family, SOCK_RAW, info->ai_family == AF_INET6 ? IPPROTO(IPPROTO_ICMPV6) : IPPROTO(IPPROTO_ICMP));
+	auto sock = socket(info->ai_family, SOCK_RAW, service->protocol);
 
 	if (sock < 0)
 	{
@@ -111,7 +113,7 @@ void IcmpPinger::initSocket(Service* service)
 
 	// construct the payload
 
-	struct IcmpEchoRequest pkt;
+	struct IcmpEcho pkt;
 	memset(&pkt, 0, sizeof(pkt));
 
 	pkt.type = info->ai_family == AF_INET6 ? ICMP6_ECHO_REQUEST : ICMP_ECHO_REQUEST;
@@ -149,11 +151,47 @@ void IcmpPinger::pollSocket(Service* service, bool last)
 
 	auto res = recv(data->socket, buf, buflen, 0);
 
-	service->alive = res > 0;
+	service->alive = false;
 
 	if (res > 0)
 	{
-		service->reason = AR_ReplyReceived;
+		// for IPv4, the raw socket response includes the IP header,
+		// while for IPv6, it does not. this seems to be consistent on both
+		// operating systems. 20 bytes is the fixed-length IPv4 header size.
+
+		auto ofs = service->protocol == IPPROTO_ICMPV6 ? 0 : 20;
+		auto pkt = reinterpret_cast<IcmpEcho*>(reinterpret_cast<char*>(&buf) + ofs);
+
+		// parse the reply
+
+		if (pkt->id != static_cast<unsigned short>(data->socket))
+		{
+			// not our packet, discard it for now
+
+			if (last)
+			{
+				service->reason = AR_TimedOut;
+			}
+			else
+			{
+				return;
+			}
+		}
+		else
+		{
+			if ((service->protocol == IPPROTO_ICMP   && pkt->type == ICMP_ECHO_REPLY )
+			 || (service->protocol == IPPROTO_ICMPV6 && pkt->type == ICMP6_ECHO_REPLY))
+			{
+				service->alive  = true;
+				service->reason = AR_ReplyReceived;
+			}
+			else
+			{
+				// if not an echo reply, but references the echo request, assume it's an error message
+
+				service->reason = AR_IcmpUnreachable;
+			}
+		}
 	}
 	else
 	{

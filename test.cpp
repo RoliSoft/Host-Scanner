@@ -92,6 +92,9 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 25 should be alive.");
 
 	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable.");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
 }
 
 BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
@@ -108,6 +111,9 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 25 should be alive.");
 
 	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable.");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
 }
 
 BOOST_AUTO_TEST_CASE(UdpPayloadLoader)
@@ -136,6 +142,9 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 208.* should answer.");
 
 	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 178.* reason should either be TimedOut or IcmpUnreachable.");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 208.* reason should be ReplyReceived.");
 }
 
 BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
@@ -152,13 +161,16 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 2620.* should answer.");
 
 	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 2a03.* reason should either be TimedOut or IcmpUnreachable.");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 2620.* reason should be ReplyReceived.");
 }
 
 BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 {
 	Services servs = {
 		new Service("178.62.249.168", 0, IPPROTO_ICMP),
-		new Service("0.0.0.0", 0, IPPROTO_ICMP)
+		new Service("0.0.1.0", 0, IPPROTO_ICMP)
 	};
 
 	IcmpPinger scan;
@@ -166,13 +178,16 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 
 	BOOST_TEST_CHECK( servs[0]->alive, "178.* should answer.");
 	BOOST_TEST_CHECK(!servs[1]->alive, "0.* should not answer.");
+	
+	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "178.* reason should be ReplyReceived.");
+	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0.* reason should either be TimedOut or IcmpUnreachable.");
 }
 
 BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 {
 	Services servs = {
 		new Service("2a03:b0c0:2:d0::19:6001", 0, IPPROTO_ICMPV6),
-		new Service("0100::1", 0, IPPROTO_ICMPV6)
+		new Service("0100::", 0, IPPROTO_ICMPV6)
 	};
 
 	IcmpPinger scan;
@@ -180,6 +195,9 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 
 	BOOST_TEST_CHECK( servs[0]->alive, "2a03.* should answer.");
 	BOOST_TEST_CHECK(!servs[1]->alive, "0100.* should not answer.");
+	
+	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "2a03.* reason should be ReplyReceived.");
+	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0100.* reason should either be TimedOut or IcmpUnreachable.");
 }
 
 BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
@@ -194,6 +212,8 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 	BOOST_TEST_CHECK(servs[0]->alive, "Port 25 should be alive.");
 
 	BOOST_TEST_CHECK(servs[0]->banlen > 0, "Failed to grab service banner.");
+
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
 }
 
 BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
@@ -208,4 +228,6 @@ BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
 	BOOST_TEST_CHECK(servs[0]->alive, "Port 25 should be alive.");
 
 	BOOST_TEST_CHECK(servs[0]->banlen > 0, "Failed to grab service banner.");
+
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
 }

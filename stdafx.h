@@ -2,7 +2,7 @@
 
 #if _WIN32
 	#define Windows 1
-#elif __linux__
+#elif __unix__
 	#define Linux 1
 #endif
 

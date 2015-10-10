@@ -57,8 +57,9 @@ If the compilation was successful, you can run it with the `./HostScanner` comma
 Tested on:
 
  * Windows 10 / Visual Studio 2015
- * Debian Sid / gcc 5.2.1, clang 3.5.0
+ * Debian Sid / gcc 5.2.1, clang 3.8.0
  * Kali Linux 2 / gcc 4.9.2, clang 3.5.0
+ * FreeBSD 11 / clang 3.7.0
 
 Other platforms are not supported at this time.
 

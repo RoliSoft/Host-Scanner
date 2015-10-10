@@ -1,6 +1,10 @@
 #include "icmppinger.h"
 #include <iostream>
 
+#if Linux
+	#include <cstring>
+#endif
+
 using namespace std;
 
 unsigned short IcmpPinger::sequence = 0;
@@ -79,7 +83,7 @@ void IcmpPinger::initSocket(Service* service)
 
 	// create raw socket
 
-	auto sock = socket(info->ai_family, SOCK_RAW, IPPROTO_ICMP);
+	auto sock = socket(info->ai_family, SOCK_RAW, info->ai_family == AF_INET6 ? IPPROTO(IPPROTO_ICMPV6) : IPPROTO(IPPROTO_ICMP));
 
 	if (sock < 0)
 	{
@@ -110,11 +114,11 @@ void IcmpPinger::initSocket(Service* service)
 	struct IcmpEchoRequest pkt;
 	memset(&pkt, 0, sizeof(pkt));
 
-	pkt.type = ICMP_ECHO_REQUEST;
-	pkt.id   = sock;
+	pkt.type = info->ai_family == AF_INET6 ? ICMP6_ECHO_REQUEST : ICMP_ECHO_REQUEST;
+	pkt.id   = static_cast<unsigned short>(sock);
 	pkt.seq  = sequence++;
 
-	for (int i = 0; i < sizeof(pkt.data); i++)
+	for (int i = 0; i < 32; i++)
 	{
 		pkt.data[i] = rand() % 256;
 	}
@@ -189,7 +193,7 @@ unsigned short IcmpPinger::checksum(unsigned short* buf, int len)
 	sum = (sum >> 16) + (sum & 0xFFFF);
 	sum += sum >> 16;
 
-	return ~sum;
+	return static_cast<unsigned short>(~sum);
 }
 
 IcmpPinger::~IcmpPinger()

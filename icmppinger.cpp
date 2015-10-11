@@ -133,6 +133,10 @@ void IcmpPinger::initSocket(Service* service)
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 	send(sock, reinterpret_cast<char*>(&pkt), sizeof(pkt), 0);
+
+	// clean-up
+
+	freeaddrinfo(info);
 }
 
 void IcmpPinger::pollSocket(Service* service, bool last)

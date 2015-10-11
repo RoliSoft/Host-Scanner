@@ -48,6 +48,8 @@ void NmapScanner::Scan(Services* services)
 		default:
 			break;
 		}
+
+		freeaddrinfo(info);
 	}
 
 	// run the separated tests

@@ -4,12 +4,10 @@
 
 #define ICMP_ECHO_REQUEST 8
 #define ICMP_ECHO_REPLY   0
-#define ICMP_TTL_EXPIRE   11
 #define ICMP_DEST_UNREACH 3
 
 #define ICMP6_ECHO_REQUEST 128
 #define ICMP6_ECHO_REPLY   129
-#define ICMP6_TTL_EXPIRE   3
 #define ICMP6_DEST_UNREACH 1
 
 /*!

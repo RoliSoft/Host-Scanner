@@ -132,6 +132,10 @@ void UdpScanner::initSocket(Service* service)
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 	send(sock, pld->data, pld->datlen, 0);
+
+	// clean-up
+
+	freeaddrinfo(info);
 }
 
 void UdpScanner::pollSocket(Service* service, bool last)

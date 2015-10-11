@@ -120,6 +120,10 @@ void TcpScanner::initSocket(Service* service)
 	// start non-blocking connection process
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
+
+	// clean-up
+
+	freeaddrinfo(info);
 }
 
 void TcpScanner::pollSocket(Service* service, bool last)

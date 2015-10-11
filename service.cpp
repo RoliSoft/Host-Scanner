@@ -9,3 +9,13 @@ Service::~Service()
 {
 	delete banner;
 }
+
+void freeServices(Services& services)
+{
+	for (auto& service : services)
+	{
+		delete service;
+	}
+
+	services.clear();
+}

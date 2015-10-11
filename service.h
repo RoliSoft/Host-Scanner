@@ -113,3 +113,10 @@ public:
  * Represents a list of services.
  */
 typedef std::vector<Service*> Services;
+
+/*!
+ * Frees up the structures allocated within this array.
+ *
+ * \param services List of services.
+ */
+void freeServices(Services& services);

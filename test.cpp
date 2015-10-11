@@ -95,6 +95,8 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable.");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
+
+	freeServices(servs);
 }
 
 BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
@@ -114,6 +116,8 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable.");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
+
+	freeServices(servs);
 }
 
 BOOST_AUTO_TEST_CASE(UdpPayloadLoader)
@@ -145,6 +149,8 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 178.* reason should either be TimedOut or IcmpUnreachable.");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 208.* reason should be ReplyReceived.");
+
+	freeServices(servs);
 }
 
 BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
@@ -164,6 +170,8 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 2a03.* reason should either be TimedOut or IcmpUnreachable.");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 2620.* reason should be ReplyReceived.");
+
+	freeServices(servs);
 }
 
 BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
@@ -181,6 +189,8 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 	
 	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "178.* reason should be ReplyReceived.");
 	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0.* reason should either be TimedOut or IcmpUnreachable.");
+
+	freeServices(servs);
 }
 
 BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
@@ -198,6 +208,8 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 	
 	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "2a03.* reason should be ReplyReceived.");
 	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0100.* reason should either be TimedOut or IcmpUnreachable.");
+
+	freeServices(servs);
 }
 
 BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
@@ -214,6 +226,8 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 	BOOST_TEST_CHECK(servs[0]->banlen > 0, "Failed to grab service banner.");
 
 	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
+
+	freeServices(servs);
 }
 
 BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
@@ -230,4 +244,6 @@ BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
 	BOOST_TEST_CHECK(servs[0]->banlen > 0, "Failed to grab service banner.");
 
 	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
+
+	freeServices(servs);
 }

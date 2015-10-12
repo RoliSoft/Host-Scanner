@@ -1,4 +1,6 @@
 #include "tcpscanner.h"
+#include <chrono>
+#include <thread>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -14,7 +16,7 @@ void TcpScanner::Scan(Service* service)
 	{
 		if (i != 0)
 		{
-			sleep(10);
+			this_thread::sleep_for(chrono::milliseconds(10));
 		}
 
 		switch (service->reason)
@@ -52,7 +54,7 @@ void TcpScanner::Scan(Services* services)
 	{
 		if (i != 0)
 		{
-			sleep(10);
+			this_thread::sleep_for(chrono::milliseconds(10));
 		}
 
 		for (auto service : *services)

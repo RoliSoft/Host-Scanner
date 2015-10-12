@@ -108,7 +108,7 @@ private:
 	static unsigned short sequence;
 
 	/*!
-	 * Sends a datagram to each requested service, with crafted packet, when available.
+	 * Sends an ICMP Echo Request to the specified service.
 	 *
 	 * \param service Service.
 	 */

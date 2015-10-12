@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "portscanner.h"
 #include <vector>
+#include <unordered_map>
 
 #define ARP_OP_REQUEST 1
 #define ARP_OP_REPLY   2
@@ -139,7 +140,7 @@ public:
 	/*!
 	 * Number of milliseconds to wait for a reply packet.
 	 */
-	unsigned long timeout = 100;
+	unsigned long timeout = 1000;
 
 	/*!
 	 * Scans a service to determine aliveness.
@@ -163,19 +164,19 @@ public:
 private:
 
 	/*!
-	 * Sends a datagram to each requested service, with crafted packet, when available.
+	 * Sends an ARP Request packet to each service.
 	 *
 	 * \param service Service.
 	 */
 	void initSocket(Service* service);
 
 	/*!
-	 * Receives the responses.
+	 * Sniffs the utilized interfaces for ARP reply packets.
 	 *
-	 * \param service Service.
-	 * \param last Whether this is the last iteration.
+	 * \param services Services mapped to their IP addresses in decimal formats,
+	 *                 for faster look-ups during packet processing.
 	 */
-	void pollSocket(Service* service, bool last = false);
+	void sniffReplies(std::unordered_map<unsigned int, Service*> services);
 
 	/*!
 	 * Gets a list of active interfaces on the current machine.

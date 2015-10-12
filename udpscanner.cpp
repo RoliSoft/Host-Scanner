@@ -4,6 +4,8 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
+#include <chrono>
+#include <thread>
 #include <regex>
 #include <mutex>
 #include <tuple>
@@ -29,7 +31,7 @@ void UdpScanner::Scan(Service* service)
 	{
 		if (i != 0)
 		{
-			sleep(10);
+			this_thread::sleep_for(chrono::milliseconds(10));
 		}
 
 		pollSocket(service, i == iters - 1);
@@ -60,7 +62,7 @@ void UdpScanner::Scan(Services* services)
 	{
 		if (i != 0)
 		{
-			sleep(10);
+			this_thread::sleep_for(chrono::milliseconds(10));
 		}
 
 		for (auto service : *services)

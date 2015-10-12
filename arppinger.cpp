@@ -3,6 +3,9 @@
 #include <vector>
 #include <unordered_map>
 #include <tuple>
+#include <thread>
+#include <ctime>
+#include <chrono>
 
 #if Windows
 
@@ -34,63 +37,39 @@ using namespace std;
 
 void ArpPinger::Scan(Service* service)
 {
+	unsigned int ip;
+	inet_pton(AF_INET, service->address, &ip);
+
+	unordered_map<unsigned int, Service*> servmap = {
+		{ ip, service }
+	};
+
+	thread thd(&ArpPinger::sniffReplies, this, servmap);
+
 	initSocket(service);
 
-	int iters = timeout / 10;
-
-	for (int i = 0; i <= iters; i++)
-	{
-		if (i != 0)
-		{
-			sleep(10);
-		}
-
-		pollSocket(service, i == iters - 1);
-
-		if (service->reason != AR_InProgress)
-		{
-			break;
-		}
-	}
+	thd.join();
 }
 
 void ArpPinger::Scan(Services* services)
 {
+	unordered_map<unsigned int, Service*> servmap;
+
+	for (auto& service : *services)
+	{
+		unsigned int ip;
+		inet_pton(AF_INET, service->address, &ip);
+		servmap[ip] = service;
+	}
+
+	thread thd(&ArpPinger::sniffReplies, this, servmap);
+
 	for (auto service : *services)
 	{
 		initSocket(service);
 	}
 
-	int iters = timeout / 10;
-	int left = services->size();
-
-	for (int i = 0; i <= iters; i++)
-	{
-		if (i != 0)
-		{
-			sleep(10);
-		}
-
-		for (auto service : *services)
-		{
-			if (service->reason != AR_InProgress)
-			{
-				continue;
-			}
-
-			pollSocket(service, i == iters - 1);
-
-			if (service->reason != AR_InProgress)
-			{
-				left--;
-			}
-		}
-
-		if (left <= 0)
-		{
-			break;
-		}
-	}
+	thd.join();
 }
 
 vector<Interface> ArpPinger::getInterfaces()
@@ -309,7 +288,7 @@ void ArpPinger::initSocket(Service* service)
 	pcap_t *pcap;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
-	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(inf.adapter)).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 1000, NULL, errbuf)) == NULL)
+	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(inf.adapter)).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
 	{
 		service->reason = AR_ScanFailed;
 		return;
@@ -374,6 +353,7 @@ void ArpPinger::initSocket(Service* service)
 	if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 	{
 		service->reason = AR_ScanFailed;
+		close(bpf);
 		return;
 	}
 
@@ -389,9 +369,9 @@ void ArpPinger::initSocket(Service* service)
 
 	auto ethPkt = reinterpret_cast<EthHeader*>(pkt);
 
-	ethPkt->typ = htons(0x0806);
+	ethPkt->typ = htons(0x0806); // ARP
 
-	memset(ethPkt->dst, 0xFF, sizeof(ethPkt->dst));
+	memset(ethPkt->dst, 0xFF, sizeof(ethPkt->dst)); // FF:FF:FF:FF:FF:FF is broadcast
 	memcpy(ethPkt->src, inf.macaddr, sizeof(ethPkt->src));
 
 	// then the ARP request
@@ -450,8 +430,89 @@ void ArpPinger::initSocket(Service* service)
 	delete[] pkt;
 }
 
-void ArpPinger::pollSocket(Service* service, bool last)
+void ArpPinger::sniffReplies(unordered_map<unsigned int, Service*> services)
 {
+	// open winpcap to the found interface
+
+	pcap_t *pcap;
+	char errbuf[PCAP_ERRBUF_SIZE];
+
+	if ((pcap = pcap_open("rpcap://\\Device\\NPF_{8FF8625C-312F-46C9-BB41-0FA570A68D3C}", 60, PCAP_OPENFLAG_PROMISCUOUS, 100, NULL, errbuf)) == NULL)
+	{
+		return;
+	}
+
+	// compile the code to filter packets
+
+	struct bpf_program bfcode;
+	if (pcap_compile(pcap, &bfcode, "arp", 1, 16777215 /* ipmask */) < 0)
+	{
+		return;
+	}
+
+	// attach compiled code to instance
+
+	if (pcap_setfilter(pcap, &bfcode) < 0)
+	{
+		return;
+	}
+
+	// iterate through the received packets until timeout
+
+	int res;
+	struct pcap_pkthdr *header;
+	const unsigned char *data;
+
+	auto start = chrono::steady_clock::now();
+
+	while ((res = pcap_next_ex(pcap, &header, &data)) >= 0)
+	{
+		// check for timeout
+
+		auto diff = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count();
+
+		if (diff > timeout)
+		{
+			pcap_close(pcap);
+			return;
+		}
+
+		// check if valid packet has been captured
+
+		if (res == 0 || header->caplen < sizeof(EthHeader) + sizeof(ArpHeader))
+		{
+			continue;
+		}
+
+		// skip ethernet frame and parse ARP packet
+
+		auto arpPkt = reinterpret_cast<ArpHeader*>(const_cast<unsigned char*>(data) + sizeof(EthHeader));
+
+		if (ntohs(arpPkt->opcode) != ARP_OP_REPLY)
+		{
+			continue;
+		}
+
+		// when reply packet is found, mark its service object as alive
+
+		auto it = services.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
+
+		if (it != services.end())
+		{
+			auto serv = (*it).second;
+			serv->alive = true;
+			serv->reason = AR_ReplyReceived;
+		}
+	}
+
+	// clean-up
+
+	if (res == -1)
+	{
+		// pcap_geterr(pcap)
+	}
+
+	pcap_close(pcap);
 }
 
 ArpPinger::~ArpPinger()

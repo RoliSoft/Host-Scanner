@@ -50,7 +50,7 @@ ostream& Format::operator<<(ostream& os, ColorCode code)
 
 	SetConsoleTextAttribute(Data::stdHwd, Data::curColor | Data::curStyle);
 
-#elif Linux
+#elif Unix
 
 	os << "\033[" << static_cast<int>(code) << "m";
 
@@ -79,7 +79,7 @@ ostream& Format::operator<<(ostream& os, StyleCode code)
 
 	SetConsoleTextAttribute(Data::stdHwd, Data::curColor | Data::curStyle);
 
-#elif Linux
+#elif Unix
 
 	os << "\e[" << static_cast<int>(code) << "m";
 

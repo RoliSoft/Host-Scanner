@@ -1,12 +1,23 @@
 #pragma once
 
 #if _WIN32
+
 	#define Windows 1
+
 #elif __unix__
-	#define Linux 1
+
+	#define Unix 1
+
+	#if __linux__
+		#define Linux 1
+	#else
+		#define BSD 1
+	#endif
+
 #endif
 
 #if Windows
+
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#include <iphlpapi.h>
@@ -19,7 +30,9 @@
 
 	#pragma comment(lib, "ws2_32.lib")
 	#pragma comment(lib, "iphlpapi.lib")
-#elif Linux
+
+#elif Unix
+
 	#include <unistd.h>
 	#include <sys/socket.h>
 	#include <sys/ioctl.h>
@@ -40,4 +53,5 @@
 	typedef int SOCKET;
 	typedef int IPPROTO;
 	typedef struct timeval TIMEVAL;
+
 #endif

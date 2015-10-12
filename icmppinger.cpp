@@ -1,7 +1,7 @@
 #include "icmppinger.h"
 #include <iostream>
 
-#if Linux
+#if Unix
 	#include <cstring>
 #endif
 

@@ -93,7 +93,7 @@ struct Interface
 	 */
 	char adapter[260];
 
-#if Linux
+#if Unix
 
 	/*!
 	 * Interface number.

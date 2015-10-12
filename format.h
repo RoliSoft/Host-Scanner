@@ -7,7 +7,7 @@
 
 	#define isatty(f) _isatty(f)
 	#define fileno(s) _fileno(s)
-#elif Linux
+#elif Unix
 	#include <unistd.h>
 #endif
 
@@ -34,7 +34,7 @@ namespace Format
 		White   = FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_BLUE,
 		Default = INT_MAX
 
-#elif Linux
+#elif Unix
 
 		Red     = 31,
 		Green   = 32,
@@ -62,7 +62,7 @@ namespace Format
 		Hidden    = 0, // N/A
 		Normal    = INT_MAX
 
-#elif Linux
+#elif Unix
 
 		Bold       = 1,
 		Underline  = 4,

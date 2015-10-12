@@ -175,7 +175,7 @@ void UdpScanner::pollSocket(Service* service, bool last)
 		{
 			service->reason = AR_TimedOut;
 		}
-#if Linux
+#if Unix
 		else if (res == -1 && errno == ECONNREFUSED)
 		{
 			service->reason = AR_IcmpUnreachable;
@@ -265,7 +265,7 @@ void UdpScanner::loadPayloads()
 		cerr << "UDP payloads database not found!" << endl;
 #if Windows
 		cerr << "Download https://svn.nmap.org/nmap/nmap-payloads to the working directory and rename it to `payloads`." << endl;
-#elif Linux
+#elif Unix
 		cerr << "Run `wget https://svn.nmap.org/nmap/nmap-payloads -O payloads` in the working directory." << endl;
 #endif
 

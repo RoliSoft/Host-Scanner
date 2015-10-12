@@ -4,15 +4,24 @@
 #include <unordered_map>
 #include <tuple>
 
-#if Windows
-	#include <pcap.h>
-#elif Linux
+#if Windows
+	#include <pcap.h>
+#elif Unix
+
 	#include <cstring>
 	#include <ifaddrs.h>
 	#include <sys/ioctl.h>
 	#include <net/if.h>
-	#include <net/ethernet.h>
-	#include <linux/if_packet.h>
+	#include <net/ethernet.h>
+	// Linux
+	#ifdef AF_PACKET
+		#include <netpacket/packet.h>
+	#endif
+
+	// BSD
+	#ifdef AF_LINK
+		#include <net/if_dl.h>
+	#endif
 #endif
 
 using namespace std;
@@ -137,7 +146,7 @@ vector<Interface> ArpPinger::getInterfaces()
 
 	delete ads;
 
-#elif Linux
+#elif Unix
 
 	// get the available interfaces
 
@@ -150,7 +159,11 @@ vector<Interface> ArpPinger::getInterfaces()
 
 	for (auto ad = ads; ad != nullptr; ad = ad->ifa_next)
 	{
-		// check AF_PACKETs to save the interface numbers and MAC addresses for later
+		// check AF_PACKET/LINKs to save the interface numbers and MAC addresses for later
+
+#ifdef AF_PACKET
+		
+		// Linux
 
 		if (ad->ifa_addr != nullptr && ad->ifa_addr->sa_family == AF_PACKET)
 		{
@@ -159,6 +172,20 @@ vector<Interface> ArpPinger::getInterfaces()
 			continue;
 		}
 
+#endif
+#ifdef AF_LINK
+
+		// BSD
+
+		if (ad->ifa_addr != nullptr && ad->ifa_addr->sa_family == AF_LINK)
+		{
+			auto sdl = reinterpret_cast<struct sockaddr_dl*>(ad->ifa_addr);
+			macs[ad->ifa_name] = make_tuple(sdl->sdl_index, sdl->sdl_data);
+			continue;
+		}
+
+#endif
+
 		// skip loopback interfaces and those without IPv4 connectivity
 
 		if (ad->ifa_addr == nullptr || ad->ifa_addr->sa_family != AF_INET || (ad->ifa_flags & IFF_UP) != IFF_UP || (ad->ifa_flags & IFF_LOOPBACK) == IFF_LOOPBACK)
@@ -166,10 +193,13 @@ vector<Interface> ArpPinger::getInterfaces()
 			continue;
 		}
 
-		// copy info
-		Interface inf;
-		strncpy(inf.adapter, ad->ifa_name, sizeof(inf.adapter));
-		strncpy(inf.description, ad->ifa_name, sizeof(inf.description));
+		// copy info
+
+		Interface inf;
+
+		strncpy(inf.adapter,     ad->ifa_name, sizeof(inf.adapter));
+		strncpy(inf.description, ad->ifa_name, sizeof(inf.description));
+
 		inf.ipaddr = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_addr))->sin_addr.s_addr;
 		inf.ipmask = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_netmask))->sin_addr.s_addr;
 		inf.ipgate = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_ifu.ifu_broadaddr))->sin_addr.s_addr;
@@ -272,7 +302,7 @@ void ArpPinger::initSocket(Service* service)
 		return;
 	}
 
-#elif Linux
+#elif Unix
 
 	// prepare the structures pointing to the interface
 
@@ -348,7 +378,7 @@ void ArpPinger::initSocket(Service* service)
 
 	pcap_close(pcap);
 
-#elif Linux
+#elif Unix
 
 	auto res = sendto(sock, pkt, pktLen, 0, reinterpret_cast<struct sockaddr*>(&dev), sizeof(dev));
 

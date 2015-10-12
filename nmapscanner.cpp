@@ -147,7 +147,7 @@ string NmapScanner::runNmap(Services* services, bool v6)
 
 #if Windows
 	cmd += "2>nul";
-#elif Linux
+#elif Unix
 	cmd += "2>/dev/null";
 #endif
 

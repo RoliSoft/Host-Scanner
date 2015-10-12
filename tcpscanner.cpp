@@ -143,7 +143,7 @@ void TcpScanner::pollSocket(Service* service, bool last)
 
 	select(
 		data->socket
-#if Linux
+#if Unix
 			+ 1
 #endif
 		, nullptr, data->fdset, nullptr, &tv
@@ -153,7 +153,7 @@ void TcpScanner::pollSocket(Service* service, bool last)
 
 	auto isOpen = FD_ISSET(data->socket, data->fdset);
 
-#if Linux
+#if Unix
 	if (isOpen)
 	{
 		// yet again Linux decided to troll me. all select() requests will become "writable", and you have

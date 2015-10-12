@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <string>
 
-#if Linux
+#if Unix
 	#include <limits.h>
 	#include <unistd.h>
 #endif
@@ -44,7 +44,7 @@ string getAppPath()
 #if Windows
 	char result[MAX_PATH];
 	auto size = GetModuleFileName(NULL, result, MAX_PATH);
-#elif Linux
+#elif Unix
 	char result[PATH_MAX];
 	auto size = readlink("/proc/self/exe", result, PATH_MAX);
 #endif
@@ -56,7 +56,7 @@ string getWorkDir()
 #if Windows
 	char result[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH, result);
-#elif Linux
+#elif Unix
 	char result[PATH_MAX];
 	getcwd(result, PATH_MAX);
 #endif

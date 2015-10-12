@@ -23,6 +23,7 @@
 	// Linux
 	#ifdef AF_PACKET
 		#include <netpacket/packet.h>
+		#include <linux/filter.h>
 	#endif
 
 	// BSD
@@ -467,7 +468,14 @@ void ArpPinger::sendRequest(Service* service)
 
 void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<unsigned int, Service*> services)
 {
-	// iterate through the interfaces and set-up a winpcap for all of them
+	if (ifaces.size() == 0 || services.size() == 0)
+	{
+		return;
+	}
+
+#if Windows
+
+	// iterate through the interfaces and setup a winpcap for all of them
 
 	vector<pcap_t*> pcaps;
 
@@ -509,12 +517,12 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 	// iterate through the received packets on all interfaces until timeout
 
 	auto res = 0;
-	struct pcap_pkthdr *header;
-	const unsigned char *data;
+	struct pcap_pkthdr* header;
+	const unsigned char* data;
 
 	auto start = chrono::steady_clock::now();
 
-	while (chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < timeout)
+	while (chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < static_cast<long long>(timeout))
 	{
 		for (auto& pcap : pcaps)
 		{
@@ -557,6 +565,94 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 	{
 		pcap_close(pcap);
 	}
+
+#elif Linux
+
+	// open universal listening socket
+
+	int sock;
+
+	if ((sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1)
+	{
+		return;
+	}
+
+	// set it to non-blocking
+
+	unsigned long mode = 1;
+	ioctl(sock, FIONBIO, &mode);
+
+	// attach filter code to instance
+
+	auto bfcode = new struct sock_filter[4];
+	bfcode[0] = // ldh  [12]				; skip 12 bytes
+	            BPF_STMT(BPF_LD + BPF_H + BPF_ABS, 12);
+	bfcode[1] = // jeq  #0x806  jt 2  jf 3	; if Eth type is ARP goto 2 else 3
+		        BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, ETH_P_ARP, 0, 1);
+	bfcode[2] = // ret  #262144				; return packet [when ARP]
+		        BPF_STMT(BPF_RET + BPF_K, sizeof(struct EthHeader) + sizeof(struct ArpHeader));
+	bfcode[3] = // ret  #0					; return null
+		        BPF_STMT(BPF_RET + BPF_K, 0);
+
+	struct sock_fprog bfprog;
+	bfprog.filter = bfcode;
+	bfprog.len = 4;
+
+	if (setsockopt(sock, SOL_SOCKET, SO_ATTACH_FILTER, &bfprog, sizeof(bfprog)) == -1)
+	{
+		close(sock);
+		delete[] bfcode;
+		return;
+	}
+
+	// iterate through the received packets on all interfaces until timeout
+
+	auto res = 0;
+	auto data = new unsigned char[60];
+	auto start = chrono::steady_clock::now();
+
+	while (chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < static_cast<long long>(timeout))
+	{
+		// capture packet from interface
+
+		res = recv(sock, data, 60, 0);
+
+		// check if a valid packet has been captured
+
+		if (res < int(sizeof(EthHeader) + sizeof(ArpHeader)))
+		{
+			continue;
+		}
+
+		// skip ethernet frame and parse ARP packet
+
+		auto arpPkt = reinterpret_cast<ArpHeader*>(data + sizeof(EthHeader));
+
+		if (ntohs(arpPkt->opcode) != ARP_OP_REPLY)
+		{
+			continue;
+		}
+
+		// when reply packet is found, mark its service object as alive
+
+		auto it = services.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
+
+		if (it != services.end())
+		{
+			auto serv = (*it).second;
+			serv->alive = true;
+			serv->reason = AR_ReplyReceived;
+		}
+	}
+
+	// clean-up
+
+	close(sock);
+
+	delete[] data;
+	delete[] bfcode;
+
+#endif
 }
 
 ArpPinger::~ArpPinger()

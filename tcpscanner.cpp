@@ -108,7 +108,7 @@ void TcpScanner::initSocket(Service* service)
 
 	// set it to non-blocking
 
-	u_long mode = 1;
+	unsigned long mode = 1;
 	ioctlsocket(sock, FIONBIO, &mode);
 
 	// allocate file descriptor set

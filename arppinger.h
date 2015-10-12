@@ -92,6 +92,15 @@ struct Interface
 	 * Identifier of the interface.
 	 */
 	char adapter[260];
+
+#if Linux
+
+	/*!
+	 * Interface number.
+	 */
+	int ifnum;
+
+#endif
 	
 	/*!
 	 * Human-friendly description of the interface.
@@ -173,7 +182,7 @@ private:
 	 *
 	 * \return List of interfaces.
 	 */
-	static std::vector<Interface> getInterfaces();
+	std::vector<Interface> getInterfaces();
 
 	/*!
 	 * Determines whether the specified IP address is on the specified interface.

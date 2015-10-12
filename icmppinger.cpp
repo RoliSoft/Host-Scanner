@@ -103,12 +103,12 @@ void IcmpPinger::initSocket(Service* service)
 
 	// max out TTL
 
-	u_char ttl = 255;
+	unsigned char ttl = 255;
 	setsockopt(sock, IPPROTO_IP, IP_TTL, reinterpret_cast<const char*>(&ttl), sizeof(ttl));
 
 	// set it to non-blocking
 
-	u_long mode = 1;
+	unsigned long mode = 1;
 	ioctlsocket(sock, FIONBIO, &mode);
 
 	// construct the payload

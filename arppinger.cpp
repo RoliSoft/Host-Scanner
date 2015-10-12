@@ -1,11 +1,18 @@
 #include "arppinger.h"
 #include <iostream>
 #include <vector>
+#include <unordered_map>
+#include <tuple>
 
 #if Windows
 	#include <pcap.h>
 #elif Linux
 	#include <cstring>
+	#include <ifaddrs.h>
+	#include <sys/ioctl.h>
+	#include <net/if.h>
+	#include <net/ethernet.h>
+	#include <linux/if_packet.h>
 #endif
 
 using namespace std;
@@ -73,7 +80,14 @@ void ArpPinger::Scan(Services* services)
 
 vector<Interface> ArpPinger::getInterfaces()
 {
-	vector<Interface> ifs;
+	static vector<Interface> ifs;
+
+	if (ifs.size() != 0)
+	{
+		return ifs;
+	}
+
+#if Windows
 
 	// allocate 1 structure and call GetAdaptersInfo in order to get the number
 	// of interfaces to allocate for; this is the official way to do it...
@@ -93,23 +107,14 @@ vector<Interface> ArpPinger::getInterfaces()
 
 	// iterate through interfaces
 
-	auto ad = ads;
-	while (ad)
+	for (auto ad = ads; ad != nullptr; ad = ad->Next)
 	{
-		// skip over non-ethernet or non-point-to-point interfaces
-
-		if (ad->Type != MIB_IF_TYPE_ETHERNET && ad->Type != MIB_IF_TYPE_PPP)
-		{
-			ad = ad->Next;
-			continue;
-		}
-
-		// skip over interfaces which are not connected, or are otherwise
+		// skip over non-ethernet or non-point-to-point interfaces,
+		// and those which are not connected, or are otherwise
 		// in a state where they don't have IPv4 connectivity
 
-		if (string(ad->IpAddressList.IpAddress.String) == "0.0.0.0")
+		if ((ad->Type != MIB_IF_TYPE_ETHERNET && ad->Type != MIB_IF_TYPE_PPP) || string(ad->IpAddressList.IpAddress.String) == "0.0.0.0")
 		{
-			ad = ad->Next;
 			continue;
 		}
 
@@ -126,15 +131,79 @@ vector<Interface> ArpPinger::getInterfaces()
 		inet_pton(AF_INET, ad->GatewayList.IpAddress.String,   &inf.ipgate);
 
 		ifs.push_back(inf);
-
-		// advance in linked list
-
-		ad = ad->Next;
 	}
 
 	// clean-up
 
 	delete ads;
+
+#elif Linux
+
+	// get the available interfaces
+
+	struct ifaddrs* ads;
+	getifaddrs(&ads);
+
+	// iterate through interfaces
+
+	unordered_map<string, tuple<int, unsigned char*>> macs;
+
+	for (auto ad = ads; ad != nullptr; ad = ad->ifa_next)
+	{
+		// check AF_PACKETs to save the interface numbers and MAC addresses for later
+
+		if (ad->ifa_addr != nullptr && ad->ifa_addr->sa_family == AF_PACKET)
+		{
+			auto sll = reinterpret_cast<struct sockaddr_ll*>(ad->ifa_addr);
+			macs[ad->ifa_name] = make_tuple(sll->sll_ifindex, sll->sll_addr);
+			continue;
+		}
+
+		// skip loopback interfaces and those without IPv4 connectivity
+
+		if (ad->ifa_addr == nullptr || ad->ifa_addr->sa_family != AF_INET || (ad->ifa_flags & IFF_UP) != IFF_UP || (ad->ifa_flags & IFF_LOOPBACK) == IFF_LOOPBACK)
+		{
+			continue;
+		}
+
+		// copy info
+		Interface inf;
+		strncpy(inf.adapter, ad->ifa_name, sizeof(inf.adapter));
+		strncpy(inf.description, ad->ifa_name, sizeof(inf.description));
+		inf.ipaddr = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_addr))->sin_addr.s_addr;
+		inf.ipmask = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_netmask))->sin_addr.s_addr;
+		inf.ipgate = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_ifu.ifu_broadaddr))->sin_addr.s_addr;
+
+		// since only the broadcast address is specified, the gateway address
+		// should be determinable based on the netmask and broadcast address.
+		// this may not be entirely accurate, but enough for our purposes.
+
+		inf.ipgate = htonl(ntohl(inf.ipgate) & ntohl(inf.ipmask));
+
+		ifs.push_back(inf);
+	}
+
+	// copy over temporarily stored interface numbers and MAC addresses
+
+	for (auto& inf : ifs)
+	{
+		auto it = macs.find(inf.adapter);
+
+		if (it != macs.end())
+		{
+			auto tpl = (*it).second;
+
+			inf.ifnum = get<0>(tpl);
+
+			memcpy(inf.macaddr, get<1>(tpl), sizeof(inf.macaddr));
+		}
+	}
+
+	// clean-up
+
+	freeifaddrs(ads);
+
+#endif
 
 	return ifs;
 }
@@ -184,23 +253,60 @@ void ArpPinger::initSocket(Service* service)
 
 	if (!found)
 	{
-		service->alive = AR_ScanFailed;
+		service->reason = AR_ScanFailed;
 		return;
 	}
+
+	service->reason = AR_InProgress;
 	
+#if Windows
+
 	// open winpcap to the found interface
 
 	pcap_t *pcap;
 	char errbuf[PCAP_ERRBUF_SIZE];
+
 	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(inf.adapter)).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 1000, NULL, errbuf)) == NULL)
 	{
-		service->alive = AR_ScanFailed;
+		service->reason = AR_ScanFailed;
 		return;
 	}
+
+#elif Linux
+
+	// prepare the structures pointing to the interface
+
+	struct sockaddr_ll dev;
+	memset(&dev, 0, sizeof(dev));
+
+	dev.sll_ifindex = inf.ifnum;
+	dev.sll_family  = AF_PACKET;
+	dev.sll_halen   = 6;
+
+	memcpy(dev.sll_addr, inf.macaddr, dev.sll_halen);
+
+	// create raw socket
+
+	auto sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+
+	if (sock < 0)
+	{
+		// root is required for raw sockets
+
+		service->reason = AR_ScanFailed;
+		return;
+	}
+
+	// set it to non-blocking
+
+	unsigned long mode = 1;
+	ioctlsocket(sock, FIONBIO, &mode);
+
+#endif
 	
 	// construct the payload
 
-	int pktLen = max(sizeof(EthHeader) + sizeof(ArpHeader), 60);
+	auto pktLen = max(int(sizeof(EthHeader) + sizeof(ArpHeader)), 60);
 	auto pkt = new char[pktLen];
 	memset(pkt, 0, pktLen);
 
@@ -229,20 +335,33 @@ void ArpPinger::initSocket(Service* service)
 	memset(arpPkt->dstmac, 0xFF, sizeof(arpPkt->dstmac));
 	memcpy(arpPkt->dstip, &addr, sizeof(arpPkt->dstip));
 
-	// send the packet
+	// send the packet, then clean-up
+
+#if Windows
 
 	auto res = pcap_sendpacket(pcap, reinterpret_cast<const unsigned char*>(pkt), pktLen);
 
 	if (res != 0)
 	{
-		service->alive = AR_ScanFailed;
+		service->reason = AR_ScanFailed;
 	}
 
-	// clean-up
+	pcap_close(pcap);
+
+#elif Linux
+
+	auto res = sendto(sock, pkt, pktLen, 0, reinterpret_cast<struct sockaddr*>(&dev), sizeof(dev));
+
+	if (res <= 0)
+	{
+		service->reason = AR_ScanFailed;
+	}
+
+	close(sock);
+
+#endif
 
 	delete pkt;
-
-	pcap_close(pcap);
 }
 
 void ArpPinger::pollSocket(Service* service, bool last)

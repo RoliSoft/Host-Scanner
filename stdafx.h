@@ -9,6 +9,7 @@
 #if Windows
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
+	#include <iphlpapi.h>
 
 	#define sleep(t) Sleep(t)
 	#define popen(c,m) _popen(c,m)
@@ -17,6 +18,7 @@
 	#define PATH_SEPARATOR "\\"
 
 	#pragma comment(lib, "ws2_32.lib")
+	#pragma comment(lib, "iphlpapi.lib")
 #elif Linux
 	#include <unistd.h>
 	#include <sys/socket.h>

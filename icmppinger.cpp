@@ -128,7 +128,7 @@ void IcmpPinger::initSocket(Service* service)
 	pkt.checksum = checksum(reinterpret_cast<unsigned short*>(&pkt), sizeof(pkt));
 
 	// "connect", then send probe packet
-	// the connect function in case of ICMP just stores the address and port,
+	// the connect function in case of ICMP just stores the address,
 	// so send()/recv() will work without them, no need to store the addrinfo
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);

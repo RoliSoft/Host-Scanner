@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "portscanner.h"
 #include <vector>
+#include <unordered_set>
 #include <unordered_map>
 
 #define ARP_OP_REQUEST 1
@@ -197,19 +198,20 @@ private:
 	void sendRequest(Service* service);
 
 	/*!
-	 * Sniffs the utilized interfaces for ARP reply packets.
+	 * Sniffs the specified interfaces for ARP reply packets.
 	 *
+	 * \param ifaces Interfaces to sniff.
 	 * \param services Services mapped to their IP addresses in decimal formats,
 	 *                 for faster look-ups during packet processing.
 	 */
-	void sniffReplies(std::unordered_map<unsigned int, Service*> services);
+	void sniffReplies(std::unordered_set<Interface*> ifaces, std::unordered_map<unsigned int, Service*> services);
 
 	/*!
 	 * Gets a list of active interfaces on the current machine.
 	 *
 	 * \return List of interfaces.
 	 */
-	std::vector<Interface> getInterfaces();
+	std::vector<Interface*> getInterfaces();
 
 	/*!
 	 * Determines whether the specified IP address is on the specified interface.
@@ -219,6 +221,6 @@ private:
 	 *
 	 * \return Value indicating whether in range.
 	 */
-	static bool isIpOnIface(unsigned int ip, Interface& inf);
+	static bool isIpOnIface(unsigned int ip, Interface* inf);
 
 };

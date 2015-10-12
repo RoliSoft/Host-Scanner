@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <tuple>
 #include <thread>
 #include <ctime>
@@ -48,7 +49,11 @@ void ArpPinger::Scan(Service* service)
 		{ reinterpret_cast<ArpScanData*>(service->data)->ipaddr, service }
 	};
 
-	thread thd(&ArpPinger::sniffReplies, this, servmap);
+	unordered_set<Interface*> ifaces = {
+		reinterpret_cast<ArpScanData*>(service->data)->iface
+	};
+
+	thread thd(&ArpPinger::sniffReplies, this, ifaces, servmap);
 
 	sendRequest(service);
 
@@ -58,6 +63,7 @@ void ArpPinger::Scan(Service* service)
 void ArpPinger::Scan(Services* services)
 {
 	unordered_map<unsigned int, Service*> servmap;
+	unordered_set<Interface*> ifaces;
 
 	for (auto& service : *services)
 	{
@@ -69,9 +75,10 @@ void ArpPinger::Scan(Services* services)
 		}
 
 		servmap[reinterpret_cast<ArpScanData*>(service->data)->ipaddr] = service;
+		ifaces.emplace(reinterpret_cast<ArpScanData*>(service->data)->iface);
 	}
 
-	thread thd(&ArpPinger::sniffReplies, this, servmap);
+	thread thd(&ArpPinger::sniffReplies, this, ifaces, servmap);
 
 	for (auto service : *services)
 	{
@@ -86,9 +93,9 @@ void ArpPinger::Scan(Services* services)
 	thd.join();
 }
 
-vector<Interface> ArpPinger::getInterfaces()
+vector<Interface*> ArpPinger::getInterfaces()
 {
-	static vector<Interface> ifs;
+	static vector<Interface*> ifs;
 
 	if (ifs.size() != 0)
 	{
@@ -128,15 +135,15 @@ vector<Interface> ArpPinger::getInterfaces()
 
 		// copy info, convert IP addresses stored as string
 
-		Interface inf;
+		auto inf = new Interface();
 
-		memcpy(inf.adapter,     ad->AdapterName, sizeof(inf.adapter));
-		memcpy(inf.description, ad->Description, sizeof(inf.description));
-		memcpy(inf.macaddr,     ad->Address,     sizeof(inf.macaddr));
+		memcpy(inf->adapter,     ad->AdapterName, sizeof(inf->adapter));
+		memcpy(inf->description, ad->Description, sizeof(inf->description));
+		memcpy(inf->macaddr,     ad->Address,     sizeof(inf->macaddr));
 
-		inet_pton(AF_INET, ad->IpAddressList.IpAddress.String, &inf.ipaddr);
-		inet_pton(AF_INET, ad->IpAddressList.IpMask.String,    &inf.ipmask);
-		inet_pton(AF_INET, ad->GatewayList.IpAddress.String,   &inf.ipgate);
+		inet_pton(AF_INET, ad->IpAddressList.IpAddress.String, &inf->ipaddr);
+		inet_pton(AF_INET, ad->IpAddressList.IpMask.String,    &inf->ipmask);
+		inet_pton(AF_INET, ad->GatewayList.IpAddress.String,   &inf->ipgate);
 
 		ifs.push_back(inf);
 	}
@@ -194,14 +201,14 @@ vector<Interface> ArpPinger::getInterfaces()
 
 		// copy info
 
-		Interface inf;
+		auto inf = new Interface();
 
-		strncpy(inf.adapter,     ad->ifa_name, sizeof(inf.adapter));
-		strncpy(inf.description, ad->ifa_name, sizeof(inf.description));
+		strncpy(inf->adapter,     ad->ifa_name, sizeof(inf->adapter));
+		strncpy(inf->description, ad->ifa_name, sizeof(inf->description));
 
-		inf.ipaddr = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_addr))->sin_addr.s_addr;
-		inf.ipmask = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_netmask))->sin_addr.s_addr;
-		inf.ipgate = (reinterpret_cast<struct sockaddr_in*>(ad->
+		inf->ipaddr = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_addr))->sin_addr.s_addr;
+		inf->ipmask = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_netmask))->sin_addr.s_addr;
+		inf->ipgate = (reinterpret_cast<struct sockaddr_in*>(ad->
 #ifdef AF_PACKET
 				ifa_ifu.ifu_broadaddr
 #endif
@@ -214,7 +221,7 @@ vector<Interface> ArpPinger::getInterfaces()
 		// should be determinable based on the netmask and broadcast address.
 		// this may not be entirely accurate, but enough for our purposes.
 
-		inf.ipgate = htonl(ntohl(inf.ipgate) & ntohl(inf.ipmask));
+		inf->ipgate = htonl(ntohl(inf->ipgate) & ntohl(inf->ipmask));
 
 		ifs.push_back(inf);
 	}
@@ -223,15 +230,15 @@ vector<Interface> ArpPinger::getInterfaces()
 
 	for (auto& inf : ifs)
 	{
-		auto it = macs.find(inf.adapter);
+		auto it = macs.find(inf->adapter);
 
 		if (it != macs.end())
 		{
 			auto tpl = (*it).second;
 
-			inf.ifnum = get<0>(tpl);
+			inf->ifnum = get<0>(tpl);
 
-			memcpy(inf.macaddr, get<1>(tpl), sizeof(inf.macaddr));
+			memcpy(inf->macaddr, get<1>(tpl), sizeof(inf->macaddr));
 		}
 	}
 
@@ -244,13 +251,13 @@ vector<Interface> ArpPinger::getInterfaces()
 	return ifs;
 }
 
-bool ArpPinger::isIpOnIface(unsigned int ip, Interface& inf)
+bool ArpPinger::isIpOnIface(unsigned int ip, Interface* inf)
 {
 	// convert to host byte order
 
 	unsigned int iph = ntohl(ip);
-	unsigned int msk = ntohl(inf.ipmask);
-	unsigned int net = ntohl(inf.ipgate == 0 ? inf.ipaddr : inf.ipgate);
+	unsigned int msk = ntohl(inf->ipmask);
+	unsigned int net = ntohl(inf->ipgate == 0 ? inf->ipaddr : inf->ipgate);
 
 	// do the range check
 
@@ -279,7 +286,7 @@ void ArpPinger::prepService(Service* service)
 	{
 		if (isIpOnIface(addr, inf))
 		{
-			iface = new Interface(inf);
+			iface = inf;
 			break;
 		}
 	}
@@ -455,93 +462,101 @@ void ArpPinger::sendRequest(Service* service)
 
 	delete[] pkt;
 
-	delete data->iface;
 	delete data;
 }
 
-void ArpPinger::sniffReplies(unordered_map<unsigned int, Service*> services)
+void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<unsigned int, Service*> services)
 {
-	// open winpcap to the found interface
+	// iterate through the interfaces and set-up a winpcap for all of them
 
-	pcap_t *pcap;
-	char errbuf[PCAP_ERRBUF_SIZE];
+	vector<pcap_t*> pcaps;
 
-	if ((pcap = pcap_open("rpcap://\\Device\\NPF_{8FF8625C-312F-46C9-BB41-0FA570A68D3C}", 60, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
+	for (auto& iface : ifaces)
+	{
+		// open winpcap to the interface
+
+		pcap_t *pcap;
+		char errbuf[PCAP_ERRBUF_SIZE];
+
+		if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(iface->adapter)).c_str(), 60, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
+		{
+			continue;
+		}
+
+		// compile the code to filter packets
+
+		struct bpf_program bfcode;
+		if (pcap_compile(pcap, &bfcode, "arp", 1, iface->ipmask) < 0)
+		{
+			continue;
+		}
+
+		// attach compiled code to instance
+
+		if (pcap_setfilter(pcap, &bfcode) < 0)
+		{
+			continue;
+		}
+
+		pcaps.push_back(pcap);
+	}
+
+	if (pcaps.size() == 0)
 	{
 		return;
 	}
 
-	// compile the code to filter packets
+	// iterate through the received packets on all interfaces until timeout
 
-	struct bpf_program bfcode;
-	if (pcap_compile(pcap, &bfcode, "arp", 1, 16777215 /* ipmask */) < 0)
-	{
-		return;
-	}
-
-	// attach compiled code to instance
-
-	if (pcap_setfilter(pcap, &bfcode) < 0)
-	{
-		return;
-	}
-
-	// iterate through the received packets until timeout
-
-	int res;
+	auto res = 0;
 	struct pcap_pkthdr *header;
 	const unsigned char *data;
 
 	auto start = chrono::steady_clock::now();
 
-	while ((res = pcap_next_ex(pcap, &header, &data)) >= 0)
+	while (chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < timeout)
 	{
-		// check for timeout
-
-		auto diff = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count();
-
-		if (diff > timeout)
+		for (auto& pcap : pcaps)
 		{
-			pcap_close(pcap);
-			return;
-		}
+			// capture packet from interface
 
-		// check if valid packet has been captured
+			res = pcap_next_ex(pcap, &header, &data);
 
-		if (res == 0 || header->caplen < sizeof(EthHeader) + sizeof(ArpHeader))
-		{
-			continue;
-		}
+			// check if a valid packet has been captured
 
-		// skip ethernet frame and parse ARP packet
+			if (res <= 0 || header->caplen < sizeof(EthHeader) + sizeof(ArpHeader))
+			{
+				continue;
+			}
 
-		auto arpPkt = reinterpret_cast<ArpHeader*>(const_cast<unsigned char*>(data) + sizeof(EthHeader));
+			// skip ethernet frame and parse ARP packet
 
-		if (ntohs(arpPkt->opcode) != ARP_OP_REPLY)
-		{
-			continue;
-		}
+			auto arpPkt = reinterpret_cast<ArpHeader*>(const_cast<unsigned char*>(data) + sizeof(EthHeader));
 
-		// when reply packet is found, mark its service object as alive
+			if (ntohs(arpPkt->opcode) != ARP_OP_REPLY)
+			{
+				continue;
+			}
 
-		auto it = services.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
+			// when reply packet is found, mark its service object as alive
 
-		if (it != services.end())
-		{
-			auto serv = (*it).second;
-			serv->alive = true;
-			serv->reason = AR_ReplyReceived;
+			auto it = services.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
+
+			if (it != services.end())
+			{
+				auto serv = (*it).second;
+				serv->alive = true;
+				serv->reason = AR_ReplyReceived;
+			}
 		}
 	}
 
 	// clean-up
 
-	if (res == -1)
+	for (auto& pcap : pcaps)
 	{
-		// pcap_geterr(pcap)
+		pcap_close(pcap);
 	}
-
-	pcap_close(pcap);
 }
 
 ArpPinger::~ArpPinger()

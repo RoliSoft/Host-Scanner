@@ -131,6 +131,24 @@ struct Interface
 };
 
 /*!
+ * Represents internal scan data for the ARP scanner.
+ */
+struct ArpScanData
+{
+
+	/*!
+	 * IPv4 address in decimal format.
+	 */
+	unsigned int ipaddr;
+
+	/*!
+	 * Interface information.
+	 */
+	struct Interface* iface;
+
+};
+
+/*!
  * Implements a scanner which sends ARP pings using raw sockets.
  */
 class ArpPinger : public PortScanner
@@ -164,11 +182,19 @@ public:
 private:
 
 	/*!
-	 * Sends an ARP Request packet to each service.
+	 * Makes the required preparations in order to determine whether this
+	 * service is eligible for this type of scanning or not.
 	 *
 	 * \param service Service.
 	 */
-	void initSocket(Service* service);
+	void prepService(Service* service);
+
+	/*!
+	 * Sends an ARP Request packet to the specified service.
+	 *
+	 * \param service Service.
+	 */
+	void sendRequest(Service* service);
 
 	/*!
 	 * Sniffs the utilized interfaces for ARP reply packets.

@@ -3,7 +3,7 @@
 #include "portscanner.h"
 
 /*!
- * Represents scan data for the TCP scanner.
+ * Represents internal scan data for the TCP scanner.
  */
 struct TcpScanData
 {

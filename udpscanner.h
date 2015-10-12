@@ -4,7 +4,7 @@
 #include "portscanner.h"
 
 /*!
- * Represents scan data for the UDP scanner.
+ * Represents internal scan data for the UDP scanner.
  */
 struct UdpScanData
 {

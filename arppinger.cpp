@@ -37,16 +37,20 @@ using namespace std;
 
 void ArpPinger::Scan(Service* service)
 {
-	unsigned int ip;
-	inet_pton(AF_INET, service->address, &ip);
+	prepService(service);
+
+	if (service->reason != AR_InProgress)
+	{
+		return;
+	}
 
 	unordered_map<unsigned int, Service*> servmap = {
-		{ ip, service }
+		{ reinterpret_cast<ArpScanData*>(service->data)->ipaddr, service }
 	};
 
 	thread thd(&ArpPinger::sniffReplies, this, servmap);
 
-	initSocket(service);
+	sendRequest(service);
 
 	thd.join();
 }
@@ -57,16 +61,26 @@ void ArpPinger::Scan(Services* services)
 
 	for (auto& service : *services)
 	{
-		unsigned int ip;
-		inet_pton(AF_INET, service->address, &ip);
-		servmap[ip] = service;
+		prepService(service);
+
+		if (service->reason != AR_InProgress)
+		{
+			continue;
+		}
+
+		servmap[reinterpret_cast<ArpScanData*>(service->data)->ipaddr] = service;
 	}
 
 	thread thd(&ArpPinger::sniffReplies, this, servmap);
 
 	for (auto service : *services)
 	{
-		initSocket(service);
+		if (service->reason != AR_InProgress)
+		{
+			continue;
+		}
+
+		sendRequest(service);
 	}
 
 	thd.join();
@@ -246,7 +260,7 @@ bool ArpPinger::isIpOnIface(unsigned int ip, Interface& inf)
 	return iph >= low && iph <= high;
 }
 
-void ArpPinger::initSocket(Service* service)
+void ArpPinger::prepService(Service* service)
 {
 	// get interfaces
 
@@ -257,30 +271,42 @@ void ArpPinger::initSocket(Service* service)
 	unsigned int addr;
 	inet_pton(AF_INET, service->address, &addr);
 
-	// check which interface's range is this address in
+	// check which interfaces' range is this address in
 
-	Interface inf;
+	Interface* iface = nullptr;
 
-	auto found = false;
-	for (auto& in : ifs)
+	for (auto& inf : ifs)
 	{
-		if (isIpOnIface(addr, in))
+		if (isIpOnIface(addr, inf))
 		{
-			//cout << service->address << " is in " << in.description << endl;
-			inf = in;
-			found = true;
+			iface = new Interface(inf);
 			break;
 		}
 	}
 
-	if (!found)
+	if (iface == nullptr)
 	{
 		service->reason = AR_ScanFailed;
 		return;
 	}
 
+	auto data = new ArpScanData();
+	service->data = data;
+	data->ipaddr = addr;
+	data->iface = iface;
+
 	service->reason = AR_InProgress;
-	
+}
+
+void ArpPinger::sendRequest(Service* service)
+{
+	if (service->reason != AR_InProgress || service->data == nullptr)
+	{
+		return;
+	}
+
+	auto data = reinterpret_cast<ArpScanData*>(service->data);
+
 #if Windows
 
 	// open winpcap to the found interface
@@ -288,7 +314,7 @@ void ArpPinger::initSocket(Service* service)
 	pcap_t *pcap;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
-	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(inf.adapter)).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
+	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(data->iface->adapter)).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
 	{
 		service->reason = AR_ScanFailed;
 		return;
@@ -301,11 +327,11 @@ void ArpPinger::initSocket(Service* service)
 	struct sockaddr_ll dev;
 	memset(&dev, 0, sizeof(dev));
 
-	dev.sll_ifindex = inf.ifnum;
+	dev.sll_ifindex = data->iface->ifnum;
 	dev.sll_family  = AF_PACKET;
 	dev.sll_halen   = 6;
 
-	memcpy(dev.sll_addr, inf.macaddr, dev.sll_halen);
+	memcpy(dev.sll_addr, data->iface->macaddr, dev.sll_halen);
 
 	// create raw socket
 
@@ -348,7 +374,7 @@ void ArpPinger::initSocket(Service* service)
 	// bind device to the desired interface
 
 	struct ifreq bif;
-	strcpy(bif.ifr_name, inf.adapter);
+	strcpy(bif.ifr_name, data->iface->adapter);
 
 	if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 	{
@@ -372,7 +398,7 @@ void ArpPinger::initSocket(Service* service)
 	ethPkt->typ = htons(0x0806); // ARP
 
 	memset(ethPkt->dst, 0xFF, sizeof(ethPkt->dst)); // FF:FF:FF:FF:FF:FF is broadcast
-	memcpy(ethPkt->src, inf.macaddr, sizeof(ethPkt->src));
+	memcpy(ethPkt->src, data->iface->macaddr, sizeof(ethPkt->src));
 
 	// then the ARP request
 
@@ -384,11 +410,11 @@ void ArpPinger::initSocket(Service* service)
 	arpPkt->plen = 4;              // IP address is 4 bytes
 	arpPkt->opcode = htons(ARP_OP_REQUEST); // request info
 
-	memcpy(arpPkt->srcmac, inf.macaddr, sizeof(arpPkt->srcmac));
-	memcpy(arpPkt->srcip, &inf.ipaddr,  sizeof(arpPkt->srcip));
+	memcpy(arpPkt->srcmac, data->iface->macaddr, sizeof(arpPkt->srcmac));
+	memcpy(arpPkt->srcip, &data->iface->ipaddr,  sizeof(arpPkt->srcip));
 
 	memset(arpPkt->dstmac, 0xFF, sizeof(arpPkt->dstmac));
-	memcpy(arpPkt->dstip, &addr, sizeof(arpPkt->dstip));
+	memcpy(arpPkt->dstip, &data->ipaddr, sizeof(arpPkt->dstip));
 
 	// send the packet, then clean-up
 
@@ -428,6 +454,9 @@ void ArpPinger::initSocket(Service* service)
 #endif
 
 	delete[] pkt;
+
+	delete data->iface;
+	delete data;
 }
 
 void ArpPinger::sniffReplies(unordered_map<unsigned int, Service*> services)
@@ -437,7 +466,7 @@ void ArpPinger::sniffReplies(unordered_map<unsigned int, Service*> services)
 	pcap_t *pcap;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
-	if ((pcap = pcap_open("rpcap://\\Device\\NPF_{8FF8625C-312F-46C9-BB41-0FA570A68D3C}", 60, PCAP_OPENFLAG_PROMISCUOUS, 100, NULL, errbuf)) == NULL)
+	if ((pcap = pcap_open("rpcap://\\Device\\NPF_{8FF8625C-312F-46C9-BB41-0FA570A68D3C}", 60, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
 	{
 		return;
 	}

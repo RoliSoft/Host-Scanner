@@ -4,15 +4,18 @@
 #include <unordered_map>
 #include <tuple>
 
-#if Windows
-	#include <pcap.h>
+#if Windows
+
+	#include <pcap.h>
+
 #elif Unix
 
 	#include <cstring>
 	#include <ifaddrs.h>
 	#include <sys/ioctl.h>
 	#include <net/if.h>
-	#include <net/ethernet.h>
+	#include <net/ethernet.h>
+
 	// Linux
 	#ifdef AF_PACKET
 		#include <netpacket/packet.h>
@@ -20,8 +23,11 @@
 
 	// BSD
 	#ifdef AF_LINK
+		#include <fcntl.h>
 		#include <net/if_dl.h>
-	#endif
+		#include <net/bpf.h>
+	#endif
+
 #endif
 
 using namespace std;
@@ -180,7 +186,7 @@ vector<Interface> ArpPinger::getInterfaces()
 		if (ad->ifa_addr != nullptr && ad->ifa_addr->sa_family == AF_LINK)
 		{
 			auto sdl = reinterpret_cast<struct sockaddr_dl*>(ad->ifa_addr);
-			macs[ad->ifa_name] = make_tuple(sdl->sdl_index, sdl->sdl_data);
+			macs[ad->ifa_name] = make_tuple(sdl->sdl_index, reinterpret_cast<unsigned char*>(sdl->sdl_data + sdl->sdl_nlen));
 			continue;
 		}
 
@@ -202,7 +208,14 @@ vector<Interface> ArpPinger::getInterfaces()
 
 		inf.ipaddr = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_addr))->sin_addr.s_addr;
 		inf.ipmask = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_netmask))->sin_addr.s_addr;
-		inf.ipgate = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_ifu.ifu_broadaddr))->sin_addr.s_addr;
+		inf.ipgate = (reinterpret_cast<struct sockaddr_in*>(ad->
+#ifdef AF_PACKET
+				ifa_ifu.ifu_broadaddr
+#endif
+#ifdef AF_LINK
+				ifa_broadaddr
+#endif
+			))->sin_addr.s_addr;
 
 		// since only the broadcast address is specified, the gateway address
 		// should be determinable based on the netmask and broadcast address.
@@ -302,7 +315,7 @@ void ArpPinger::initSocket(Service* service)
 		return;
 	}
 
-#elif Unix
+#elif Linux
 
 	// prepare the structures pointing to the interface
 
@@ -330,7 +343,39 @@ void ArpPinger::initSocket(Service* service)
 	// set it to non-blocking
 
 	unsigned long mode = 1;
-	ioctlsocket(sock, FIONBIO, &mode);
+	ioctl(sock, FIONBIO, &mode);
+
+#elif BSD
+
+	// find and open the next available Berkeley Packet Filter device
+
+	int bpf = 0;
+	for (int i = 0; i < 1000; i++)
+	{
+		bpf = open(("/dev/bpf" + to_string(i)).c_str(), O_RDWR);
+
+		if (bpf != -1)
+		{
+			break;
+		}
+	}
+
+	if (bpf < 0)
+	{
+		service->reason = AR_ScanFailed;
+		return;
+	}
+
+	// bind device to the desired interface
+
+	struct ifreq bif;
+	strcpy(bif.ifr_name, inf.adapter);
+
+	if (ioctl(bpf, BIOCSETIF, &bif) > 0)
+	{
+		service->reason = AR_ScanFailed;
+		return;
+	}
 
 #endif
 	
@@ -378,7 +423,7 @@ void ArpPinger::initSocket(Service* service)
 
 	pcap_close(pcap);
 
-#elif Unix
+#elif Linux
 
 	auto res = sendto(sock, pkt, pktLen, 0, reinterpret_cast<struct sockaddr*>(&dev), sizeof(dev));
 
@@ -389,9 +434,20 @@ void ArpPinger::initSocket(Service* service)
 
 	close(sock);
 
+#elif BSD
+
+	auto res = write(bpf, pkt, pktLen);
+
+	if (res <= 0)
+	{
+		service->reason = AR_ScanFailed;
+	}
+
+	close(bpf);
+
 #endif
 
-	delete pkt;
+	delete[] pkt;
 }
 
 void ArpPinger::pollSocket(Service* service, bool last)

@@ -81,7 +81,7 @@ ostream& Format::operator<<(ostream& os, StyleCode code)
 
 #elif Unix
 
-	os << "\e[" << static_cast<int>(code) << "m";
+	os << "\033[" << static_cast<int>(code) << "m";
 
 #endif
 

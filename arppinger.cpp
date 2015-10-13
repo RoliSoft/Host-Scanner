@@ -31,6 +31,8 @@
 		#include <fcntl.h>
 		#include <net/if_dl.h>
 		#include <net/bpf.h>
+
+		#define ETH_P_ARP 0x0806
 	#endif
 
 #endif
@@ -619,14 +621,14 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 		// check if a valid packet has been captured
 
-		if (res < int(sizeof(EthHeader) + sizeof(ArpHeader)))
+		if (res < int(sizeof(struct EthHeader) + sizeof(struct ArpHeader)))
 		{
 			continue;
 		}
 
 		// skip ethernet frame and parse ARP packet
 
-		auto arpPkt = reinterpret_cast<ArpHeader*>(data + sizeof(EthHeader));
+		auto arpPkt = reinterpret_cast<struct ArpHeader*>(data + sizeof(struct EthHeader));
 
 		if (ntohs(arpPkt->opcode) != ARP_OP_REPLY)
 		{
@@ -650,6 +652,172 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 	close(sock);
 
 	delete[] data;
+	delete[] bfcode;
+
+#elif BSD
+
+	// set up filter code for bpf
+	// [see linux one above for comments]
+	
+	auto bfcode = new struct bpf_insn[4];
+	bfcode[0] = BPF_STMT(BPF_LD + BPF_H + BPF_ABS, 12);
+	bfcode[1] = BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, ETH_P_ARP, 0, 1);
+	bfcode[2] = BPF_STMT(BPF_RET + BPF_K, sizeof(struct EthHeader) + sizeof(struct ArpHeader));
+	bfcode[3] = BPF_STMT(BPF_RET + BPF_K, 0);
+
+	// iterate through the interfaces and setup a bpf for all of them
+
+	vector<int> bpfs;
+
+	for (auto& iface : ifaces)
+	{
+		// find and open the next available Berkeley Packet Filter device
+
+		int bpf = 0;
+		for (int i = 0; i < 1000; i++)
+		{
+			bpf = open(("/dev/bpf" + to_string(i)).c_str(), O_RDWR);
+
+			if (bpf != -1)
+			{
+				break;
+			}
+		}
+
+		if (bpf < 0)
+		{
+			continue;
+		}
+
+		// bind device to the desired interface
+
+		struct ifreq bif;
+		strcpy(bif.ifr_name, iface->adapter);
+
+		if (ioctl(bpf, BIOCSETIF, &bif) > 0)
+		{
+			close(bpf);
+			continue;
+		}
+
+		// enable immediate return mode
+
+		int en = 1;
+		ioctl(bpf, BIOCIMMEDIATE, &en);
+
+		// set it to non-blocking
+
+		unsigned long mode = 1;
+		ioctl(bpf, FIONBIO, &mode);
+
+		// attach filter code to instance
+
+		struct bpf_program bfprog;
+		bfprog.bf_insns = bfcode;
+		bfprog.bf_len = 4;
+
+		if (ioctl(bpf, BIOCSETF, &bfprog) < 0)
+		{
+			close(bpf);
+			continue;
+		}
+
+		bpfs.push_back(bpf);
+	}
+
+	if (bpfs.size() == 0)
+	{
+		delete[] bfcode;
+		return;
+	}
+
+	// iterate through the received packets on all interfaces until timeout
+
+	auto res = 0;
+	auto start = chrono::steady_clock::now();
+
+	while (chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < static_cast<long long>(timeout))
+	{
+		for (auto& bpf : bpfs)
+		{
+			// request buffer length
+
+			int blen = 1;
+
+			if (ioctl(bpf, BIOCGBLEN, &blen) == -1)
+			{
+				continue;
+			}
+
+			// allocate buffer and capture packets
+
+			auto data = new unsigned char[blen];
+
+			res = read(bpf, data, blen);
+
+			// check if read was successful
+
+			if (res <= 0)
+			{
+				delete[] data;
+				continue;
+			}
+
+			// iterate through captured packets
+
+			auto pkt = reinterpret_cast<unsigned char*>(data);
+
+			while (pkt < data + res)
+			{
+				// extract packet
+
+				auto bh = reinterpret_cast<struct bpf_hdr*>(pkt);
+
+				// check if a valid packet has been captured
+
+				if (bh->bh_caplen < int(sizeof(struct EthHeader) + sizeof(struct ArpHeader)))
+				{
+					pkt += BPF_WORDALIGN(bh->bh_hdrlen + bh->bh_caplen);
+					continue;
+				}
+
+				// skip ethernet frame and parse ARP packet
+
+				auto arpPkt = reinterpret_cast<struct ArpHeader*>(pkt + bh->bh_hdrlen + sizeof(struct EthHeader));
+
+				if (ntohs(arpPkt->opcode) != ARP_OP_REPLY)
+				{
+					pkt += BPF_WORDALIGN(bh->bh_hdrlen + bh->bh_caplen);
+					continue;
+				}
+
+				// when reply packet is found, mark its service object as alive
+
+				auto it = services.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
+
+				if (it != services.end())
+				{
+					auto serv = (*it).second;
+					serv->alive = true;
+					serv->reason = AR_ReplyReceived;
+				}
+
+				// advance to next packet
+
+				pkt += BPF_WORDALIGN(bh->bh_hdrlen + bh->bh_caplen);
+			}
+
+			delete[] data;
+		}
+	}
+
+	// clean-up
+
+	for (auto& bpf : bpfs)
+	{
+		close(bpf);
+	}
+
 	delete[] bfcode;
 
 #endif

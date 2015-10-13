@@ -3,6 +3,7 @@
 #include "tcpscanner.h"
 #include "udpscanner.h"
 #include "icmppinger.h"
+#include "arppinger.h"
 #include "nmapscanner.h"
 
 PortScanner* PortScannerFactory::Get(IPPROTO protocol, bool external)
@@ -23,6 +24,9 @@ PortScanner* PortScannerFactory::Get(IPPROTO protocol, bool external)
 	case IPPROTO_ICMP:
 	case IPPROTO_ICMPV6:
 		return new IcmpPinger();
+
+	case IPPROTO_NONE:
+		return new ArpPinger();
 
 	default:
 		return nullptr;

@@ -5,6 +5,7 @@
 #include "tcpscanner.h"
 #include "udpscanner.h"
 #include "icmppinger.h"
+#include "arppinger.h"
 #include "nmapscanner.h"
 #include <boost/test/unit_test.hpp>
 
@@ -64,6 +65,10 @@ BOOST_AUTO_TEST_CASE(PortScanFactory)
 	auto udp = PortScannerFactory::Get(IPPROTO_UDP);
 	BOOST_TEST_CHECK((typeid(*udp) == typeid(UdpScanner)), "Factory should have spawned UdpScanner for IPPROTO_UDP.");
 	delete udp;
+
+	auto arp = PortScannerFactory::Get(IPPROTO_NONE);
+	BOOST_TEST_CHECK((typeid(*arp) == typeid(ArpPinger)), "Factory should have spawned ArpPinger for IPPROTO_NONE.");
+	delete arp;
 
 	auto icmp = PortScannerFactory::Get(IPPROTO_ICMP);
 	BOOST_TEST_CHECK((typeid(*icmp) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMP.");
@@ -208,6 +213,28 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 	
 	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "2a03.* reason should be ReplyReceived.");
 	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0100.* reason should either be TimedOut or IcmpUnreachable.");
+
+	freeServices(servs);
+}
+
+BOOST_AUTO_TEST_CASE(ArpPing)
+{
+	Services servs = {
+		new Service("192.168.1.1", 0, IPPROTO_NONE),
+		new Service("192.168.1.2", 0, IPPROTO_NONE),
+		new Service("178.62.249.168", 0, IPPROTO_NONE),
+	};
+
+	ArpPinger scan;
+	scan.Scan(&servs);
+
+	BOOST_TEST_CHECK( servs[0]->alive, "*.1 should answer.");
+	BOOST_TEST_CHECK(!servs[1]->alive, "*.2 should not answer.");
+	BOOST_TEST_CHECK(!servs[2]->alive, "178.* should not answer.");
+
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "*.1 reason should be ReplyReceived.");
+	BOOST_TEST_CHECK(servs[1]->reason == AR_TimedOut, "*.2 reason should be TimedOut.");
+	BOOST_TEST_CHECK(servs[2]->reason == AR_ScanFailed, "178.* reason should be ScanFailed.");
 
 	freeServices(servs);
 }

@@ -61,6 +61,11 @@ void ArpPinger::Scan(Service* service)
 	sendRequest(service);
 
 	thd.join();
+
+	if (service->reason == AR_InProgress)
+	{
+		service->reason = AR_TimedOut;
+	}
 }
 
 void ArpPinger::Scan(Services* services)
@@ -94,6 +99,14 @@ void ArpPinger::Scan(Services* services)
 	}
 
 	thd.join();
+
+	for (auto service : *services)
+	{
+		if (service->reason == AR_InProgress)
+		{
+			service->reason = AR_TimedOut;
+		}
+	}
 }
 
 vector<Interface*> ArpPinger::getInterfaces()

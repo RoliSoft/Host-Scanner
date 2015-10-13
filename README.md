@@ -10,17 +10,26 @@ The purpose of this project is to discover hosts on a network and then port scan
 * UDP scanner
   * Uses a list of known port numbers and sends a specifically crafted payload in order to try and get an answer from the server, if there are any listening.
 
+* ICMP pinger
+  * Support for ICMP Echo Request packets (also known as "standard ping") to determine if a host is alive.
+
+* ARP pinger
+  * Support for ARP Request packets to map alive hosts on a local network.
+
 * External scanners
   * Ability to use external tools for all the scanning needs, instead of the built-in scanners. Currently Nmap support is implemented, more to follow if needed.
+
+* Unit tests
+  * All features are covered by unit tests which are run on three platforms in order to ensure utmost stability and portability.
+
+* Portability
+  * Features are implemented (when a standardized API is not available) using raw sockets on Linux, WinPcap on Windows, and Berkeley Packet Filter on BSD / OS X.
 
 ## Planned features
 
 * Network mapping
-  * LAN
-    * ARP requests for IPv4
-    * Neighbor Solicitation for IPv6
-  * WAN
-    * Try host discovery methods for the whole range
+  * ~~ARP requests for IPv4~~ ✓
+  * Neighbor Solicitation for IPv6
 
 * Host discovery
   * Send standard ICMP ping
@@ -60,6 +69,7 @@ Tested on:
  * Debian Sid / gcc 5.2.1, clang 3.8.0
  * Kali Linux 2 / gcc 4.9.2, clang 3.5.0
  * FreeBSD 11 / clang 3.7.0
+ * OS X 10.11 / AppleClang 7.0.0
 
 Other platforms are not supported at this time.
 

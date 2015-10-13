@@ -176,11 +176,21 @@ public:
 	void Scan(Services* services) override;
 
 	/*!
+	 * Creates a new instance of this type.
+	 */
+	ArpPinger();
+
+	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~ArpPinger() override;
 
 private:
+
+	/*!
+	 * List of available interfaces and their properties.
+	 */
+	std::vector<Interface*> interfaces;
 
 	/*!
 	 * Makes the required preparations in order to determine whether this
@@ -207,11 +217,9 @@ private:
 	void sniffReplies(std::unordered_set<Interface*> ifaces, std::unordered_map<unsigned int, Service*> services);
 
 	/*!
-	 * Gets a list of active interfaces on the current machine.
-	 *
-	 * \return List of interfaces.
+	 * Populates the list of active interfaces on the current machine.
 	 */
-	std::vector<Interface*> getInterfaces();
+	void loadInterfaces();
 
 	/*!
 	 * Determines whether the specified IP address is on the specified interface.

@@ -39,6 +39,22 @@
 
 using namespace std;
 
+ArpPinger::ArpPinger()
+	: interfaces(vector<Interface*>())
+{
+}
+
+ArpPinger::~ArpPinger()
+{
+	if (interfaces.size() != 0)
+	{
+		for (auto& iface : interfaces)
+		{
+			delete iface;
+		}
+	}
+}
+
 void ArpPinger::Scan(Service* service)
 {
 	prepService(service);
@@ -109,13 +125,11 @@ void ArpPinger::Scan(Services* services)
 	}
 }
 
-vector<Interface*> ArpPinger::getInterfaces()
+void ArpPinger::loadInterfaces()
 {
-	static vector<Interface*> ifs;
-
-	if (ifs.size() != 0)
+	if (interfaces.size() != 0)
 	{
-		return ifs;
+		return;
 	}
 
 #if Windows
@@ -161,7 +175,7 @@ vector<Interface*> ArpPinger::getInterfaces()
 		inet_pton(AF_INET, ad->IpAddressList.IpMask.String,    &inf->ipmask);
 		inet_pton(AF_INET, ad->GatewayList.IpAddress.String,   &inf->ipgate);
 
-		ifs.push_back(inf);
+		interfaces.push_back(inf);
 	}
 
 	// clean-up
@@ -239,12 +253,12 @@ vector<Interface*> ArpPinger::getInterfaces()
 
 		inf->ipgate = htonl(ntohl(inf->ipgate) & ntohl(inf->ipmask));
 
-		ifs.push_back(inf);
+		interfaces.push_back(inf);
 	}
 
 	// copy over temporarily stored interface numbers and MAC addresses
 
-	for (auto& inf : ifs)
+	for (auto& inf : interfaces)
 	{
 		auto it = macs.find(inf->adapter);
 
@@ -263,8 +277,6 @@ vector<Interface*> ArpPinger::getInterfaces()
 	freeifaddrs(ads);
 
 #endif
-
-	return ifs;
 }
 
 bool ArpPinger::isIpOnIface(unsigned int ip, Interface* inf)
@@ -287,7 +299,10 @@ void ArpPinger::prepService(Service* service)
 {
 	// get interfaces
 
-	auto ifs = getInterfaces();
+	if (interfaces.size() == 0)
+	{
+		loadInterfaces();
+	}
 
 	// parse address
 	
@@ -298,7 +313,7 @@ void ArpPinger::prepService(Service* service)
 
 	Interface* iface = nullptr;
 
-	for (auto& inf : ifs)
+	for (auto& inf : interfaces)
 	{
 		if (isIpOnIface(addr, inf))
 		{
@@ -834,8 +849,4 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 	delete[] bfcode;
 
 #endif
-}
-
-ArpPinger::~ArpPinger()
-{
 }

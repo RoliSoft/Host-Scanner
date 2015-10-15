@@ -1,8 +1,8 @@
 # Host Scanner
 
-The purpose of this project is to discover hosts on a network and then port scan them.
+The purpose of this project is to discover hosts on a network and gather information about them for analysis.
 
-## Implemented features
+## Features
 
 * TCP scanner
   * A high-performance TCP scanner which initiates the three-way handshake by multiplexing non-blocking sockets and grabs the service banner.
@@ -25,10 +25,9 @@ The purpose of this project is to discover hosts on a network and then port scan
 * Portability
   * Features are implemented (when a standardized API is not available) using raw sockets on Linux, WinPcap on Windows, and Berkeley Packet Filter on BSD / OS X.
 
-## Planned features
+### Planned features
 
 * Network mapping
-  * ~~ARP requests for IPv4~~ ✓
   * Neighbor Solicitation for IPv6
 
 * Host discovery
@@ -37,22 +36,24 @@ The purpose of this project is to discover hosts on a network and then port scan
   * Send UDP packet to port 53, if response or ICMP "port unreachable", host is alive
   * _Otherwise assume host is offline or heavily firewalled_
 
-* ~~Port scanning~~ ✓
-  * ~~Send TCP SYN to all or popular ports, get service banner on ACK~~ ✓
-  * ~~Send crafted UDP packets to known ports~~ ✓
+## Building
 
-* ~~External tools~~ ✓
-  * ~~Integrate with external tools for failover/preference~~ ✓
-    * ~~nmap~~ ✓
+To compile and run the project, you must first install the dependencies, which can be done with:
 
-* Reporting
-  * Results will be forwarded to agent for further processing
+ * Debian/Ubuntu/Kali:
 
-## How to run
+       apt-get install build-essential cmake libboost-dev libboost-test-dev libboost-program-options-dev
+ * RHEL/CentOS/Fedora:
 
-To compile and run the project, you must first install the dependencies, which on Debian (and on its derivatives) can be done with:
+       yum groupinstall "Development Tools" && yum install cmake boost-devel
 
-    apt-get install build-essential cmake libboost-dev libboost-test-dev libboost-program-options-dev
+ * FreeBSD:
+
+       pkg install cmake boost-libs
+
+ * Mac OS X: (with [Homebrew](http://brew.sh/))
+
+       brew install cmake boost
 
 After the dependencies have been installed, you can check out the repository and compile it with the following commands:
 
@@ -63,15 +64,51 @@ After the dependencies have been installed, you can check out the repository and
 
 If the compilation was successful, you can run it with the `./HostScanner` command. Tests are also available, you may run them through `make test` or directly, by executing `./TestScanner`.
 
-Tested on:
+## Portability
 
- * Windows 10 / Visual Studio 2015
- * Debian Sid / gcc 5.2.1, clang 3.8.0
- * Kali Linux 2 / gcc 4.9.2, clang 3.5.0
- * FreeBSD 11 / clang 3.7.0
- * OS X 10.11 / AppleClang 7.0.0
+You'll need a fairly new compiler, as C++14 features are used in the code. As for platforms, the application is compiled and unit-tested periodically on the following:
+
+ * Windows
+   * Windows 10 / Visual Studio 2015
+
+ * Linux
+   * Debian Sid / gcc 5.2.1, clang 3.8.0
+   * Kali Linux 2 / gcc 4.9.2, clang 3.5.0
+ 
+ * BSD/Darwin
+   * FreeBSD 11 / clang 3.7.0
+   * OS X 10.11 / AppleClang 7.0.0
 
 Other platforms are not supported at this time.
+
+## Permissions
+
+Some features of the application require elevated privileges in order to run:
+
+* `IcmpPinger` uses raw sockets in order to send and receive ICMP packets.
+  * *Windows*: Administrator privileges are required.
+  * *Linux*: root user _or_ `CAP_NET_RAW` capability is required.
+  * *BSD / OS X*: root user is required.
+
+* `ArpPinger` crafts, sends and listens for raw Ethernet frames.
+  * *Windows*: [WinPcap](http://www.winpcap.org/install/default.htm) driver is required.
+  * *Linux*: root user _or_ `CAP_NET_RAW` capability is required.
+  * *BSD / OS X*: root user _or_ read-write access to `/dev/bpf*` is required.
+
+### Granting access
+
+On Unix and Unix-like operating systems, if you wish to allow users without root privileges to run the application, you can do so by running:
+
+    chmod +s HostScanner
+    chown root:root HostScanner
+
+This will activate the `SUID` bit, which will allow the application to escalate to root when run by an unprivileged user.
+
+If you do not wish to run the application as root, but wish to use the features that require it, on Linux, you have the option of using the capabilities system:
+
+    setcap cap_net_raw+eip HostScanner
+
+This will specifically allow the use of raw sockets for this application when run by unprivileged users.
 
 ## Known issues
 

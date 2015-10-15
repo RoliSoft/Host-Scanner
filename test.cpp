@@ -1,4 +1,5 @@
 #define BOOST_TEST_MODULE TestScanner
+
 #include "stdafx.h"
 #include "service.h"
 #include "portscannerfactory.h"
@@ -20,6 +21,7 @@
 #endif
 
 using namespace std;
+using namespace boost;
 
 /*
 	WARNING:
@@ -37,6 +39,8 @@ struct TestSetup
 {
 	TestSetup()
 	{
+		unit_test::unit_test_log_t::instance().set_threshold_level(unit_test::log_test_units);
+
 #if Windows
 		WSADATA wsaData;
 		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)

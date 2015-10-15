@@ -41,19 +41,20 @@ The purpose of this project is to discover hosts on a network and gather informa
 To compile and run the project, you must first install the dependencies, which can be done with:
 
  * Debian/Ubuntu/Kali:
+ 
+        apt-get install build-essential cmake libboost-dev libboost-test-dev libboost-program-options-dev
 
-       apt-get install build-essential cmake libboost-dev libboost-test-dev libboost-program-options-dev
  * RHEL/CentOS/Fedora:
 
-       yum groupinstall "Development Tools" && yum install cmake boost-devel
+        yum groupinstall "Development Tools" && yum install cmake boost-devel
 
  * FreeBSD:
 
-       pkg install cmake boost-libs
+        pkg install cmake boost-libs
 
  * Mac OS X: (with [Homebrew](http://brew.sh/))
 
-       brew install cmake boost
+        brew install cmake boost
 
 After the dependencies have been installed, you can check out the repository and compile it with the following commands:
 

@@ -50,6 +50,16 @@ public:
 	unsigned long timeout = 1000;
 
 	/*!
+	 * Indicates whether to wait for and grab service banners.
+	 */
+	bool grabBanner = true;
+
+	/*!
+	 * Indicates whether to run protocol-tailored scripts.
+	 */
+	bool runScripts = true;
+
+	/*!
 	 * Scans a service to determine aliveness.
 	 * 
 	 * \param service Service.

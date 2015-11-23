@@ -164,12 +164,15 @@ void UdpScanner::pollSocket(Service* service, bool last)
 	{
 		service->reason = AR_ReplyReceived;
 
-		// save service banner
+		if (grabBanner)
+		{
+			// save service banner
 
-		service->banlen = res;
-		service->banner = new char[res];
+			service->banlen = res;
+			service->banner = new char[res];
 
-		memcpy(service->banner, buf, res);
+			memcpy(service->banner, buf, res);
+		}
 	}
 	else
 	{

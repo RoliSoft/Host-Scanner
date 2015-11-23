@@ -179,9 +179,17 @@ void TcpScanner::pollSocket(Service* service, bool last)
 
 	if (isOpen)
 	{
-		service->reason = AR_InProgress2;
-		readBanner(service, last);
-		return;
+		if (grabBanner)
+		{
+			service->reason = AR_InProgress2;
+			readBanner(service, last);
+			return;
+		}
+		else
+		{
+			service->reason = AR_ReplyReceived;
+			shutdown(data->socket, SD_BOTH);
+		}
 	}
 	else
 	{

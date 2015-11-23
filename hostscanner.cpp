@@ -37,26 +37,23 @@ void HostScanner::Scan(Services* services)
 
 	// if there are addresses which have not replied, start TCP scan
 
-	vector<unsigned short> commonTcp = { 80, 443, 22, 25, 445, 139 }; // http, https, ssh, smtp, ms-ds, netbios
-
-	Services servsTcp;
-	unordered_map<char*, Service*> servsMap;
-
-	for (auto serv : *services | filtered(isntAlive))
+	if (useTcp)
 	{
-		if (useTcp)
+		vector<unsigned short> commonTcp = { 80, 443, 22, 25, 445, 139 }; // http, https, ssh, smtp, ms-ds, netbios
+
+		Services servsTcp;
+		unordered_map<char*, Service*> servsMap;
+
+		for (auto serv : *services | filtered(isntAlive))
 		{
 			for (auto port : commonTcp)
 			{
 				servsTcp.push_back(new Service(serv->address, port, IPPROTO_TCP));
 			}
+
+			servsMap[serv->address] = serv;
 		}
 
-		servsMap[serv->address] = serv;
-	}
-
-	if (useTcp)
-	{
 		TcpScanner tcp;
 		tcp.grabBanner = false;
 		tcp.runScripts = false;
@@ -84,6 +81,7 @@ void HostScanner::Scan(Services* services)
 		vector<unsigned short> commonUdp = { 161, 137 }; // snmp, netbios
 
 		Services servsUdp;
+		unordered_map<char*, Service*> servsMap;
 
 		for (auto serv : *services | filtered(isntAlive))
 		{
@@ -91,6 +89,8 @@ void HostScanner::Scan(Services* services)
 			{
 				servsUdp.push_back(new Service(serv->address, port, IPPROTO_UDP));
 			}
+
+			servsMap[serv->address] = serv;
 		}
 
 		UdpScanner udp;

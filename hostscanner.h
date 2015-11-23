@@ -53,4 +53,38 @@ public:
 	 */
 	~HostScanner() override;
 
+private:
+	
+	/*!
+	 * Creates a list of IP addresses based on the specified CIDR notation.
+	 * 
+	 * \param address IP address.
+	 * \param cidr CIDR value.
+	 */
+	static void createCidrList(char* address, int cidr);
+	
+	/*!
+	 * Creates a list of IP addresses starting from address specified by `start`,
+	 * and finishing in address specified by `finish`, inclusively.
+	 * 
+	 * \param start IP address to start with.
+	 * \param finish IP address to end with.
+	 */
+	static void createRangeList(char* start, char* finish);
+	
+	/*!
+	 * Creates a bitmask from the specified value which will be used to generate
+	 * an IP address list with a starting address and this being the CIDR value.
+	 * 
+	 * \param cidr CIDR value to create bitmask for.
+	 */
+	static unsigned createBitmask(int cidr);
+	
+	/*!
+	 * Transforms the specified IP address from unsigned integer form to its string notation.
+	 * 
+	 * \param ip Numerical form of the IP address.
+	 */
+	static char* uintToIp(unsigned ip);
+
 };

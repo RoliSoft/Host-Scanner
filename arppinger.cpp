@@ -180,7 +180,7 @@ void ArpPinger::loadInterfaces()
 
 	// clean-up
 
-	delete ads;
+	delete[] ads;
 
 #elif Unix
 

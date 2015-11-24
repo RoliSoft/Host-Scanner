@@ -33,3 +33,13 @@ std::string getWorkDir();
  * \return Rest of the path, top-level file or directory.
  */
 std::tuple<std::string, std::string> splitPath(const std::string& path);
+
+/*!
+ * Fetches the content behind the specified URL.
+ *
+ * \param url Location to download.
+ *
+ * \return Tuple containing two strings:
+ *         the downloaded string, if any, and the error message, if any.
+ */
+std::tuple<std::string, std::string> getURL(const std::string& url);

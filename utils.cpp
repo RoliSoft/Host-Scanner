@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <string>
+#include <curl/curl.h>
 
 #if Unix
 	#include <limits.h>
@@ -73,4 +74,42 @@ tuple<string, string> splitPath(const string& path)
 	}
 
 	return make_tuple(path.substr(0, idx), path.substr(idx + 1));
+}
+
+tuple<string, string> getURL(const string& url)
+{
+	CURL *curl;
+	CURLcode res;
+
+	curl = curl_easy_init();
+
+	if (!curl)
+	{
+		return make_tuple("", "failed to initialize curl");
+	}
+
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+
+	string buffer, error;
+
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, static_cast<size_t(*)(char*, size_t, size_t, void*)>([](char *ptr, size_t size, size_t nmemb, void *userdata)
+		{
+			auto blocks = size * nmemb;
+			auto buffer = reinterpret_cast<string*>(userdata);
+			buffer->append(ptr, blocks);
+			return blocks;
+		}));
+
+	res = curl_easy_perform(curl);
+
+	if (res != CURLE_OK)
+	{
+		error = curl_easy_strerror(res);
+	}
+
+	curl_easy_cleanup(curl);
+
+	return make_tuple(buffer, error);
 }

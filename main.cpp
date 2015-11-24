@@ -2,9 +2,11 @@
 #include <string>
 #include <tuple>
 #include <boost/program_options.hpp>
+#include <curl/curl.h>
 #include "stdafx.h"
 #include "utils.h"
 #include "format.h"
+#include "hostscanner.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -19,6 +21,8 @@ int main()
 		return EXIT_FAILURE;
 	}
 #endif
+
+	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	Format::Init();
 
@@ -40,6 +44,8 @@ int main()
 	cout << Format::Default << endl;
 	cout << "usage: " << app << " [args]" << endl;
 	cout << desc << endl;
+
+	curl_global_cleanup();
 
 #if Windows
 	WSACleanup();

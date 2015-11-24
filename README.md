@@ -1,6 +1,6 @@
 # Host Scanner
 
-The purpose of this project is to discover hosts on a network and gather information about them for analysis.
+The purpose of this project is to discover hosts on a network and gather information about them for later analysis.
 
 ## Features
 
@@ -23,7 +23,7 @@ The purpose of this project is to discover hosts on a network and gather informa
   * Ability to use external tools for all the scanning needs, instead of the built-in scanners. Currently Nmap support is implemented, more to follow if needed.
 
 * Online sources
-  * Passive reconnaissance by fetching already available data from relevant services intended for security researchers. Currently Shodan and Censys are supported.
+  * Support for passive reconnaissance by fetching already available data from relevant services intended for security researchers. Currently Shodan and Censys are supported.
 
 * Unit tests
   * All features are covered by unit tests which are run on three platforms in order to ensure utmost stability and portability.
@@ -114,3 +114,13 @@ This will specifically allow the use of raw sockets for this application when ru
 ## Known issues
 
 * Neither the `TcpScanner` nor the `UdpScanner` classes receive the `WSAECONNREFUSED` (`ECONNREFUSED` on Linux) error on Windows. There is little documentation on non-blocking sockets and this particular error. The [783052b](https://github.com/RoliSoft/Host-Scanner/commit/783052b49d39c3f2833e93c9bc183088eaec8797) commit tried using native `WSA*()` calls, as the documentation says `WSAECONNREFUSED` would be signalled on `FD_CONNECT`, but that is not happening, `WSAWaitForMultipleEvents()` returns either `WSA_WAIT_EVENT_0` or the undocumented `258` value, while `WSAGetLastError()` either returns `0` or `WSAEWOULDBLOCK`. The result of this issue is that on Windows, connections to non-listening ports will only be marked as dead after the timeout period has elapsed, while on Linux, the scan returns as soon as the ICMP packet is received.
+
+## Licensing
+
+Copyright (c) `2015` `RoliSoft <root@rolisoft.net>`
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose.
+
+For a more information regarding the terms and conditions of this software, please read the full legal text of the GNU Affero General Public License version 3, a copy of which is available in the [LICENSE.md](LICENSE.md) file. Otherwise, see &lt;<http://www.gnu.org/licenses/>&gt;.
+
+Dual-licensing may be available upon request, depending on your purpose. For any inquiries, feel free to contact me at the email address listed above.

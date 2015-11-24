@@ -16,8 +16,14 @@ The purpose of this project is to discover hosts on a network and gather informa
 * ARP pinger
   * Support for ARP Request packets to map alive hosts on a local network.
 
+* Host discovery
+  * Discovers hosts behind a given netblock by sending ICMP Echo Request packets, failing that sends TCP SYN packets to most common open ports, failing that as well will result in sending specifically-crafted UDP packets to most common UDP-based services.
+
 * External scanners
   * Ability to use external tools for all the scanning needs, instead of the built-in scanners. Currently Nmap support is implemented, more to follow if needed.
+
+* Online sources
+  * Passive reconnaissance by fetching already available data from relevant services intended for security researchers. Currently Shodan and Censys are supported.
 
 * Unit tests
   * All features are covered by unit tests which are run on three platforms in order to ensure utmost stability and portability.
@@ -29,12 +35,6 @@ The purpose of this project is to discover hosts on a network and gather informa
 
 * Network mapping
   * Neighbor Solicitation for IPv6
-
-* Host discovery
-  * Send standard ICMP ping
-  * Send TCP SYN to port 80, if ACK or RST received, host is alive
-  * Send UDP packet to port 53, if response or ICMP "port unreachable", host is alive
-  * _Otherwise assume host is offline or heavily firewalled_
 
 ## Building
 

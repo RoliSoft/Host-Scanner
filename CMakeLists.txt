@@ -21,6 +21,9 @@ set(Boost_USE_MULTITHREADED ON)
 find_package(Boost 1.55.0 COMPONENTS program_options unit_test_framework REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
+find_package(CURL REQUIRED)
+include_directories(${CURL_INCLUDE_DIR})
+
 file(GLOB HEADERS "*.h")
 file(GLOB SOURCES "*.cpp")
 
@@ -30,8 +33,19 @@ list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 add_executable(HostScanner ${HEADERS} ${SOURCES} main.cpp)
 add_executable(TestScanner ${HEADERS} ${SOURCES} test.cpp)
 
-target_link_libraries(HostScanner ${WINPCAP_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(TestScanner ${WINPCAP_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	file(GLOB CURL_DLLS ${CURL_INCLUDE_DIR}/../bin/*.dll)
+	
+	foreach(CURL_DLL ${CURL_DLLS})
+		add_custom_command(TARGET HostScanner POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CURL_DLL}" $<TARGET_FILE_DIR:HostScanner>)
+		add_custom_command(TARGET TestScanner POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CURL_DLL}" $<TARGET_FILE_DIR:TestScanner>)
+	endforeach()
+endif()
+
+target_link_libraries(HostScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(TestScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 enable_testing()
 add_test(ScannerTest TestScanner)

@@ -1,6 +1,5 @@
 #include "utils.h"
 #include <string>
-#include <curl/curl.h>
 
 #if Unix
 	#include <limits.h>
@@ -76,7 +75,7 @@ tuple<string, string> splitPath(const string& path)
 	return make_tuple(path.substr(0, idx), path.substr(idx + 1));
 }
 
-tuple<string, string> getURL(const string& url)
+tuple<string, string> getURL(const string& url, const function<void(CURL*)>& opts)
 {
 	CURL *curl;
 	CURLcode res;
@@ -101,6 +100,11 @@ tuple<string, string> getURL(const string& url)
 			buffer->append(ptr, blocks);
 			return blocks;
 		}));
+
+	if (opts != nullptr)
+	{
+		opts(curl);
+	}
 
 	res = curl_easy_perform(curl);
 

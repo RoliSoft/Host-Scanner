@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include <string>
 #include <tuple>
+#include <functional>
+#include <curl/curl.h>
 
 /*!
  * Executes a command and returns its output.
@@ -38,8 +40,12 @@ std::tuple<std::string, std::string> splitPath(const std::string& path);
  * Fetches the content behind the specified URL.
  *
  * \param url Location to download.
+ * \param opts Optional callback function called right after setting up curl,
+ *             and before performing the request. Within this function, you may
+ *             manipulate any aspect of the request by calling `curl_easy_setopt`
+ *             on the passed `CURL` pointer.
  *
  * \return Tuple containing two strings:
  *         the downloaded string, if any, and the error message, if any.
  */
-std::tuple<std::string, std::string> getURL(const std::string& url);
+std::tuple<std::string, std::string> getURL(const std::string& url, const std::function<void(CURL*)>& opts = nullptr);

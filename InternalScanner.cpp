@@ -10,27 +10,50 @@
 using namespace std;
 using namespace boost;
 
-void InternalScanner::Scan(Service* service)
+void InternalScanner::Scan(Host* host)
 {
-	Services services = { service };
-	Scan(&services);
+	Hosts hosts = { host };
+	Scan(&hosts);
 }
 
-void InternalScanner::Scan(Services* services)
+void InternalScanner::Scan(Hosts* hosts)
 {
 	using namespace adaptors;
 
-	auto isAlive   = [](Service* serv) { return  serv->alive; };
-	auto isntAlive = [](Service* serv) { return !serv->alive; };
+	auto isAlive   = [](auto* serv) { return  serv->alive; };
+	auto isntAlive = [](auto* serv) { return !serv->alive; };
+
+	unordered_map<char*, Host*> hostMap;
+
+	for (auto host : *hosts | filtered(isntAlive))
+	{
+		hostMap[host->address] = host;
+	}
 
 	// start off by scanning with the ICMP Pinger
 
 	if (useIcmp)
 	{
-		IcmpPinger icmp;
-		icmp.Scan(services);
+		Services servsIcmp;
 
-		if (all_of(services->cbegin(), services->cend(), isAlive))
+		for (auto host : *hosts | filtered(isntAlive))
+		{
+			servsIcmp.push_back(new Service(host->address, 0, IPPROTO_ICMP));
+		}
+
+		IcmpPinger icmp;
+		icmp.Scan(&servsIcmp);
+
+		for (auto servIcmp : servsIcmp | filtered(isAlive))
+		{
+			hostMap[servIcmp->address]->alive  = true;
+			hostMap[servIcmp->address]->reason = servIcmp->reason;
+			hostMap[servIcmp->address]->services->push_back(new Service(*servIcmp));
+		}
+
+		freeServices(servsIcmp);
+
+		if (all_of(hosts->cbegin(), hosts->cend(), isAlive))
 		{
 			return;
 		}
@@ -43,16 +66,13 @@ void InternalScanner::Scan(Services* services)
 		vector<unsigned short> commonTcp = { 80, 443, 22, 25, 445, 139 }; // http, https, ssh, smtp, ms-ds, netbios
 
 		Services servsTcp;
-		unordered_map<char*, Service*> servsMap;
 
-		for (auto serv : *services | filtered(isntAlive))
+		for (auto host : *hosts | filtered(isntAlive))
 		{
 			for (auto port : commonTcp)
 			{
-				servsTcp.push_back(new Service(serv->address, port, IPPROTO_TCP));
+				servsTcp.push_back(new Service(host->address, port, IPPROTO_TCP));
 			}
-
-			servsMap[serv->address] = serv;
 		}
 
 		TcpScanner tcp;
@@ -62,14 +82,14 @@ void InternalScanner::Scan(Services* services)
 
 		for (auto servTcp : servsTcp | filtered(isAlive))
 		{
-			servsMap[servTcp->address]->alive    = true;
-			servsMap[servTcp->address]->reason   = servTcp->reason;
-			servsMap[servTcp->address]->protocol = IPPROTO_TCP;
+			hostMap[servTcp->address]->alive  = true;
+			hostMap[servTcp->address]->reason = servTcp->reason;
+			hostMap[servTcp->address]->services->push_back(new Service(*servTcp));
 		}
 
 		freeServices(servsTcp);
 
-		if (all_of(services->cbegin(), services->cend(), isAlive))
+		if (all_of(hosts->cbegin(), hosts->cend(), isAlive))
 		{
 			return;
 		}
@@ -82,16 +102,13 @@ void InternalScanner::Scan(Services* services)
 		vector<unsigned short> commonUdp = { 161, 137 }; // snmp, netbios
 
 		Services servsUdp;
-		unordered_map<char*, Service*> servsMap;
 
-		for (auto serv : *services | filtered(isntAlive))
+		for (auto host : *hosts | filtered(isntAlive))
 		{
 			for (auto port : commonUdp)
 			{
-				servsUdp.push_back(new Service(serv->address, port, IPPROTO_UDP));
+				servsUdp.push_back(new Service(host->address, port, IPPROTO_UDP));
 			}
-
-			servsMap[serv->address] = serv;
 		}
 
 		UdpScanner udp;
@@ -101,14 +118,14 @@ void InternalScanner::Scan(Services* services)
 
 		for (auto servUdp : servsUdp | filtered(isAlive))
 		{
-			servsMap[servUdp->address]->alive    = true;
-			servsMap[servUdp->address]->reason   = servUdp->reason;
-			servsMap[servUdp->address]->protocol = IPPROTO_UDP;
+			hostMap[servUdp->address]->alive  = true;
+			hostMap[servUdp->address]->reason = servUdp->reason;
+			hostMap[servUdp->address]->services->push_back(new Service(*servUdp));
 		}
 
 		freeServices(servsUdp);
 
-		if (all_of(services->cbegin(), services->cend(), isAlive))
+		if (all_of(hosts->cbegin(), hosts->cend(), isAlive))
 		{
 			return;
 		}
@@ -117,64 +134,4 @@ void InternalScanner::Scan(Services* services)
 
 InternalScanner::~InternalScanner()
 {
-}
-
-void InternalScanner::createCidrList(char* address, int cidr)
-{
-	unsigned int ip, bitmask, gateway, broadcast;
-
-	inet_pton(AF_INET, address, &ip);
-	ip = ntohl(ip);
-
-	bitmask = createBitmask(cidr);
-
-	gateway   = ip &  bitmask;
-	broadcast = ip | ~bitmask;
-
-	for (ip = gateway; ip <= broadcast; ip++)
-	{
-		cout << uintToIp(ip) << endl;
-	}
-}
-
-void InternalScanner::createRangeList(char* start, char* finish)
-{
-	unsigned int ip, low, high;
-
-	inet_pton(AF_INET, start,  &low);
-	inet_pton(AF_INET, finish, &high);
-
-	low  = ntohl(low);
-	high = ntohl(high);
-
-	if (high < low)
-	{
-		swap(low, high);
-	}
-
-	for (ip = low; ip <= high; ip++)
-	{
-		cout << uintToIp(ip) << endl;
-	}
-}
-
-unsigned int InternalScanner::createBitmask(int cidr)
-{
-	cidr = max(0, min(cidr, 32));
-
-	unsigned int bitmask = UINT_MAX;
-
-	for (int i = 0; i < 33 - cidr - 1; i++)
-	{
-		bitmask <<= 1;
-	}
-
-	return bitmask;
-}
-
-char* InternalScanner::uintToIp(unsigned int ip)
-{
-	auto addr = new char[16];
-	snprintf(addr, 16, "%d.%d.%d.%d", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
-	return addr;
 }

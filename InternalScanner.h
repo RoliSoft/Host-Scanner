@@ -1,6 +1,6 @@
 #pragma once
 #include "Stdafx.h"
-#include "ServiceScanner.h"
+#include "HostScanner.h"
 
 /*!
  * Implements a host scanner.
@@ -8,7 +8,7 @@
  * The purpose of this scanner is to scan the specified list of addresses
  * and determine which one is alive.
  */
-class InternalScanner : public ServiceScanner
+class InternalScanner : public HostScanner
 {
 public:
 	
@@ -35,56 +35,22 @@ public:
 	bool useUdp = true;
 
 	/*!
-	 * Scans a host to determine aliveness.
+	 * Scans a host to determine service availability.
 	 * 
-	 * \param service Service.
+	 * \param host Host.
 	 */
-	void Scan(Service* service) override;
+	void Scan(Host* host) override;
 
 	/*!
-	 * Scans a list of hosts to determine aliveness.
+	 * Scans a list of hosts to determine service availability.
 	 * 
-	 * \param services List of services.
+	 * \param hosts List of hosts.
 	 */
-	void Scan(Services* services) override;
+	void Scan(Hosts* hosts) override;
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~InternalScanner() override;
-
-private:
-	
-	/*!
-	 * Creates a list of IP addresses based on the specified CIDR notation.
-	 * 
-	 * \param address IP address.
-	 * \param cidr CIDR value.
-	 */
-	static void createCidrList(char* address, int cidr);
-	
-	/*!
-	 * Creates a list of IP addresses starting from address specified by `start`,
-	 * and finishing in address specified by `finish`, inclusively.
-	 * 
-	 * \param start IP address to start with.
-	 * \param finish IP address to end with.
-	 */
-	static void createRangeList(char* start, char* finish);
-	
-	/*!
-	 * Creates a bitmask from the specified value which will be used to generate
-	 * an IP address list with a starting address and this being the CIDR value.
-	 * 
-	 * \param cidr CIDR value to create bitmask for.
-	 */
-	static unsigned createBitmask(int cidr);
-	
-	/*!
-	 * Transforms the specified IP address from unsigned integer form to its string notation.
-	 * 
-	 * \param ip Numerical form of the IP address.
-	 */
-	static char* uintToIp(unsigned ip);
 
 };

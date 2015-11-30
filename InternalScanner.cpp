@@ -1,4 +1,4 @@
-#include "HostScanner.h"
+#include "InternalScanner.h"
 #include "IcmpPinger.h"
 #include "TcpScanner.h"
 #include "UdpScanner.h"
@@ -10,13 +10,13 @@
 using namespace std;
 using namespace boost;
 
-void HostScanner::Scan(Service* service)
+void InternalScanner::Scan(Service* service)
 {
 	Services services = { service };
 	Scan(&services);
 }
 
-void HostScanner::Scan(Services* services)
+void InternalScanner::Scan(Services* services)
 {
 	using namespace adaptors;
 
@@ -115,11 +115,11 @@ void HostScanner::Scan(Services* services)
 	}
 }
 
-HostScanner::~HostScanner()
+InternalScanner::~InternalScanner()
 {
 }
 
-void HostScanner::createCidrList(char* address, int cidr)
+void InternalScanner::createCidrList(char* address, int cidr)
 {
 	unsigned int ip, bitmask, gateway, broadcast;
 
@@ -137,7 +137,7 @@ void HostScanner::createCidrList(char* address, int cidr)
 	}
 }
 
-void HostScanner::createRangeList(char* start, char* finish)
+void InternalScanner::createRangeList(char* start, char* finish)
 {
 	unsigned int ip, low, high;
 
@@ -158,7 +158,7 @@ void HostScanner::createRangeList(char* start, char* finish)
 	}
 }
 
-unsigned int HostScanner::createBitmask(int cidr)
+unsigned int InternalScanner::createBitmask(int cidr)
 {
 	cidr = max(0, min(cidr, 32));
 
@@ -172,7 +172,7 @@ unsigned int HostScanner::createBitmask(int cidr)
 	return bitmask;
 }
 
-char* HostScanner::uintToIp(unsigned int ip)
+char* InternalScanner::uintToIp(unsigned int ip)
 {
 	auto addr = new char[16];
 	sprintf(addr, "%d.%d.%d.%d", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);

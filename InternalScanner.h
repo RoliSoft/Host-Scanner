@@ -8,7 +8,7 @@
  * The purpose of this scanner is to scan the specified list of addresses
  * and determine which one is alive.
  */
-class HostScanner : public ServiceScanner
+class InternalScanner : public ServiceScanner
 {
 public:
 	
@@ -51,7 +51,7 @@ public:
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
-	~HostScanner() override;
+	~InternalScanner() override;
 
 private:
 	

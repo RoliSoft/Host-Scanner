@@ -1,4 +1,4 @@
-#include "nmapscanner.h"
+#include "NmapScanner.h"
 #include "utils.h"
 #include <iostream>
 #include <string>

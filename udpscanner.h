@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
-#include "stdafx.h"
-#include "portscanner.h"
+#include "Stdafx.h"
+#include "PortScanner.h"
 
 /*!
  * Represents internal scan data for the UDP scanner.

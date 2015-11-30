@@ -1,6 +1,6 @@
 #pragma once
-#include "stdafx.h"
-#include "service.h"
+#include "Stdafx.h"
+#include "Service.h"
 
 /*!
  * Represents a port scanner.

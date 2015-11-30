@@ -1,4 +1,4 @@
-#include "icmppinger.h"
+#include "IcmpPinger.h"
 #include <iostream>
 #include <chrono>
 #include <thread>

@@ -1,4 +1,4 @@
-#include "portscanner.h"
+#include "PortScanner.h"
 #include <iostream>
 
 using namespace std;

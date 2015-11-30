@@ -1,6 +1,6 @@
 #pragma once
-#include "stdafx.h"
-#include "portscanner.h"
+#include "Stdafx.h"
+#include "PortScanner.h"
 
 #define ICMP_ECHO_REQUEST 8
 #define ICMP_ECHO_REPLY   0

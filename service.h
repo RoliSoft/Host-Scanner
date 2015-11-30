@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "stdafx.h"
+#include "Stdafx.h"
 
 /*!
  * List of reasons which caused the host to be determined as it is.

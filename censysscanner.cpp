@@ -1,5 +1,5 @@
-#include "censysscanner.h"
-#include "utils.h"
+#include "CensysScanner.h"
+#include "Utils.h"
 #include <tuple>
 #include <curl/curl.h>
 

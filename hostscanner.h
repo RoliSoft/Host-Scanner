@@ -1,6 +1,6 @@
 #pragma once
-#include "stdafx.h"
-#include "portscanner.h"
+#include "Stdafx.h"
+#include "PortScanner.h"
 
 /*!
  * Implements a host scanner.

@@ -1,6 +1,6 @@
 #pragma once
-#include "stdafx.h"
-#include "portscanner.h"
+#include "Stdafx.h"
+#include "PortScanner.h"
 
 /*
  * Implements the factory pattern for retrieving port scanner instances.

@@ -23,10 +23,10 @@
 #include <tuple>
 #include <boost/program_options.hpp>
 #include <curl/curl.h>
-#include "stdafx.h"
-#include "utils.h"
-#include "format.h"
-#include "hostscanner.h"
+#include "Stdafx.h"
+#include "Utils.h"
+#include "Format.h"
+#include "HostScanner.h"
 
 using namespace std;
 namespace po = boost::program_options;

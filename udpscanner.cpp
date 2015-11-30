@@ -1,5 +1,5 @@
-#include "udpscanner.h"
-#include "utils.h"
+#include "UdpScanner.h"
+#include "Utils.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>

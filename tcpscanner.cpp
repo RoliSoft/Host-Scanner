@@ -1,4 +1,4 @@
-#include "tcpscanner.h"
+#include "TcpScanner.h"
 #include <chrono>
 #include <thread>
 #include <boost/lexical_cast.hpp>

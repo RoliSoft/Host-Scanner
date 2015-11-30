@@ -27,11 +27,11 @@ include_directories(${CURL_INCLUDE_DIR})
 file(GLOB HEADERS "*.h")
 file(GLOB SOURCES "*.cpp")
 
-list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/test.cpp")
-list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Test.cpp")
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp")
 
-add_executable(HostScanner ${HEADERS} ${SOURCES} main.cpp)
-add_executable(TestScanner ${HEADERS} ${SOURCES} test.cpp)
+add_executable(HostScanner ${HEADERS} ${SOURCES} Main.cpp)
+add_executable(TestScanner ${HEADERS} ${SOURCES} Test.cpp)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	file(GLOB CURL_DLLS ${CURL_INCLUDE_DIR}/../bin/*.dll)

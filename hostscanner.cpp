@@ -1,7 +1,7 @@
-#include "hostscanner.h"
-#include "icmppinger.h"
-#include "tcpscanner.h"
-#include "udpscanner.h"
+#include "HostScanner.h"
+#include "IcmpPinger.h"
+#include "TcpScanner.h"
+#include "UdpScanner.h"
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>
 #include <boost/range/adaptor/filtered.hpp>

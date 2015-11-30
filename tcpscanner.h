@@ -1,6 +1,6 @@
 #pragma once
-#include "stdafx.h"
-#include "portscanner.h"
+#include "Stdafx.h"
+#include "PortScanner.h"
 
 /*!
  * Represents internal scan data for the TCP scanner.

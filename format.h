@@ -1,5 +1,5 @@
 #pragma once
-#include "stdafx.h"
+#include "Stdafx.h"
 #include <iostream>
 
 #ifdef Windows

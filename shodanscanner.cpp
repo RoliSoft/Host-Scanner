@@ -1,5 +1,5 @@
-#include "shodanscanner.h"
-#include "utils.h"
+#include "ShodanScanner.h"
+#include "Utils.h"
 
 using namespace std;
 

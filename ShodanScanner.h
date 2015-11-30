@@ -1,6 +1,7 @@
 #pragma once
 #include "Stdafx.h"
 #include "ServiceScanner.h"
+#include <string>
 
 /*!
  * Implements a passive scanner which returns Shodan data.

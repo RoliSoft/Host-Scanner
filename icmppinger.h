@@ -1,6 +1,6 @@
 #pragma once
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 
 #define ICMP_ECHO_REQUEST 8
 #define ICMP_ECHO_REPLY   0
@@ -72,7 +72,7 @@ struct IcmpScanData
 /*!
  * Implements a scanner which sends ICMP pings using raw sockets.
  */
-class IcmpPinger : public PortScanner
+class IcmpPinger : public ServiceScanner
 {
 public:
 	

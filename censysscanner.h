@@ -1,12 +1,12 @@
 #pragma once
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 #include <tuple>
 
 /*!
  * Implements a passive scanner which returns Censys data.
  */
-class CensysScanner : public PortScanner
+class CensysScanner : public ServiceScanner
 {
 public:
 	

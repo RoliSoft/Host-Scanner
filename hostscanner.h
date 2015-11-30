@@ -1,6 +1,6 @@
 #pragma once
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 
 /*!
  * Implements a host scanner.
@@ -8,7 +8,7 @@
  * The purpose of this scanner is to scan the specified list of addresses
  * and determine which one is alive.
  */
-class HostScanner : public PortScanner
+class HostScanner : public ServiceScanner
 {
 public:
 	

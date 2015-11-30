@@ -5,7 +5,7 @@
 /*!
  * Represents a port scanner.
  */
-class PortScanner
+class ServiceScanner
 {
 public:
 
@@ -28,11 +28,11 @@ public:
 	 *
 	 * \param services List of services.
 	 */
-	void DumpResults(Services* services);
+	static void DumpResults(Services* services);
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
-	virtual ~PortScanner();
+	virtual ~ServiceScanner();
 	
 };

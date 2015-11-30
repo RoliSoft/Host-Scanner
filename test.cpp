@@ -22,7 +22,7 @@
 
 #include "Stdafx.h"
 #include "Service.h"
-#include "PortScannerFactory.h"
+#include "ServiceScannerFactory.h"
 #include "TcpScanner.h"
 #include "UdpScanner.h"
 #include "IcmpPinger.h"
@@ -82,27 +82,27 @@ BOOST_GLOBAL_FIXTURE(TestSetup);
 
 BOOST_AUTO_TEST_CASE(PortScanFactory)
 {
-	auto tcp = PortScannerFactory::Get(IPPROTO_TCP);
+	auto tcp = ServiceScannerFactory::Get(IPPROTO_TCP);
 	BOOST_TEST_CHECK((typeid(*tcp) == typeid(TcpScanner)), "Factory should have spawned TcpScanner for IPPROTO_TCP.");
 	delete tcp;
 
-	auto udp = PortScannerFactory::Get(IPPROTO_UDP);
+	auto udp = ServiceScannerFactory::Get(IPPROTO_UDP);
 	BOOST_TEST_CHECK((typeid(*udp) == typeid(UdpScanner)), "Factory should have spawned UdpScanner for IPPROTO_UDP.");
 	delete udp;
 
-	auto arp = PortScannerFactory::Get(IPPROTO_NONE);
+	auto arp = ServiceScannerFactory::Get(IPPROTO_NONE);
 	BOOST_TEST_CHECK((typeid(*arp) == typeid(ArpPinger)), "Factory should have spawned ArpPinger for IPPROTO_NONE.");
 	delete arp;
 
-	auto icmp = PortScannerFactory::Get(IPPROTO_ICMP);
+	auto icmp = ServiceScannerFactory::Get(IPPROTO_ICMP);
 	BOOST_TEST_CHECK((typeid(*icmp) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMP.");
 	delete icmp;
 
-	auto icmp6 = PortScannerFactory::Get(IPPROTO_ICMPV6);
+	auto icmp6 = ServiceScannerFactory::Get(IPPROTO_ICMPV6);
 	BOOST_TEST_CHECK((typeid(*icmp6) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMPV6.");
 	delete icmp6;
 
-	auto nmap = PortScannerFactory::Get(IPPROTO_NONE, true);
+	auto nmap = ServiceScannerFactory::Get(IPPROTO_NONE, true);
 	BOOST_TEST_CHECK((typeid(*nmap) == typeid(NmapScanner)), "Factory should have spawned NmapScanner for <IPPROTO_NONE,external>.");
 	delete nmap;
 }

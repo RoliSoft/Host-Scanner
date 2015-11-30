@@ -1,9 +1,9 @@
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 #include <iostream>
 
 using namespace std;
 
-void PortScanner::DumpResults(Services* services)
+void ServiceScanner::DumpResults(Services* services)
 {
 	for (auto service : *services)
 	{
@@ -41,6 +41,6 @@ void PortScanner::DumpResults(Services* services)
 	}
 }
 
-PortScanner::~PortScanner()
+ServiceScanner::~ServiceScanner()
 {
 }

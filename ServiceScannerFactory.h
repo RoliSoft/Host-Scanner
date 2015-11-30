@@ -1,11 +1,11 @@
 #pragma once
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 
 /*
  * Implements the factory pattern for retrieving port scanner instances.
  */
-class PortScannerFactory
+class ServiceScannerFactory
 {
 public:
 
@@ -15,6 +15,6 @@ public:
 	 * \param protocol IP protocol.
 	 * \param external Whether to use an external scanner.
 	 */
-	static PortScanner* Get(IPPROTO protocol, bool external = false);
+	static ServiceScanner* Get(IPPROTO protocol, bool external = false);
 
 };

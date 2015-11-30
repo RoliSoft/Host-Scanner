@@ -1,6 +1,6 @@
 #pragma once
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 
 /*!
  * Represents internal scan data for the TCP scanner.
@@ -26,7 +26,7 @@ struct TcpScanData
  * This will try to initiate the three-way handshake with all the requested services.
  * It is not a stealthy method, and does not include any trickery to bypass firewalls.
  */
-class TcpScanner : public PortScanner
+class TcpScanner : public ServiceScanner
 {
 public:
 	

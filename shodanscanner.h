@@ -1,11 +1,11 @@
 #pragma once
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 
 /*!
  * Implements a passive scanner which returns Shodan data.
  */
-class ShodanScanner : public PortScanner
+class ShodanScanner : public ServiceScanner
 {
 public:
 	

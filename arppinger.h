@@ -1,6 +1,6 @@
 #pragma once
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
@@ -152,7 +152,7 @@ struct ArpScanData
 /*!
  * Implements a scanner which sends ARP pings using raw sockets.
  */
-class ArpPinger : public PortScanner
+class ArpPinger : public ServiceScanner
 {
 public:
 	

@@ -1,12 +1,12 @@
 #include "Stdafx.h"
-#include "PortScannerFactory.h"
+#include "ServiceScannerFactory.h"
 #include "TcpScanner.h"
 #include "UdpScanner.h"
 #include "IcmpPinger.h"
 #include "ArpPinger.h"
 #include "NmapScanner.h"
 
-PortScanner* PortScannerFactory::Get(IPPROTO protocol, bool external)
+ServiceScanner* ServiceScannerFactory::Get(IPPROTO protocol, bool external)
 {
 	if (external)
 	{

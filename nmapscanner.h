@@ -1,12 +1,12 @@
 #pragma once
 #include <string>
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 
 /*!
  * Provides interoperability with Nmap.
  */
-class NmapScanner : public PortScanner
+class NmapScanner : public ServiceScanner
 {
 public:
 	

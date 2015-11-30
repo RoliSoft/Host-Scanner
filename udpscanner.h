@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include "Stdafx.h"
-#include "PortScanner.h"
+#include "ServiceScanner.h"
 
 /*!
  * Represents internal scan data for the UDP scanner.
@@ -40,7 +40,7 @@ struct Payload
  * This will try to initiate the three-way handshake with all the requested services.
  * It is not a stealthy method, and does not include any trickery to bypass firewalls.
  */
-class UdpScanner : public PortScanner
+class UdpScanner : public ServiceScanner
 {
 public:
 	

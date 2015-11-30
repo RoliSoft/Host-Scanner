@@ -1,12 +1,12 @@
 #pragma once
 #include "Stdafx.h"
-#include "ServiceScanner.h"
+#include "HostScanner.h"
 #include <string>
 
 /*!
  * Implements a passive scanner which returns Shodan data.
  */
-class ShodanScanner : public ServiceScanner
+class ShodanScanner : public HostScanner
 {
 public:
 	
@@ -21,18 +21,18 @@ public:
 	std::string endpoint = "api.shodan.io/shodan";
 
 	/*!
-	 * Scans a service to determine aliveness.
+	 * Scans a host to determine service availability.
 	 * 
-	 * \param service Service.
+	 * \param host Host.
 	 */
-	void Scan(Service* service) override;
+	void Scan(Host* host) override;
 
 	/*!
-	 * Scans a list of services to determine aliveness.
+	 * Scans a list of hosts to determine service availability.
 	 * 
-	 * \param services List of services.
+	 * \param hosts List of hosts.
 	 */
-	void Scan(Services* services) override;
+	void Scan(Hosts* hosts) override;
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
@@ -42,10 +42,10 @@ public:
 private:
 
 	/*!
-	 * Gets the information available on the API for the specified service.
+	 * Gets the information available on the API for the specified host.
 	 *
-	 * \param service Service.
+	 * \param host Host.
 	 */
-	void getHostInfo(Service* service);
+	void getHostInfo(Host* host);
 
 };

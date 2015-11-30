@@ -75,7 +75,7 @@ tuple<string, string> splitPath(const string& path)
 	return make_tuple(path.substr(0, idx), path.substr(idx + 1));
 }
 
-tuple<string, string> getURL(const string& url, const function<void(CURL*)>& opts)
+tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>& opts)
 {
 	CURL *curl;
 	CURLcode res;
@@ -84,7 +84,7 @@ tuple<string, string> getURL(const string& url, const function<void(CURL*)>& opt
 
 	if (!curl)
 	{
-		return make_tuple("", "failed to initialize curl");
+		return make_tuple("", "failed to initialize curl", -1);
 	}
 
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -108,6 +108,9 @@ tuple<string, string> getURL(const string& url, const function<void(CURL*)>& opt
 
 	res = curl_easy_perform(curl);
 
+	long code;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+
 	if (res != CURLE_OK)
 	{
 		error = curl_easy_strerror(res);
@@ -115,5 +118,5 @@ tuple<string, string> getURL(const string& url, const function<void(CURL*)>& opt
 
 	curl_easy_cleanup(curl);
 
-	return make_tuple(buffer, error);
+	return make_tuple(buffer, error, code);
 }

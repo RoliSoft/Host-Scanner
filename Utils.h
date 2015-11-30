@@ -45,7 +45,7 @@ std::tuple<std::string, std::string> splitPath(const std::string& path);
  *             manipulate any aspect of the request by calling `curl_easy_setopt`
  *             on the passed `CURL` pointer.
  *
- * \return Tuple containing two strings:
+ * \return Tuple containing two strings and the response code:
  *         the downloaded string, if any, and the error message, if any.
  */
-std::tuple<std::string, std::string> getURL(const std::string& url, const std::function<void(CURL*)>& opts = nullptr);
+std::tuple<std::string, std::string, int> getURL(const std::string& url, const std::function<void(CURL*)>& opts = nullptr);

@@ -26,7 +26,7 @@
 #include "Stdafx.h"
 #include "Utils.h"
 #include "Format.h"
-#include "HostScanner.h"
+#include "InternalScanner.h"
 
 using namespace std;
 namespace po = boost::program_options;

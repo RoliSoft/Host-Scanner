@@ -20,18 +20,18 @@ Hosts* HostScanner::ScanCidr(char* address, int cidr)
 
 	// generate list of hosts for range
 
-	auto serv = new Hosts();
+	auto hosts = new Hosts();
 
 	for (ip = gateway; ip <= broadcast; ip++)
 	{
-		serv->push_back(new Host(uintToIp(ip)));
+		hosts->push_back(new Host(uintToIp(ip)));
 	}
 
 	// scan generated list
 
-	Scan(serv);
+	Scan(hosts);
 
-	return serv;
+	return hosts;
 }
 
 Hosts* HostScanner::ScanRange(char* start, char* finish)
@@ -53,18 +53,18 @@ Hosts* HostScanner::ScanRange(char* start, char* finish)
 
 	// generate list of hosts for range
 
-	auto serv = new Hosts();
+	auto hosts = new Hosts();
 
 	for (ip = low; ip <= high; ip++)
 	{
-		serv->push_back(new Host(uintToIp(ip)));
+		hosts->push_back(new Host(uintToIp(ip)));
 	}
 
 	// scan generated list
 
-	Scan(serv);
+	Scan(hosts);
 
-	return serv;
+	return hosts;
 }
 
 void HostScanner::DumpResults(Hosts* hosts)

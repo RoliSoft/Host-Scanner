@@ -56,6 +56,6 @@ private:
 	 *
 	 * \return Service banner, if any.
 	 */
-	std::string CensysScanner::findServiceBanner(boost::property_tree::ptree pt);
+	std::string findServiceBanner(boost::property_tree::ptree pt);
 
 };

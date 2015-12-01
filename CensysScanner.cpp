@@ -72,7 +72,7 @@ void CensysScanner::getHostInfo(Host* host)
 
 		for (auto& ptrun : pt)
 		{
-			int port = atoi(ptrun.first.data());
+			unsigned short port = static_cast<unsigned short>(atoi(ptrun.first.data()));
 
 			if (port == 0)
 			{
@@ -175,7 +175,7 @@ string CensysScanner::findServiceBanner(property_tree::ptree pt)
 			}
 		}
 	}
-	catch (boost::exception const& ex)
+	catch (boost::exception const&)
 	{
 	}
 

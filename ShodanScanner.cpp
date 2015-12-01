@@ -77,7 +77,7 @@ void ShodanScanner::getHostInfo(Host* host)
 				continue;
 			}
 
-			int port = atoi(jport.c_str());
+			unsigned short port = static_cast<unsigned short>(atoi(jport.c_str()));
 			IPPROTO proto = IPPROTO_NONE;
 
 			if (jproto == string("tcp"))

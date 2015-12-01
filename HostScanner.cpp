@@ -1,6 +1,7 @@
 #include "HostScanner.h"
 #include "ServiceScanner.h"
 #include <iostream>
+#include <climits>
 
 using namespace std;
 

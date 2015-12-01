@@ -1,19 +1,20 @@
 #pragma once
 #include "Stdafx.h"
-#include "ServiceScanner.h"
-#include <tuple>
+#include "HostScanner.h"
+#include <string>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 /*!
- * Implements a passive scanner which returns Censys data.
- */
-class CensysScanner : public ServiceScanner
+* Implements a passive scanner which returns Censys data.
+*/
+class CensysScanner : public HostScanner
 {
 public:
 	
 	/*!
 	 * API username and password to use for the requests.
 	 */
-	std::tuple<std::string, std::string> auth;
+	std::string auth;
 
 	/*!
 	 * API endpoint location.
@@ -21,18 +22,18 @@ public:
 	std::string endpoint = "censys.io/api/v1";
 
 	/*!
-	 * Scans a service to determine aliveness.
+	 * Scans a host to determine service availability.
 	 * 
-	 * \param service Service.
+	 * \param host Host.
 	 */
-	void Scan(Service* service) override;
+	void Scan(Host* host) override;
 
 	/*!
-	 * Scans a list of services to determine aliveness.
+	 * Scans a list of hosts to determine service availability.
 	 * 
-	 * \param services List of services.
+	 * \param hosts List of hosts.
 	 */
-	void Scan(Services* services) override;
+	void Scan(Hosts* hosts) override;
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
@@ -42,10 +43,19 @@ public:
 private:
 
 	/*!
-	 * Gets the information available on the API for the specified service.
+	 * Gets the information available on the API for the specified host.
 	 *
-	 * \param service Service.
+	 * \param host Host.
 	 */
-	void getHostInfo(Service* service);
+	void getHostInfo(Host* host);
+
+	/*!
+	 * Traverses the supplied property tree and tries to find a relevant service banner.
+	 *
+	 * \param pt Property tree to traverse.
+	 *
+	 * \return Service banner, if any.
+	 */
+	std::string CensysScanner::findServiceBanner(boost::property_tree::ptree pt);
 
 };

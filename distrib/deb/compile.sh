@@ -1,11 +1,13 @@
 #!/bin/bash
 
 shopt -s extglob
+set -x
 
+cd /root && \
 git clone https://github.com/RoliSoft/Host-Scanner && \
 cd Host-Scanner/build && \
 cmake .. && \
-make && \
+make HostScanner && \
 rm -rf !(HostScanner) && \
 cd .. && \
 cpack -D CPACK_GENERATOR="${1^^}" && \

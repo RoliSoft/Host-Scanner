@@ -47,5 +47,7 @@ endif()
 target_link_libraries(HostScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(TestScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
+install(TARGETS ${HostScanner} DESTINATION bin)
+
 enable_testing()
 add_test(ScannerTest TestScanner)

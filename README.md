@@ -42,11 +42,11 @@ To compile and run the project, you must first install the dependencies, which c
 
  * Debian/Ubuntu/Kali:
  
-        apt-get install build-essential cmake libcurl-dev libboost-dev libboost-test-dev libboost-program-options-dev
+        apt install build-essential cmake libcurl4-openssl-dev libboost-all-dev
 
  * RHEL/CentOS/Fedora:
 
-        yum groupinstall "Development Tools" && yum install cmake libcurl-devel boost-devel
+        yum install gcc-c++ make cmake libcurl-devel boost-devel-static
 
  * FreeBSD:
 

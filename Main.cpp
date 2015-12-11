@@ -53,14 +53,14 @@ int main()
 
 	auto app = get<1>(splitPath(getAppPath()));
 	cout << Format::Green;
-	cout << "   _   _           _     _____                                 " << endl;
-	cout << "  | | | |         | |   /  ___|                                " << endl;
-	cout << "  | |_| | ___  ___| |_  \\ `--.  ___ __ _ _ __  _ __   ___ _ __ " << endl;
-	cout << "  |  _  |/ _ \\/ __| __|  `--. \\/ __/ _` | '_ \\| '_ \\ / _ \\ '__|" << endl;
-	cout << "  | | | | (_) \\__ \\ |_  /\\__/ / (_| (_| | | | | | | |  __/ |   " << endl;
-	cout << "  \\_| |_/\\___/|___/\\__| \\____/ \\___\\__,_|_| |_|_| |_|\\___|_|   " << endl;
-	cout << "                                                               " << endl;
-	cout << "           " << Format::Underline << "https://github.com/RoliSoft/Host-Scanner" << Format::Normal << endl;
+	cout << "  " << Format::Bold << " _   _ "  << Format::Normal << "          _    "   << Format::Bold << " _____"   << Format::Normal << "                                 "    << endl;
+	cout << "  " << Format::Bold << "| | | |"  << Format::Normal << "         | |   "   << Format::Bold << "/  ___|"  << Format::Normal << "                                "     << endl;
+	cout << "  " << Format::Bold << "| |_| |"  << Format::Normal << " ___  ___| |_  "   << Format::Bold << "\\ `--."  << Format::Normal << "  ___ __ _ _ __  _ __   ___ _ __ "    << endl;
+	cout << "  " << Format::Bold << "|  _  |"  << Format::Normal << "/ _ \\/ __| __|  " << Format::Bold << "`--. \\"  << Format::Normal << "/ __/ _` | '_ \\| '_ \\ / _ \\ '__|"  << endl;
+	cout << "  " << Format::Bold << "| | | |"  << Format::Normal << " (_) \\__ \\ |_  " << Format::Bold << "/\\__/ /" << Format::Normal << " (_| (_| | | | | | | |  __/ |   "     << endl;
+	cout << "  " << Format::Bold << "\\_| |_/" << Format::Normal << "\\___/|___/\\__| " << Format::Bold << "\\____/"  << Format::Normal << " \\___\\__,_|_| |_|_| |_|\\___|_|   " << endl;
+	cout << endl;
+	cout << "           " << Format::Bold << "https" << Format::Normal << "://" << Format::Bold << "github.com" << Format::Normal << "/" << Format::Bold << "RoliSoft" << Format::Normal << "/" << Format::Bold << "Host-Scanner" << Format::Normal << endl;
 	cout << Format::Default << endl;
 	cout << "usage: " << app << " [args]" << endl;
 	cout << desc << endl;

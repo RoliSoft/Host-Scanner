@@ -3,7 +3,12 @@
 #include <string>
 #include <tuple>
 #include <functional>
-#include <curl/curl.h>
+
+#if HAVE_CURL
+	#include <curl/curl.h>
+#else
+	typedef void CURL;
+#endif
 
 /*!
  * Executes a command and returns its output.

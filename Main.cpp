@@ -22,11 +22,16 @@
 #include <string>
 #include <tuple>
 #include <boost/program_options.hpp>
-#include <curl/curl.h>
 #include "Stdafx.h"
 #include "Utils.h"
 #include "Format.h"
 #include "InternalScanner.h"
+#include "ShodanScanner.h"
+#include "CensysScanner.h"
+
+#if HAVE_CURL
+	#include <curl/curl.h>
+#endif
 
 using namespace std;
 namespace po = boost::program_options;
@@ -42,7 +47,9 @@ int main()
 	}
 #endif
 
+#if HAVE_CURL
 	curl_global_init(CURL_GLOBAL_DEFAULT);
+#endif
 
 	Format::Init();
 
@@ -53,19 +60,21 @@ int main()
 
 	auto app = get<1>(splitPath(getAppPath()));
 	cout << Format::Green;
-	cout << "  " << Format::Bold << " _   _ "  << Format::Normal << "          _    "   << Format::Bold << " _____"   << Format::Normal << "                                 "    << endl;
-	cout << "  " << Format::Bold << "| | | |"  << Format::Normal << "         | |   "   << Format::Bold << "/  ___|"  << Format::Normal << "                                "     << endl;
-	cout << "  " << Format::Bold << "| |_| |"  << Format::Normal << " ___  ___| |_  "   << Format::Bold << "\\ `--."  << Format::Normal << "  ___ __ _ _ __  _ __   ___ _ __ "    << endl;
-	cout << "  " << Format::Bold << "|  _  |"  << Format::Normal << "/ _ \\/ __| __|  " << Format::Bold << "`--. \\"  << Format::Normal << "/ __/ _` | '_ \\| '_ \\ / _ \\ '__|"  << endl;
-	cout << "  " << Format::Bold << "| | | |"  << Format::Normal << " (_) \\__ \\ |_  " << Format::Bold << "/\\__/ /" << Format::Normal << " (_| (_| | | | | | | |  __/ |   "     << endl;
-	cout << "  " << Format::Bold << "\\_| |_/" << Format::Normal << "\\___/|___/\\__| " << Format::Bold << "\\____/"  << Format::Normal << " \\___\\__,_|_| |_|_| |_|\\___|_|   " << endl;
+	cout << "  " << Format::Bold << " _   _ "  << Format::Normal << Format::Green << "          _    "   << Format::Bold << " _____"   << Format::Normal << Format::Green << "                                 "    << endl;
+	cout << "  " << Format::Bold << "| | | |"  << Format::Normal << Format::Green << "         | |   "   << Format::Bold << "/  ___|"  << Format::Normal << Format::Green << "                                "     << endl;
+	cout << "  " << Format::Bold << "| |_| |"  << Format::Normal << Format::Green << " ___  ___| |_  "   << Format::Bold << "\\ `--."  << Format::Normal << Format::Green << "  ___ __ _ _ __  _ __   ___ _ __ "    << endl;
+	cout << "  " << Format::Bold << "|  _  |"  << Format::Normal << Format::Green << "/ _ \\/ __| __|  " << Format::Bold << "`--. \\"  << Format::Normal << Format::Green << "/ __/ _` | '_ \\| '_ \\ / _ \\ '__|"  << endl;
+	cout << "  " << Format::Bold << "| | | |"  << Format::Normal << Format::Green << " (_) \\__ \\ |_  " << Format::Bold << "/\\__/ /" << Format::Normal << Format::Green << " (_| (_| | | | | | | |  __/ |   "     << endl;
+	cout << "  " << Format::Bold << "\\_| |_/" << Format::Normal << Format::Green << "\\___/|___/\\__| " << Format::Bold << "\\____/"  << Format::Normal << Format::Green << " \\___\\__,_|_| |_|_| |_|\\___|_|   " << endl;
 	cout << endl;
-	cout << "           " << Format::Bold << "https" << Format::Normal << "://" << Format::Bold << "github.com" << Format::Normal << "/" << Format::Bold << "RoliSoft" << Format::Normal << "/" << Format::Bold << "Host-Scanner" << Format::Normal << endl;
-	cout << Format::Default << endl;
+	cout << "           " << Format::Bold << "https" << Format::Normal << Format::Green << "://" << Format::Bold << "github.com" << Format::Normal << Format::Green << "/" << Format::Bold << "RoliSoft" << Format::Normal << Format::Green << "/" << Format::Bold << "Host-Scanner" << Format::Normal << Format::Default << endl;
+	cout << endl;
 	cout << "usage: " << app << " [args]" << endl;
 	cout << desc << endl;
 
+#if HAVE_CURL
 	curl_global_cleanup();
+#endif
 
 #if Windows
 	WSACleanup();

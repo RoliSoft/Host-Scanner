@@ -31,7 +31,15 @@ void ShodanScanner::getHostInfo(Host* host)
 
 	if (get<2>(json) != 200)
 	{
-		cerr << "Failed to get JSON reply: HTTP response code was " << get<2>(json) << "." << endl;
+		if (get<2>(json) == -1)
+		{
+			cerr << "Failed to send HTTP request: " << get<1>(json) << endl;
+		}
+		else
+		{
+			cerr << "Failed to get JSON reply: HTTP response code was " << get<2>(json) << "." << endl;
+		}
+
 		return;
 	}
 

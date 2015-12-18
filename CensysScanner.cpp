@@ -2,10 +2,13 @@
 #include "Utils.h"
 #include <tuple>
 #include <iostream>
-#include <curl/curl.h>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+
+#if HAVE_CURL
+	#include <curl/curl.h>
+#endif
 
 using namespace std;
 using namespace boost;
@@ -28,15 +31,27 @@ void CensysScanner::getHostInfo(Host* host)
 	using property_tree::write_json;
 	using property_tree::ptree;
 
-	auto json = getURL("https://" + endpoint + "/view/ipv4/" + host->address, [this](CURL* curl)
+	auto json = getURL("https://" + endpoint + "/view/ipv4/" + host->address
+#if HAVE_CURL
+		, [this](CURL* curl)
 		{
 			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 			curl_easy_setopt(curl, CURLOPT_USERPWD, auth.c_str());
-		});
+		}
+#endif
+	);
 
 	if (get<2>(json) != 200)
 	{
-		cerr << "Failed to get JSON reply: HTTP response code was " << get<2>(json) << "." << endl;
+		if (get<2>(json) == -1)
+		{
+			cerr << "Failed to send HTTP request: " << get<1>(json) << endl;
+		}
+		else
+		{
+			cerr << "Failed to get JSON reply: HTTP response code was " << get<2>(json) << "." << endl;
+		}
+
 		return;
 	}
 

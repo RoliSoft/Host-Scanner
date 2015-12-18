@@ -77,6 +77,8 @@ tuple<string, string> splitPath(const string& path)
 
 tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>& opts)
 {
+#if HAVE_CURL
+
 	CURL *curl;
 	CURLcode res;
 
@@ -119,4 +121,10 @@ tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>
 	curl_easy_cleanup(curl);
 
 	return make_tuple(buffer, error, code);
+
+#else
+
+	return make_tuple("", "not compiled with curl support", -1);
+
+#endif
 }

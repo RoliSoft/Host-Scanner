@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include <stdlib.h>
 #include <string>
 
 #if Unix
@@ -63,6 +64,17 @@ string getWorkDir()
 	return string(result);
 }
 
+string getEnvVar(const string& env)
+{
+#if Windows
+	char *result;
+	size_t size;
+	return _dupenv_s(&result, &size, env.c_str()) == 0 ? result : "";
+#elif Unix
+	return getenv(env.c_str());
+#endif
+}
+
 tuple<string, string> splitPath(const string& path)
 {
 	auto idx = path.find_last_of(PATH_SEPARATOR);
@@ -79,7 +91,6 @@ tuple<string, string> splitPath(const string& path)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>& opts)
 {
-#pragma GCC diagnostic pop
 #if HAVE_CURL
 
 	CURL *curl;
@@ -131,3 +142,4 @@ tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>
 
 #endif
 }
+#pragma GCC diagnostic pop

@@ -32,6 +32,15 @@ std::string getAppPath();
 std::string getWorkDir();
 
 /*!
+ * Gets the value of the requested environment variable.
+ *
+ * \param env Variable name.
+ *
+ * \return Environment variable, or empty string.
+ */
+std::string getEnvVar(const std::string& env);
+
+/*!
  * Splits the path, second item will be top-level file or
  * directory, while the first will be the rest of the path.
  *

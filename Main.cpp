@@ -21,7 +21,7 @@
 #include <iostream>
 #include <string>
 #include <tuple>
-#include <fstream>
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
 #include "Stdafx.h"
@@ -36,6 +36,7 @@
 #endif
 
 using namespace std;
+namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
 
 	Format::Init();
 
-	po::options_description desc("arguments", 120);
+	po::options_description desc("arguments", 100);
 	desc.add_options()
 		("target,t", po::value<vector<string>>(),
 			"List of targets to scan:\n"
@@ -86,11 +87,32 @@ int main(int argc, char *argv[])
 	po::variables_map vm;
 	po::store(po::command_line_parser(argc, argv).options(desc).positional(pos).run(), vm);
 
-	ifstream inifs("HostScanner.ini");
-	if (inifs.good())
+	string path = "";
+	vector<string> paths = {
+#if Windows
+		get<0>(splitPath(getAppPath())) + "\\HostScanner.ini",
+		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\HostScanner.ini"
+#else
+		get<0>(splitPath(getAppPath())) + "/HostScanner.ini",
+		getEnvVar("HOME") + "/.HostScanner.conf",
+		"/etc/HostScanner/HostScanner.conf"
+#endif
+	};
+
+	for (auto check : paths)
 	{
-		po::store(po::parse_config_file(inifs, desc, true), vm);
-		inifs.close();
+		fs::path fp(check);
+
+		if (fs::exists(fp) && fs::is_regular_file(fp))
+		{
+			path = check;
+			break;
+		}
+	}
+
+	if (path.length() != 0)
+	{
+		po::store(po::parse_config_file<char>(path.c_str(), desc, true), vm);
 	}
 
 	po::notify(vm);

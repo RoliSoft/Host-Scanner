@@ -10,9 +10,11 @@
 #include <mutex>
 #include <tuple>
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace boost;
+namespace fs = boost::filesystem;
 
 unordered_map<unsigned short, struct Payload*> UdpScanner::payloads = unordered_map<unsigned short, struct Payload*>();
 
@@ -234,44 +236,42 @@ void UdpScanner::loadPayloads()
 
 	// open payloads file
 
+	string path = "";
+	vector<string> paths = {
+#if Windows
+		get<0>(splitPath(getAppPath())) + "\\payloads.lst",
+		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\payloads.lst"
+#else
+		get<0>(splitPath(getAppPath())) + "/payloads.lst",
+		"/var/lib/HostScanner/payloads.lst"
+#endif
+	};
+
+	for (auto check : paths)
+	{
+		fs::path fp(check);
+
+		if (fs::exists(fp) && fs::is_regular_file(fp))
+		{
+			path = check;
+			break;
+		}
+	}
+
 	ifstream plfs;
 
-	auto expth = get<0>(splitPath(getAppPath()));
-	plfs.open(expth + PATH_SEPARATOR + "payloads");
-
-	if (!plfs.good())
+	if (path.length() != 0)
 	{
-		auto nxpth = splitPath(expth);
-
-		if (get<1>(nxpth) == "build")
-		{
-			plfs.open(get<0>(nxpth) + PATH_SEPARATOR + "payloads");
-		}
+		plfs.open(path);
 	}
 
-	if (!plfs.good())
-	{
-		expth = getWorkDir();
-		plfs.open(expth + PATH_SEPARATOR + "payloads");
-
-		if (!plfs.good())
-		{
-			auto nxpth = splitPath(expth);
-
-			if (get<1>(nxpth) == "build")
-			{
-				plfs.open(get<0>(nxpth) + PATH_SEPARATOR + "payloads");
-			}
-		}
-	}
-
-	if (!plfs.good())
+	if (path.length() == 0 || !plfs.good())
 	{
 		cerr << "UDP payloads database not found!" << endl;
 #if Windows
-		cerr << "Download https://svn.nmap.org/nmap/nmap-payloads to the working directory and rename it to `payloads`." << endl;
+		cerr << "Download https://svn.nmap.org/nmap/nmap-payloads next to the app and rename it to `payloads.lst`." << endl;
 #elif Unix
-		cerr << "Run `wget https://svn.nmap.org/nmap/nmap-payloads -O payloads` in the working directory." << endl;
+		cerr << "Run `wget https://svn.nmap.org/nmap/nmap-payloads -O payloads.lst` next to the app." << endl;
 #endif
 
 		plfs.close();

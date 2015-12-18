@@ -103,6 +103,13 @@ public:
 	Service(char* address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
 
 	/*!
+	 * Copies the specified instance.
+	 *
+	 * \param service Instance to copy.
+	 */
+	Service(const Service& service) = default;
+
+	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~Service();

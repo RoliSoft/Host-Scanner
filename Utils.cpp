@@ -75,8 +75,11 @@ tuple<string, string> splitPath(const string& path)
 	return make_tuple(path.substr(0, idx), path.substr(idx + 1));
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>& opts)
 {
+#pragma GCC diagnostic pop
 #if HAVE_CURL
 
 	CURL *curl;

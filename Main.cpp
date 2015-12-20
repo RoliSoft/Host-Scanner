@@ -21,9 +21,14 @@
 #include <iostream>
 #include <string>
 #include <tuple>
+#include <vector>
+#include <set>
+#include <unordered_set>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include "Stdafx.h"
 #include "Utils.h"
 #include "Format.h"
@@ -56,6 +61,14 @@ void log(int level, const string& msg)
 		os = &cerr;
 		cout << Format::Bold << Format::Red << "[!] " << Format::Default << Format::Normal;
 		break;
+	case VRB:
+		os = &cout;
+		cout << Format::Green << "[.] " << Format::Default;
+		break;
+	case DBG:
+		os = &cout;
+		cout << Format::Green << "[ ] " << Format::Default;
+		break;
 	default:
 		os = &cout;
 		cout << Format::Green << "[*] " << Format::Default;
@@ -78,6 +91,9 @@ int scan(const po::variables_map& vm)
 	string p_port;
 	vector<string> p_target;
 
+	HostScanner* scanner = nullptr;
+	set<int> ports;
+
 	// get scanner
 
 	if (vm.count("scanner") != 0)
@@ -89,7 +105,6 @@ int scan(const po::variables_map& vm)
 		p_scanner = "internal";
 	}
 
-	HostScanner* scanner = nullptr;
 	if (p_scanner == "internal" || p_scanner.length() == 0)
 	{
 		scanner = new InternalScanner();
@@ -178,7 +193,93 @@ int scan(const po::variables_map& vm)
 	}
 	else
 	{
-		// TODO read all listed ports
+		// read all listed ports
+
+		vector<string> s_ports;
+		split(s_ports, p_port, boost::is_any_of(","), boost::token_compress_on);
+
+		for (auto& s_port : s_ports)
+		{
+			// check if range
+
+			if (s_port.find("-") != string::npos)
+			{
+				// check if unbounded
+
+				int a, b;
+
+				if (boost::starts_with(s_port, "-"))
+				{
+					// from 1 to n	
+
+					a = 1;
+					b = atoi(s_port.substr(1).c_str());
+				}
+				else if (boost::ends_with(s_port, "-"))
+				{
+					// from n to 65535
+
+					a = atoi(s_port.c_str());
+					b = 65535;
+				}
+				else
+				{
+					// range specified
+
+					vector<string> s_range;
+					split(s_range, s_port, boost::is_any_of("-"), boost::token_compress_on);
+
+					if (s_range.size() < 2)
+					{
+						log(ERR, "Unable to parse '" + s_port + "' in port list.");
+						retval = EXIT_FAILURE;
+						goto cleanup;
+					}
+
+					a = atoi(s_range[0].c_str());
+					b = atoi(s_range[1].c_str());
+
+					if (a > b)
+					{
+						swap(a, b);
+					}
+				}
+
+				if (a < 1 || a > 65535 || b < 1 || b > 65535)
+				{
+					log(ERR, "Port range '" + s_port + "' is invalid.");
+					retval = EXIT_FAILURE;
+					goto cleanup;
+				}
+
+				for (int i = a; i <= b; i++)
+				{
+					ports.emplace(i);
+				}
+			}
+			else
+			{
+				int port = atoi(s_port.c_str());
+
+				if (port < 0 || port > 65535)
+				{
+					log(ERR, "Port '" + s_port + "' out of range.");
+					retval = EXIT_FAILURE;
+					goto cleanup;
+				}
+
+				ports.emplace(port);
+			}
+		}
+
+		if (ports.size() < 1)
+		{
+			log(ERR, "Failed to parse ports from '" + p_port + "'.");
+			retval = EXIT_FAILURE;
+			goto cleanup;
+		}
+
+		log(VRB, "Scanning " + to_string(ports.size()) + " ports.");
 	}
 
 	// read targets
@@ -196,7 +297,102 @@ int scan(const po::variables_map& vm)
 	}
 	else
 	{
-		// TODO read all targets
+		unordered_set<string> f_target;
+
+		// merge targets specified via positional parameters and targets separated by comma
+
+		for (auto& s_target : p_target)
+		{
+			if (s_target.find(",") != string::npos)
+			{
+				vector<string> t_target;
+				split(t_target, s_target, boost::is_any_of(","));
+				f_target.insert(t_target.begin(), t_target.end());
+			}
+			else
+			{
+				f_target.emplace(s_target);
+			}
+		}
+
+		// iterate final target list
+
+		for (auto& s_target : f_target)
+		{
+			if (s_target.find("/") != string::npos)
+			{
+				// CIDR
+
+				vector<string> s_cidr;
+				split(s_cidr, s_target, boost::is_any_of("/"), boost::token_compress_on);
+
+				if (s_cidr.size() != 2)
+				{
+					log(ERR, "CIDR notation '" + s_target + "' is invalid.");
+					retval = EXIT_FAILURE;
+					goto cleanup;
+				}
+
+				string addr = s_cidr[0];
+				int cidr = atoi(s_cidr[1].c_str());
+
+				if (cidr < 0 || cidr > 32)
+				{
+					log(ERR, "CIDR notation '" + s_target + "' is out of range.");
+					retval = EXIT_FAILURE;
+					goto cleanup;
+				}
+
+				// TODO store addr, cidr
+
+				log(VRB, "Scanning hosts in " + addr + "/" + to_string(cidr) + ".");
+			}
+			else if (s_target.find("-") != string::npos)
+			{
+				// range
+
+				vector<string> s_range;
+				split(s_range, s_target, boost::is_any_of("-"), boost::token_compress_on);
+
+				if (s_range.size() != 2)
+				{
+					log(ERR, "Range notation '" + s_target + "' is invalid.");
+					retval = EXIT_FAILURE;
+					goto cleanup;
+				}
+
+				if (s_range[1].find("-") != string::npos)
+				{
+					log(ERR, "Only last octet can be a range in '" + s_target + "'.");
+					retval = EXIT_FAILURE;
+					goto cleanup;
+				}
+
+				int lastsep = s_range[0].find_last_of(".");
+
+				if (lastsep == string::npos)
+				{
+					log(ERR, "Failed to find last octet in '" + s_target + "'.");
+					retval = EXIT_FAILURE;
+					goto cleanup;
+				}
+
+				string from = s_range[0];
+				string to   = s_range[0].substr(0, lastsep) + "." + s_range[1];
+
+				// TODO store from, to
+
+				log(VRB, "Scanning hosts " + from + " to " + to + ".");
+			}
+			else
+			{
+				// IP or host
+
+				// TODO store s_target
+
+				log(VRB, "Scanning host " + s_target + ".");
+			}
+		}
 	}
 
 	log("Initiating scan against ...");

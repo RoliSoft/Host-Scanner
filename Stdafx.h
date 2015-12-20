@@ -55,3 +55,13 @@
 	typedef struct timeval TIMEVAL;
 
 #endif
+
+#include <string>
+
+#define ERR 0
+#define MSG 1
+#define VRB 2
+#define DBG 3
+
+void log(int level, const std::string& msg);
+void log(const std::string& msg);

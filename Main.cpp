@@ -46,11 +46,6 @@ using namespace std;
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-#define ERR 0
-#define MSG 1
-#define VRB 2
-#define DBG 3
-
 void log(int level, const string& msg)
 {
 	ostream* os;
@@ -83,7 +78,7 @@ void log(const string& msg)
 	log(MSG, msg);
 }
 
-int scan(const po::variables_map& vm)
+inline int scan(const po::variables_map& vm)
 {
 	int retval = EXIT_SUCCESS;
 
@@ -368,7 +363,7 @@ int scan(const po::variables_map& vm)
 					goto cleanup;
 				}
 
-				int lastsep = s_range[0].find_last_of(".");
+				auto lastsep = s_range[0].find_last_of(".");
 
 				if (lastsep == string::npos)
 				{

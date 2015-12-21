@@ -1,5 +1,5 @@
 #include "ServiceScanner.h"
-#include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -7,11 +7,13 @@ void ServiceScanner::DumpResults(Services* services)
 {
 	for (auto service : *services)
 	{
-		cout << service->address << ":" << service->port << " is " << (service->alive ? "open" : "closed") << " (" << service->reason << ")" << endl;
+		log(MSG, string(service->address) + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + to_string(service->reason) + ")");
 
 		if (service->banlen > 0)
 		{
-			cout << " -> ";
+			stringstream ss;
+			ss << " -> ";
+
 			for (int i = 0; i < service->banlen; i++)
 			{
 				if (service->banner[i] == '\r') continue;
@@ -20,23 +22,24 @@ void ServiceScanner::DumpResults(Services* services)
 				{
 					if ((service->banlen - i) > 3)
 					{
-						cout << endl << " -> ";
+						ss << endl << " -> ";
 					}
 					else
 					{
-						cout << " ";
+						ss << " ";
 					}
 				}
 				else if (service->banner[i] >= ' ' && service->banner[i] <= '~')
 				{
-					cout << service->banner[i];
+					ss << service->banner[i];
 				}
 				else
 				{
-					cout << ".";
+					ss << ".";
 				}
 			}
-			cout << endl;
+
+			log(DBG, ss.str());
 		}
 	}
 }

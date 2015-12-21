@@ -94,6 +94,7 @@ void IcmpPinger::initSocket(Service* service)
 		// admin rights are required for raw sockets
 
 		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to open socket with AF_INET" + string(info->ai_family == AF_INET6 ? "6" : "") + "/SOCK_RAW.");
 		return;
 	}
 

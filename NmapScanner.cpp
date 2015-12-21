@@ -103,6 +103,7 @@ string NmapScanner::runNmap(Services* services, bool v6)
 			udps.emplace(service->port);
 			break;
 		default:
+			log(ERR, "Unsupported protocol through nmap: " + to_string(service->protocol));
 			break;
 		}
 
@@ -173,17 +174,19 @@ void NmapScanner::parseXml(string xml, Services* services)
 	}
 	catch (boost::exception const& ex)
 	{
-		cerr << "Failed to parse XML output: ";
+		string reason;
 
 		auto exst = dynamic_cast<const std::exception*>(&ex);
 		if (NULL != exst)
 		{
-			cerr << exst->what() << endl;
+			reason = exst->what();
 		}
 		else
 		{
-			cerr << diagnostic_information(ex);
+			reason = diagnostic_information(ex);
 		}
+
+		log(ERR, "Failed to parse XML output: " + reason);
 
 		return;
 	}
@@ -197,7 +200,7 @@ void NmapScanner::parseXml(string xml, Services* services)
 
 		if (exit == "error")
 		{
-			cerr << "Nmap execution failed: " << emsg << endl;
+			log(ERR, "Nmap execution failed: " + emsg);
 			return;
 		}
 
@@ -332,17 +335,19 @@ void NmapScanner::parseXml(string xml, Services* services)
 	}
 	catch (boost::exception const& ex)
 	{
-		cerr << "Failed to use XML output: ";
+		string reason;
 
 		auto exst = dynamic_cast<const std::exception*>(&ex);
 		if (NULL != exst)
 		{
-			cerr << exst->what() << endl;
+			reason = exst->what();
 		}
 		else
 		{
-			cerr << diagnostic_information(ex);
+			reason = diagnostic_information(ex);
 		}
+
+		log(ERR, "Failed to process XML output: " + reason);
 
 		return;
 	}

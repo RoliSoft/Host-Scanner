@@ -17,7 +17,8 @@ string execute(const char* cmd)
 
 	if (!pipe)
 	{
-		return "Failed to execute command: `" + string(cmd) + "`";
+		log(ERR, "Failed to execute command: `" + string(cmd) + "`");
+		return "";
 	}
 
 	// read what it writes to the standard output during its lifetime

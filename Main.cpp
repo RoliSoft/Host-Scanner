@@ -56,6 +56,10 @@ void log(int level, const string& msg)
 		os = &cerr;
 		cout << Format::Bold << Format::Red << "[!] " << Format::Default << Format::Normal;
 		break;
+	case WRN:
+		os = &cerr;
+		cout << Format::Bold << Format::Yellow << "[!] " << Format::Default << Format::Normal;
+		break;
 	case VRB:
 		os = &cout;
 		cout << Format::Green << "[.] " << Format::Default;
@@ -71,11 +75,6 @@ void log(int level, const string& msg)
 	}
 
 	*os << msg << endl;
-}
-
-void log(const string& msg)
-{
-	log(MSG, msg);
 }
 
 inline int scan(const po::variables_map& vm)

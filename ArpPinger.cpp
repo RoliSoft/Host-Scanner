@@ -325,6 +325,7 @@ void ArpPinger::prepService(Service* service)
 	if (iface == nullptr)
 	{
 		service->reason = AR_ScanFailed;
+		log(ERR, "Host '" + string(service->address) + "' is not local to any of the interfaces.");
 		return;
 	}
 
@@ -355,6 +356,7 @@ void ArpPinger::sendRequest(Service* service)
 	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(data->iface->adapter)).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
 	{
 		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to open PCAP device: " + string(data->iface->adapter));
 		return;
 	}
 
@@ -380,6 +382,7 @@ void ArpPinger::sendRequest(Service* service)
 		// root is required for raw sockets
 
 		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to open socket with PF_PACKET/SOCK_RAW.");
 		return;
 	}
 
@@ -406,6 +409,7 @@ void ArpPinger::sendRequest(Service* service)
 	if (bpf < 0)
 	{
 		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to allocate a BPF device.");
 		return;
 	}
 
@@ -417,6 +421,7 @@ void ArpPinger::sendRequest(Service* service)
 	if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 	{
 		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to bind BPF device to interface '" + string(data->iface->adapter) + "': " + string(strerror(errno)));
 		close(bpf);
 		return;
 	}
@@ -463,6 +468,7 @@ void ArpPinger::sendRequest(Service* service)
 	if (res != 0)
 	{
 		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to send packet through PCAP: " + string(pcap_geterr(pcap)));
 	}
 
 	pcap_close(pcap);
@@ -474,6 +480,7 @@ void ArpPinger::sendRequest(Service* service)
 	if (res <= 0)
 	{
 		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to send packet through socket: " + string(strerror(errno)));
 	}
 
 	close(sock);
@@ -485,6 +492,7 @@ void ArpPinger::sendRequest(Service* service)
 	if (res <= 0)
 	{
 		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to send packet through BPF: " + string(strerror(errno)));
 	}
 
 	close(bpf);
@@ -518,6 +526,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 		if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(iface->adapter)).c_str(), 60, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
 		{
+			log(ERR, "Failed to open PCAP for interface '" + string(iface->adapter) + "': " + string(pcap_geterr(pcap)));
 			continue;
 		}
 
@@ -526,6 +535,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 		struct bpf_program bfcode;
 		if (pcap_compile(pcap, &bfcode, "arp", 1, iface->ipmask) < 0)
 		{
+			log(ERR, "Failed to compile filter for PCAP for interface '" + string(iface->adapter) + "': " + string(pcap_geterr(pcap)));
 			continue;
 		}
 
@@ -533,6 +543,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 		if (pcap_setfilter(pcap, &bfcode) < 0)
 		{
+			log(ERR, "Failed to attach filter to PCAP for interface '" + string(iface->adapter) + "': " + string(pcap_geterr(pcap)));
 			continue;
 		}
 
@@ -541,6 +552,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 	if (pcaps.size() == 0)
 	{
+		log(ERR, "Failed to open any PCAP devices.");
 		return;
 	}
 
@@ -604,6 +616,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 	if ((sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1)
 	{
+		log(ERR, "Failed to open socket with AF_PACKET/SOCK_RAW/ETH_P_ALL.");
 		return;
 	}
 
@@ -632,6 +645,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 	{
 		close(sock);
 		delete[] bfcode;
+		log(ERR, "Failed to compile and attach filter to socket: " + string(strerror(errno)));
 		return;
 	}
 
@@ -714,6 +728,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 		if (bpf < 0)
 		{
+			log(ERR, "Failed to allocate a BPF device for interface '" + string(iface->adapter) + "'.");
 			continue;
 		}
 
@@ -725,6 +740,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 		if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 		{
 			close(bpf);
+			log(ERR, "Failed to bind BPF device to interface '" + string(iface->adapter) + "': " + string(strerror(errno)));
 			continue;
 		}
 
@@ -747,6 +763,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 		if (ioctl(bpf, BIOCSETF, &bfprog) < 0)
 		{
 			close(bpf);
+			log(ERR, "Failed to compile and attach filter to BPF device for interface '" + string(iface->adapter) + "': " + string(strerror(errno)));
 			continue;
 		}
 
@@ -756,6 +773,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 	if (bpfs.size() == 0)
 	{
 		delete[] bfcode;
+		log(ERR, "Failed to open any BPF devices.");
 		return;
 	}
 

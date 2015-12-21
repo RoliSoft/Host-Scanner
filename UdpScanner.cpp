@@ -267,11 +267,11 @@ void UdpScanner::loadPayloads()
 
 	if (path.length() == 0 || !plfs.good())
 	{
-		cerr << "UDP payloads database not found!" << endl;
+		log(WRN, "UDP payloads database not found!");
 #if Windows
-		cerr << "Download https://svn.nmap.org/nmap/nmap-payloads next to the app and rename it to `payloads.lst`." << endl;
+		log(MSG, "Download https://svn.nmap.org/nmap/nmap-payloads next to the app and rename it to `payloads.lst`.");
 #elif Unix
-		cerr << "Run `wget https://svn.nmap.org/nmap/nmap-payloads -O payloads.lst` next to the app." << endl;
+		log(MSG, "Run `wget https://svn.nmap.org/nmap/nmap-payloads -O payloads.lst` next to the app.");
 #endif
 
 		plfs.close();

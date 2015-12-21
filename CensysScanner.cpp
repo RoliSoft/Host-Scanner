@@ -45,11 +45,11 @@ void CensysScanner::getHostInfo(Host* host)
 	{
 		if (get<2>(json) == -1)
 		{
-			cerr << "Failed to send HTTP request: " << get<1>(json) << endl;
+			log(ERR, "Failed to send HTTP request: " + get<1>(json));
 		}
 		else
 		{
-			cerr << "Failed to get JSON reply: HTTP response code was " << get<2>(json) << "." << endl;
+			log(ERR, "Failed to get JSON reply: HTTP response code was " + to_string(get<2>(json)) + ".");
 		}
 
 		return;
@@ -66,17 +66,19 @@ void CensysScanner::getHostInfo(Host* host)
 	}
 	catch (boost::exception const& ex)
 	{
-		cerr << "Failed to parse JSON response: ";
+		string reason;
 
 		auto exst = dynamic_cast<const std::exception*>(&ex);
 		if (NULL != exst)
 		{
-			cerr << exst->what() << endl;
+			reason = exst->what();
 		}
 		else
 		{
-			cerr << diagnostic_information(ex);
+			reason = diagnostic_information(ex);
 		}
+
+		log(ERR, "Failed to parse JSON response: " + reason);
 
 		return;
 	}
@@ -123,17 +125,19 @@ void CensysScanner::getHostInfo(Host* host)
 	}
 	catch (boost::exception const& ex)
 	{
-		cerr << "Failed to use JSON output: ";
+		string reason;
 
 		auto exst = dynamic_cast<const std::exception*>(&ex);
 		if (NULL != exst)
 		{
-			cerr << exst->what() << endl;
+			reason = exst->what();
 		}
 		else
 		{
-			cerr << diagnostic_information(ex);
+			reason = diagnostic_information(ex);
 		}
+
+		log(ERR, "Failed to process JSON response: " + reason);
 
 		return;
 	}

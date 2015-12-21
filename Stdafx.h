@@ -58,10 +58,47 @@
 
 #include <string>
 
-#define ERR 0
-#define MSG 1
-#define VRB 2
-#define DBG 3
+/*!
+ * Represents an error message.
+ */
+#define ERR 5
 
+/*!
+ * Represents a warning message.
+ */
+#define WRN 4
+
+/*!
+ * Represents a message with default severity.
+ */
+#define MSG 3
+
+/*!
+ * Represents a verbose message.
+ * This is only visible with the --verbose switch.
+ */
+#define VRB 2
+
+/*!
+ * Represents a debug message.
+ * This is only visible with the --debug switch.
+ */
+#define DBG 1
+
+/*!
+ * Logs a message through the implemented provider.
+ *
+ * \param level Message severity level.
+ * \param msg Message to log.
+ */
 void log(int level, const std::string& msg);
-void log(const std::string& msg);
+
+/*!
+ * Logs a message with default severity level.
+ *
+ * \param msg Message to log.
+ */
+inline void log(const std::string& msg)
+{
+	log(MSG, msg);
+}

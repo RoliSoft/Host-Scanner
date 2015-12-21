@@ -29,6 +29,7 @@
 #include "ArpPinger.h"
 #include "NmapScanner.h"
 #include <boost/test/unit_test.hpp>
+#include <iostream>
 
 #ifndef BOOST_TEST_WARN
 #define BOOST_TEST_WARN(a,m) BOOST_CHECK(a)
@@ -54,6 +55,16 @@ using namespace boost;
 		- it has IPv6 access,
 		- services on the tested IP addresses haven't changed.
 */
+
+void log(int level, const string& msg)
+{
+	if (level < WRN)
+	{
+		return;
+	}
+
+	cerr << msg << endl;
+}
 
 struct TestSetup
 {

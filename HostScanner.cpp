@@ -5,7 +5,7 @@
 
 using namespace std;
 
-Hosts* HostScanner::ScanCidr(char* address, int cidr)
+Hosts* HostScanner::GenerateCidr(const char* address, int cidr, Hosts* hosts)
 {
 	// get lowest and highest IP for supplied CIDR
 
@@ -21,21 +21,20 @@ Hosts* HostScanner::ScanCidr(char* address, int cidr)
 
 	// generate list of hosts for range
 
-	auto hosts = new Hosts();
+	if (hosts == nullptr)
+	{
+		hosts = new Hosts();
+	}
 
 	for (ip = gateway; ip <= broadcast; ip++)
 	{
 		hosts->push_back(new Host(uintToIp(ip)));
 	}
 
-	// scan generated list
-
-	Scan(hosts);
-
 	return hosts;
 }
 
-Hosts* HostScanner::ScanRange(char* start, char* finish)
+Hosts* HostScanner::GenerateRange(const char* start, const char* finish, Hosts* hosts)
 {
 	// parse supplied addresses
 
@@ -54,16 +53,15 @@ Hosts* HostScanner::ScanRange(char* start, char* finish)
 
 	// generate list of hosts for range
 
-	auto hosts = new Hosts();
+	if (hosts == nullptr)
+	{
+		hosts = new Hosts();
+	}
 
 	for (ip = low; ip <= high; ip++)
 	{
 		hosts->push_back(new Host(uintToIp(ip)));
 	}
-
-	// scan generated list
-
-	Scan(hosts);
 
 	return hosts;
 }
@@ -94,7 +92,7 @@ unsigned int HostScanner::createBitmask(int cidr)
 	return bitmask;
 }
 
-char* HostScanner::uintToIp(unsigned int ip)
+const char* HostScanner::uintToIp(unsigned int ip)
 {
 	auto addr = new char[16];
 	snprintf(addr, 16, "%d.%d.%d.%d", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);

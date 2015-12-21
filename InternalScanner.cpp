@@ -23,7 +23,7 @@ void InternalScanner::Scan(Hosts* hosts)
 	auto isAlive   = [](auto* serv) { return  serv->alive; };
 	auto isntAlive = [](auto* serv) { return !serv->alive; };
 
-	unordered_map<char*, Host*> hostMap;
+	unordered_map<const char*, Host*> hostMap;
 
 	for (auto host : *hosts | filtered(isntAlive))
 	{

@@ -24,24 +24,26 @@ public:
 	virtual void Scan(Hosts* hosts) = 0;
 
 	/*!
-	 * Scans a network range to determine service availability.
+	 * Generates a host list for a network range.
 	 *
 	 * \param address IP address.
 	 * \param cidr CIDR value.
+	 * \param hosts Existing list to fill, if any.
 	 *
-	 * \return List of scanned services.
+	 * \return List of hosts.
 	 */
-	Hosts* ScanCidr(char* address, int cidr);
+	static Hosts* GenerateCidr(const char* address, int cidr, Hosts* hosts = nullptr);
 
 	/*!
-	 * Scans a network range to determine service availability.
+	 * Generates a host list for a network range.
 	 *
 	 * \param start IP address to start with.
 	 * \param finish IP address to end with.
+	 * \param hosts Existing list to fill, if any.
 	 *
-	 * \return List of scanned services.
+	 * \return List of hosts.
 	 */
-	Hosts* ScanRange(char* start, char* finish);
+	static Hosts* GenerateRange(const char* start, const char* finish, Hosts* hosts = nullptr);
 
 	/*!
 	 * Dumps the scan results into the standard output.
@@ -70,6 +72,6 @@ private:
 	 *
 	 * \param ip Numerical form of the IP address.
 	 */
-	static char* uintToIp(unsigned ip);
+	static const char* uintToIp(unsigned ip);
 
 };

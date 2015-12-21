@@ -87,6 +87,11 @@ tuple<string, string> splitPath(const string& path)
 	return make_tuple(path.substr(0, idx), path.substr(idx + 1));
 }
 
+string pluralize(int quantity, const string& unit)
+{
+	return to_string(quantity) + " " + unit + (quantity != 1 ? "s" : "");
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>& opts)

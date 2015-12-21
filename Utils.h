@@ -51,6 +51,16 @@ std::string getEnvVar(const std::string& env);
 std::tuple<std::string, std::string> splitPath(const std::string& path);
 
 /*!
+ * Pluralizes the specified unit based on the quantity.
+ *
+ * \param quantity Quantity of unit.
+ * \param unit Unit to pluralize.
+ *
+ * \return String with quantity and unit, pluralized if needed.
+ */
+std::string pluralize(int quantity, const std::string& unit);
+
+/*!
  * Fetches the content behind the specified URL.
  *
  * \param url Location to download.

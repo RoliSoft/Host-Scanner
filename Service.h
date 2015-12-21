@@ -55,7 +55,7 @@ public:
 	/*!
 	 * Remote address.
 	 */
-	char* address;
+	const char* address;
 
 	/*!
 	 * Remote port.
@@ -100,7 +100,7 @@ public:
 	 * \param port Remote port.
 	 * \param protocol Remote protocol, otherwise TCP.
 	 */
-	Service(char* address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
+	Service(const char* address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
 
 	/*!
 	 * Copies the specified instance.

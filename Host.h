@@ -13,7 +13,7 @@ public:
 	/*!
 	 * Remote address.
 	 */
-	char* address;
+	const char* address;
 	
 	/*!
 	 * Whether the service is alive at this host.
@@ -36,7 +36,7 @@ public:
 	 * 
 	 * \param address Remote address.
 	 */
-	Host(char* address);
+	Host(const char* address);
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.

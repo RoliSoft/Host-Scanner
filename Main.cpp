@@ -87,6 +87,7 @@ inline int scan(const po::variables_map& vm)
 	vector<string> p_target;
 
 	HostScanner* scanner = nullptr;
+	Hosts* hosts = nullptr;
 	set<int> ports;
 
 	// get scanner
@@ -94,6 +95,8 @@ inline int scan(const po::variables_map& vm)
 	if (vm.count("scanner") != 0)
 	{
 		p_scanner = vm["scanner"].as<string>();
+		boost::trim(p_scanner);
+		boost::to_lower(p_scanner);
 	}
 	else
 	{
@@ -310,6 +313,8 @@ inline int scan(const po::variables_map& vm)
 			}
 		}
 
+		hosts = new Hosts();
+
 		// iterate final target list
 
 		for (auto& s_target : f_target)
@@ -338,9 +343,9 @@ inline int scan(const po::variables_map& vm)
 					goto cleanup;
 				}
 
-				// TODO store addr, cidr
-
 				log(VRB, "Scanning hosts in " + addr + "/" + to_string(cidr) + ".");
+
+				scanner->GenerateCidr(addr.c_str(), cidr, hosts);
 			}
 			else if (s_target.find("-") != string::npos)
 			{
@@ -375,27 +380,38 @@ inline int scan(const po::variables_map& vm)
 				string from = s_range[0];
 				string to   = s_range[0].substr(0, lastsep) + "." + s_range[1];
 
-				// TODO store from, to
-
 				log(VRB, "Scanning hosts " + from + " to " + to + ".");
+
+				scanner->GenerateRange(from.c_str(), to.c_str(), hosts);
 			}
 			else
 			{
 				// IP or host
 
-				// TODO store s_target
-
 				log(VRB, "Scanning host " + s_target + ".");
+
+				hosts->push_back(new Host(s_target.c_str()));
 			}
 		}
 	}
 
-	log("Initiating scan against ...");
+	// start scan
+
+	log("Initiating scan against " + pluralize(hosts->size(), "host") + "...");
+
+	scanner->Scan(hosts);
+
+	scanner->DumpResults(hosts);
 
 cleanup:
 	if (scanner != nullptr)
 	{
 		delete scanner;
+	}
+
+	if (hosts != nullptr)
+	{
+		delete hosts;
 	}
 
 	return retval;

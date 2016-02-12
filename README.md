@@ -136,10 +136,10 @@ This will specifically allow the use of raw sockets for this application when ru
 
 ## Licensing
 
-Copyright (c) `2015` `RoliSoft <root@rolisoft.net>`
+Copyright (c) `2016` `RoliSoft <root@rolisoft.net>`
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose.
 
-For more information regarding the terms and conditions of this software, please read the full legal text of the GNU Affero General Public License version 3, a copy of which is available in the [LICENSE.md](LICENSE.md) file. Otherwise, see &lt;<http://www.gnu.org/licenses/>&gt;.
+For more information regarding the terms and conditions of this software, please read the full legal text of the GNU General Public License version 3, a copy of which is available in the [LICENSE.md](LICENSE.md) file. Otherwise, see &lt;<http://www.gnu.org/licenses/>&gt;.
 
 Dual-licensing may be available upon request, depending on your purpose. For any inquiries, feel free to contact me at the email address listed above.

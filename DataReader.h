@@ -3,6 +3,7 @@
 #include <fstream>
 #include <tuple>
 #include <boost/endian/conversion.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 
 /*!
  * Implements a file stream wrapper for reading binary data files.
@@ -38,7 +39,7 @@ public:
 	template <class T>
 	void Read(T& value)
 	{
-		fs->read(reinterpret_cast<char*>(&value), sizeof(T));
+		bs->sgetn(reinterpret_cast<char*>(&value), sizeof(T));
 		boost::endian::little_to_native_inplace(value);
 	}
 	
@@ -67,5 +68,10 @@ private:
 	 * Pointer to the currently open data file.
 	 */
 	std::ifstream *fs;
+
+	/*!
+	 * Pointer to the filtering stream buffer the currently open file is wrapped in.
+	 */
+	boost::iostreams::filtering_istreambuf* bs;
 
 };

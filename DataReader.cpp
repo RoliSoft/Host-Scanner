@@ -1,8 +1,13 @@
 #include "DataReader.h"
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/filesystem.hpp>
+#include <iostream>
 
 using namespace std;
+namespace io = boost::iostreams;
+namespace fs = boost::filesystem;
 
-DataReader::DataReader() : fs(nullptr)
+DataReader::DataReader() : fs(nullptr), bs(nullptr)
 {
 }
 
@@ -13,11 +18,34 @@ bool DataReader::Open(const string& filename)
 	fs = new ifstream();
 	fs->open(filename, ifstream::binary);
 
-	return fs->good();
+	if (!fs->good())
+	{
+		delete fs;
+		fs = nullptr;
+		return false;
+	}
+
+	bs = new io::filtering_istreambuf();
+
+	if (fs::path(filename).extension() == ".gz")
+	{
+		bs->push(io::gzip_decompressor());
+	}
+
+	bs->push(*fs);
+
+	return true;
 }
 
 void DataReader::Close()
 {
+	if (bs != nullptr)
+	{
+		delete bs;
+
+		bs = nullptr;
+	}
+
 	if (fs != nullptr)
 	{
 		if (fs->is_open())
@@ -37,7 +65,7 @@ tuple<int, const char*> DataReader::ReadData()
 	Read(len);
 
 	auto data = new char[len];
-	fs->read(data, len);
+	bs->sgetn(data, len);
 
 	return make_tuple(len, data);
 }

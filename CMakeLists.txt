@@ -41,9 +41,20 @@ if (${BUILD_STATIC})
 	endif()
 endif()
 
+if (NOT DEFINED WITHOUT_ZLIB OR NOT ${WITHOUT_ZLIB} EQUAL 1)
+	if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+		set(ADDITIONAL_BOOST_COMPONENTS "zlib")
+	else()
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lz")
+	endif()
+	add_definitions(-DHAVE_ZLIB)
+else()
+	message(STATUS "HostScanner will be compiled without zlib; compressed data files will not be loadable.")
+endif()
+
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-find_package(Boost 1.55.0 COMPONENTS system iostreams zlib filesystem program_options unit_test_framework REQUIRED)
+find_package(Boost 1.58.0 COMPONENTS system iostreams filesystem program_options unit_test_framework ${ADDITIONAL_BOOST_COMPONENTS} REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if (NOT DEFINED WITHOUT_CURL OR NOT ${WITHOUT_CURL} EQUAL 1)
@@ -83,8 +94,8 @@ if (${BUILD_STATIC})
 	set_target_properties(TestScanner PROPERTIES LINK_SEARCH_END_STATIC 1)
 endif()
 
-target_link_libraries(HostScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_ZLIB_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(TestScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_ZLIB_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(HostScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_LIBRARIES})
+target_link_libraries(TestScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_LIBRARIES})
 
 install(TARGETS ${HostScanner} DESTINATION bin)
 

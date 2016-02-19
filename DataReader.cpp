@@ -1,8 +1,11 @@
 #include "DataReader.h"
 #include "Utils.h"
 #include <iostream>
-#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/filesystem.hpp>
+
+#if HAVE_ZLIB
+	#include <boost/iostreams/filter/gzip.hpp>
+#endif
 
 using namespace std;
 namespace io = boost::iostreams;
@@ -21,8 +24,7 @@ bool DataReader::OpenFile(const string& filename)
 
 	if (!fs->good())
 	{
-		delete fs;
-		fs = nullptr;
+		Close();
 		return false;
 	}
 
@@ -30,7 +32,12 @@ bool DataReader::OpenFile(const string& filename)
 
 	if (fs::path(filename).extension() == ".gz")
 	{
+#if HAVE_ZLIB
 		bs->push(io::gzip_decompressor());
+#else
+		Close();
+		return false;
+#endif
 	}
 
 	bs->push(*fs);
@@ -43,14 +50,22 @@ bool DataReader::OpenEnv(const string& name)
 	vector<string> paths = {
 #if Windows
 		get<0>(splitPath(getAppPath())) + "\\data\\" + name + ".dat",
+#if HAVE_ZLIB
 		get<0>(splitPath(getAppPath())) + "\\data\\" + name + ".dat.gz",
+#endif
 		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\data\\" + name + ".dat",
+#if HAVE_ZLIB
 		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\data\\" + name + ".dat.gz"
+#endif
 #else
 		get<0>(splitPath(getAppPath())) + "/data/" + name + ".dat",
+#if HAVE_ZLIB
 		get<0>(splitPath(getAppPath())) + "/data/" + name + ".dat.gz",
+#endif
 		"/var/lib/HostScanner/data/" + name + ".dat",
+#if HAVE_ZLIB
 		"/var/lib/HostScanner/data/" + name + ".dat.gz"
+#endif
 #endif
 	};
 

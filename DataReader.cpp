@@ -1,7 +1,8 @@
 #include "DataReader.h"
+#include "Utils.h"
+#include <iostream>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/filesystem.hpp>
-#include <iostream>
 
 using namespace std;
 namespace io = boost::iostreams;
@@ -11,7 +12,7 @@ DataReader::DataReader() : fs(nullptr), bs(nullptr)
 {
 }
 
-bool DataReader::Open(const string& filename)
+bool DataReader::OpenFile(const string& filename)
 {
 	Close();
 
@@ -35,6 +36,40 @@ bool DataReader::Open(const string& filename)
 	bs->push(*fs);
 
 	return true;
+}
+
+bool DataReader::OpenEnv(const string& name)
+{
+	vector<string> paths = {
+#if Windows
+		get<0>(splitPath(getAppPath())) + "\\data\\" + name + ".dat",
+		get<0>(splitPath(getAppPath())) + "\\data\\" + name + ".dat.gz",
+		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\data\\" + name + ".dat",
+		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\data\\" + name + ".dat.gz"
+#else
+		get<0>(splitPath(getAppPath())) + "/data/" + name + ".dat",
+		get<0>(splitPath(getAppPath())) + "/data/" + name + ".dat.gz",
+		"/var/lib/HostScanner/data/" + name + ".dat",
+		"/var/lib/HostScanner/data/" + name + ".dat.gz"
+#endif
+	};
+
+	for (auto path : paths)
+	{
+		fs::path fp(path);
+
+		if (!fs::exists(fp) || !fs::is_regular_file(fp))
+		{
+			continue;
+		}
+
+		if (OpenFile(path))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void DataReader::Close()

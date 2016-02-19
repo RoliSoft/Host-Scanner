@@ -20,11 +20,20 @@ public:
 	/*!
 	 * Opens the specified file for reading.
 	 *
+	 * \param filename Path to the data file.
+	 *
+	 * \return Value indicating whether the file was opened successfully.
+	 */
+	bool OpenFile(const std::string& filename);
+	
+	/*!
+	 * Finds the data file with the specified name and opens it for reading.
+	 *
 	 * \param filename Name of the data file.
 	 *
 	 * \return Value indicating whether the file was opened successfully.
 	 */
-	bool Open(const std::string& filename);
+	bool OpenEnv(const std::string& name);
 
 	/*!
 	 * Closes the currently open file, if any.

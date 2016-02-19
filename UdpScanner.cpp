@@ -237,33 +237,11 @@ void UdpScanner::loadPayloads()
 
 	// open payloads file
 
-	string path = "";
-	vector<string> paths = {
-#if Windows
-		get<0>(splitPath(getAppPath())) + "\\data\\payloads.dat",
-		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\data\\payloads.dat"
-#else
-		get<0>(splitPath(getAppPath())) + "/data/payloads.dat",
-		"/var/lib/HostScanner/data/payloads.lst"
-#endif
-	};
-
-	for (auto check : paths)
-	{
-		fs::path fp(check);
-
-		if (fs::exists(fp) && fs::is_regular_file(fp))
-		{
-			path = check;
-			break;
-		}
-	}
-
 	DataReader dr;
 
-	if (path.length() == 0 || !dr.Open(path))
+	if (!dr.OpenEnv("payloads"))
 	{
-		log(WRN, "UDP payloads database not found!");
+		log(WRN, "Payloads database was not found!");
 
 		pldmtx.unlock();
 		return;
@@ -276,7 +254,7 @@ void UdpScanner::loadPayloads()
 
 	if (ptype != 10)
 	{
-		log(WRN, "Type of the UDP payloads database is incorrect.");
+		log(WRN, "Payloads database type is incorrect.");
 
 		pldmtx.unlock();
 		return;
@@ -284,7 +262,7 @@ void UdpScanner::loadPayloads()
 
 	if (pver != 1)
 	{
-		log(WRN, "Version of the UDP payloads database is not supported.");
+		log(WRN, "Payloads database version is not supported.");
 
 		pldmtx.unlock();
 		return;
@@ -315,7 +293,6 @@ void UdpScanner::loadPayloads()
 		for (int j = 0; j < pports; j++)
 		{
 			dr.Read(port);
-
 			payloads.emplace(port, pld);
 		}
 	}

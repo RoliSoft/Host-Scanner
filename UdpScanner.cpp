@@ -1,5 +1,6 @@
 #include "UdpScanner.h"
 #include "Utils.h"
+#include "DataReader.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -239,11 +240,11 @@ void UdpScanner::loadPayloads()
 	string path = "";
 	vector<string> paths = {
 #if Windows
-		get<0>(splitPath(getAppPath())) + "\\payloads.lst",
-		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\payloads.lst"
+		get<0>(splitPath(getAppPath())) + "\\data\\payloads.dat",
+		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\data\\payloads.dat"
 #else
-		get<0>(splitPath(getAppPath())) + "/payloads.lst",
-		"/var/lib/HostScanner/payloads.lst"
+		get<0>(splitPath(getAppPath())) + "/data/payloads.dat",
+		"/var/lib/HostScanner/data/payloads.lst"
 #endif
 	};
 
@@ -258,162 +259,69 @@ void UdpScanner::loadPayloads()
 		}
 	}
 
-	ifstream plfs;
+	DataReader dr;
 
-	if (path.length() != 0)
-	{
-		plfs.open(path);
-	}
-
-	if (path.length() == 0 || !plfs.good())
+	if (path.length() == 0 || !dr.Open(path))
 	{
 		log(WRN, "UDP payloads database not found!");
-#if Windows
-		log(MSG, "Download https://svn.nmap.org/nmap/nmap-payloads next to the app and rename it to `payloads.lst`.");
-#elif Unix
-		log(MSG, "Run `wget https://svn.nmap.org/nmap/nmap-payloads -O payloads.lst` next to the app.");
-#endif
 
-		plfs.close();
 		pldmtx.unlock();
 		return;
 	}
 
-	// define regexes for parsing the file
+	unsigned short ptype, pver;
 
-	regex skiprgx("^\\s*((#|source).*|$)");
-	regex newprgx("^\\s*udp\\s+([\\d,]+)(?:\\s+\"(.+)\")?.*");
-	regex datlrgx("^\\s*\"(.+)\".*");
-	regex hexcrgx("\\\\x([a-fA-F0-9]{2})");
+	dr.Read(ptype);
+	dr.Read(pver);
 
-	// start parsing the file line-by-line
-
-	string line;
-	while (getline(plfs, line))
+	if (ptype != 10)
 	{
-		// skip comments and empty lines
+		log(WRN, "Type of the UDP payloads database is incorrect.");
 
-		if (regex_match(line, skiprgx))
+		pldmtx.unlock();
+		return;
+	}
+
+	if (pver != 1)
+	{
+		log(WRN, "Version of the UDP payloads database is not supported.");
+
+		pldmtx.unlock();
+		return;
+	}
+
+	unsigned int pnum;
+	dr.Read(pnum);
+
+	for (int i = 0; i < pnum; i++)
+	{
+		// read payload
+
+		auto data = dr.ReadData();
+
+		// copy read data
+
+		pld = new struct Payload();
+		pld->datlen = get<0>(data);
+		pld->data = new char[pld->datlen];
+
+		memcpy(pld->data, get<1>(data), pld->datlen);
+
+		// enumerate over the mapped ports
+
+		unsigned short pports;
+		dr.Read(pports);
+
+		for (int j = 0; j < pports; j++)
 		{
-			continue;
-		}
+			dr.Read(port);
 
-		// check for "udp" and port enumeration lines
-
-		smatch sm;
-		if (regex_match(line, sm, newprgx))
-		{
-			pld = new struct Payload();
-
-			// parse port enumeration
-
-			if (sm[1].str().find(',') != string::npos)
-			{
-				// multiple ports, parse one by one
-
-				string str = string(sm[1].str());
-				size_t pos = 0;
-				string token;
-				while ((pos = str.find(',')) != string::npos)
-				{
-					token = str.substr(0, pos);
-					port = (unsigned short)stoi(token);
-					payloads.emplace(port, pld);
-					str.erase(0, pos + 1);
-				}
-
-				// parse last port
-
-				token = str.substr(0, pos);
-				port = (unsigned short)stoi(token);
-				payloads.emplace(port, pld);
-			}
-			else
-			{
-				// single port
-
-				port = (unsigned short)stoi(sm[1].str());
-				payloads.emplace(port, pld);
-			}
-
-			// parse payload, if starts on this line
-
-			if (sm[2].matched)
-			{
-				// resolve hexadecimals
-
-				string data;
-				auto callback = [&](string const& m)
-					{
-						auto mc = m.c_str();
-						if (mc[0] == '\\')
-						{
-							data += char(stoul(string(1, mc[2]) + mc[3], nullptr, 16));
-						}
-						else
-						{
-							data += m;
-						}
-					};
-
-				string input = sm[2].str();
-				sregex_token_iterator begin(input.begin(), input.end(), hexcrgx, { -1, 0 }), end;
-				for_each(begin, end, callback);
-
-				// copy to payload
-
-				pld->datlen = data.length();
-				pld->data = new char[pld->datlen];
-
-				memcpy(pld->data, data.c_str(), pld->datlen);
-			}
-
-			continue;
-		}
-
-		// check for lines that start or continue payload data
-
-		if (pld != nullptr && regex_match(line, sm, datlrgx))
-		{
-			string data;
-			if (pld->data != nullptr)
-			{
-				data += string(pld->data, pld->datlen);
-			}
-
-			// resolve hexadecimals
-
-			auto callback = [&](string const& m)
-				{
-					auto mc = m.c_str();
-					if (mc[0] == '\\' && mc[1] == 'x')
-					{
-						data += char(stoul(string(1, mc[2]) + mc[3], nullptr, 16));
-					}
-					else
-					{
-						data += m;
-					}
-				};
-
-			string input = sm[1].str();
-			sregex_token_iterator begin(input.begin(), input.end(), hexcrgx, { -1, 0 }), end;
-			for_each(begin, end, callback);
-
-			// copy to payload
-
-			delete pld->data;
-
-			pld->datlen = data.length();
-			pld->data = new char[pld->datlen];
-
-			memcpy(pld->data, data.c_str(), pld->datlen);
+			payloads.emplace(port, pld);
 		}
 	}
 
 	// clean up
 
-	plfs.close();
 	pldmtx.unlock();
 }
 

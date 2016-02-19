@@ -13,11 +13,23 @@ public:
 
 	/*!
 	 * Creates a new instance of this type.
+	 */
+	DataReader();
+	
+	/*!
+	 * Opens the specified file for reading.
 	 *
 	 * \param filename Name of the data file.
+	 *
+	 * \return Value indicating whether the file was opened successfully.
 	 */
-	DataReader(const std::string& filename);
-	
+	bool Open(const std::string& filename);
+
+	/*!
+	 * Closes the currently open file, if any.
+	 */
+	void Close();
+
 	/*!
 	 * Reads the next field as a numeric of type `T` from the file.
 	 *

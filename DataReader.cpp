@@ -2,10 +2,33 @@
 
 using namespace std;
 
-DataReader::DataReader(const string& filename)
+DataReader::DataReader() : fs(nullptr)
 {
+}
+
+bool DataReader::Open(const string& filename)
+{
+	Close();
+
 	fs = new ifstream();
 	fs->open(filename, ifstream::binary);
+
+	return fs->good();
+}
+
+void DataReader::Close()
+{
+	if (fs != nullptr)
+	{
+		if (fs->is_open())
+		{
+			fs->close();
+		}
+
+		delete fs;
+		
+		fs = nullptr;
+	}
 }
 
 tuple<int, const char*> DataReader::ReadData()
@@ -27,13 +50,5 @@ string DataReader::ReadString()
 
 DataReader::~DataReader()
 {
-	if (fs != nullptr)
-	{
-		if (fs->is_open())
-		{
-			fs->close();
-		}
-
-		delete fs;
-	}
+	Close();
 }

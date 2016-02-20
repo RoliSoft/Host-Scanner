@@ -29,7 +29,7 @@ public:
 	/*!
 	 * Finds the data file with the specified name and opens it for reading.
 	 *
-	 * \param filename Name of the data file.
+	 * \param name Name of the data file.
 	 *
 	 * \return Value indicating whether the file was opened successfully.
 	 */

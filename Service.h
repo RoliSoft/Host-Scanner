@@ -70,28 +70,33 @@ public:
 	/*!
 	 * Whether the service is alive at this host.
 	 */
-	bool alive = false;
+	bool alive;
 	
 	/*!
 	 * Reason for the value specified in `alive`.
 	 * Negative values are errors, positive values are scanner-dependent reasons.
 	 */
-	AliveReason reason = AR_NotScanned;
+	AliveReason reason;
 
 	/*!
 	 * Service banner, if any.
 	 */
-	char* banner = nullptr;
+	char* banner;
 
 	/*!
 	 * Length of the service banner.
 	 */
-	int banlen = 0;
+	int banlen;
+
+	/*!
+	 * CPE name of the service.
+	 */
+	std::string cpe;
 
 	/*!
 	 * Object store reserved for the scanner.
 	 */
-	void* data = nullptr;
+	void* data;
 
 	/*!
 	 * Creates a new instance of this type.

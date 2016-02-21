@@ -3,12 +3,32 @@
 #include "DataReader.h"
 
 using namespace std;
+using namespace boost;
 
 vector<struct ServiceRegex*> ServiceRegexMatcher::regexes = vector<struct ServiceRegex*>();
 
 void ServiceRegexMatcher::Scan(Service* service)
 {
-	// TODO: implement
+	if (service->banlen == 0 || service->banner == nullptr)
+	{
+		return;
+	}
+
+	if (regexes.size() == 0)
+	{
+		loadRegexes();
+	}
+
+	string banner(service->banner, service->banlen);
+
+	for (auto rgx : regexes)
+	{
+		if (regex_match(banner, rgx->regex, match_single_line))
+		{
+			service->cpe = rgx->cpe;
+			return;
+		}
+	}
 }
 
 vector<ServiceRegex*> ServiceRegexMatcher::GetRegexes()
@@ -72,13 +92,26 @@ void ServiceRegexMatcher::loadRegexes()
 	{
 		auto rgx = new ServiceRegex();
 
-		rgx->regex   = regex(dr.ReadString());
+		string rgex  = dr.ReadString();
 		rgx->cpe     = dr.ReadString();
-		rgx->vendor  = dr.ReadString();
 		rgx->product = dr.ReadString();
 		rgx->version = dr.ReadString();
 
-		regexes.push_back(rgx);
+		if (rgx->cpe.length() == 0)
+		{
+			delete rgx;
+			continue;
+		}
+
+		try
+		{
+			rgx->regex = regex(rgex, regex::perl);
+			regexes.push_back(rgx);
+		}
+		catch (runtime_error& re)
+		{
+			delete rgx;
+		}
 	}
 
 	// clean up

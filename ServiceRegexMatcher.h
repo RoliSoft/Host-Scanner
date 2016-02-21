@@ -1,8 +1,8 @@
 #pragma once
 #include "Stdafx.h"
 #include "BannerProcessor.h"
-#include <regex>
 #include <string>
+#include <boost/regex.hpp>
 
 /*!
  * Represents a service identifier entry.
@@ -13,17 +13,12 @@ struct ServiceRegex
 	/*!
 	 * Regular expression to match against service banner.
 	 */
-	std::regex regex;
+	boost::regex regex;
 
 	/*!
 	 * CPE name of the matched service.
 	 */
 	std::string cpe;
-
-	/*!
-	 * Vendor of the matched service.
-	 */
-	std::string vendor;
 
 	/*!
 	 * Product name of the matched service.

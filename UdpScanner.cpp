@@ -216,12 +216,12 @@ unordered_map<unsigned short, Payload*> UdpScanner::GetPayloads()
 
 void UdpScanner::loadPayloads()
 {
-	static mutex pldmtx;
-	auto locked = pldmtx.try_lock();
+	static mutex mtx;
+	auto locked = mtx.try_lock();
 	if (!locked)
 	{
 		// wait until running parser finishes before returning
-		lock_guard<mutex> guard(pldmtx);
+		lock_guard<mutex> guard(mtx);
 		return;
 	}
 
@@ -243,7 +243,7 @@ void UdpScanner::loadPayloads()
 	{
 		log(WRN, "Payloads database was not found!");
 
-		pldmtx.unlock();
+		mtx.unlock();
 		return;
 	}
 
@@ -256,7 +256,7 @@ void UdpScanner::loadPayloads()
 	{
 		log(WRN, "Payloads database type is incorrect.");
 
-		pldmtx.unlock();
+		mtx.unlock();
 		return;
 	}
 
@@ -264,14 +264,14 @@ void UdpScanner::loadPayloads()
 	{
 		log(WRN, "Payloads database version is not supported.");
 
-		pldmtx.unlock();
+		mtx.unlock();
 		return;
 	}
 
 	unsigned int pnum;
 	dr.Read(pnum);
 
-	for (int i = 0; i < pnum; i++)
+	for (auto i = 0u; i < pnum; i++)
 	{
 		// read payload
 
@@ -290,7 +290,7 @@ void UdpScanner::loadPayloads()
 		unsigned short pports;
 		dr.Read(pports);
 
-		for (int j = 0; j < pports; j++)
+		for (auto j = 0u; j < pports; j++)
 		{
 			dr.Read(port);
 			payloads.emplace(port, pld);
@@ -299,7 +299,7 @@ void UdpScanner::loadPayloads()
 
 	// clean up
 
-	pldmtx.unlock();
+	mtx.unlock();
 }
 
 UdpScanner::~UdpScanner()

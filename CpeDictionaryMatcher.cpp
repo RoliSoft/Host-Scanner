@@ -9,7 +9,77 @@ unordered_map<string, vector<string>*> CpeDictionaryMatcher::aliases = unordered
 
 void CpeDictionaryMatcher::Scan(Service* service)
 {
-	// TODO: implement
+	if (service->banlen == 0 || service->banner == nullptr)
+	{
+		return;
+	}
+
+	if (entries.size() == 0)
+	{
+		loadEntries();
+	}
+
+	string banner(service->banner, service->banlen);
+
+	int tokens = 0;
+	int matchlen = 0;
+	string best = "";
+
+	for (auto ent : entries)
+	{
+		int ctokens = 0;
+		int cmatchlen = 0;
+		bool verfound = false;
+		string bestver = "";
+		
+		for (auto token : ent->tokens)
+		{
+			if (banner.find(token) != string::npos)
+			{
+				ctokens++;
+				cmatchlen += token.length();
+			}
+		}
+
+		for (auto version : ent->versions)
+		{
+			if (banner.find(version->version) == string::npos)
+			{
+				continue;
+			}
+
+			verfound = true;
+
+			int vtokens = ctokens;
+			int vmatchlen = cmatchlen;
+
+			for (auto token : version->tokens)
+			{
+				if (banner.find(token) != string::npos)
+				{
+					vtokens++;
+					vmatchlen += token.length();
+				}
+			}
+
+			if (vmatchlen > cmatchlen)
+			{
+				ctokens = vtokens;
+				cmatchlen = vmatchlen;
+				bestver = version->cpe;
+			}
+		}
+
+		if (verfound && cmatchlen > matchlen)
+		{
+			tokens = ctokens;
+			matchlen = cmatchlen;
+			best = ent->cpe + ":" + bestver;
+			log(DBG, best);
+		}
+	}
+
+	service->cpe = best;
 }
 
 vector<CpeEntry*> CpeDictionaryMatcher::GetEntries()
@@ -83,10 +153,42 @@ void CpeDictionaryMatcher::loadEntries()
 	{
 		auto ent = new CpeEntry();
 
-		ent->cpe     = dr.ReadString();
-		ent->vendor  = dr.ReadString();
-		ent->product = dr.ReadString();
-		ent->name    = dr.ReadString();
+		ent->cpe = dr.ReadString();
+		
+		unsigned char tnum;
+		dr.Read(tnum);
+
+		ent->tokens = vector<string>();
+
+		for (auto j = 0u; j < tnum; j++)
+		{
+			ent->tokens.push_back(dr.ReadString());
+		}
+
+		unsigned int vnum;
+		dr.Read(vnum);
+
+		ent->versions = vector<CpeVersionEntry*>();
+
+		for (auto j = 0u; j < vnum; j++)
+		{
+			auto ver = new CpeVersionEntry();
+
+			ver->cpe     = dr.ReadString();
+			ver->version = dr.ReadString();
+
+			unsigned char vtnum;
+			dr.Read(vtnum);
+
+			ver->tokens = vector<string>();
+
+			for (auto k = 0u; k < vtnum; k++)
+			{
+				ver->tokens.push_back(dr.ReadString());
+			}
+
+			ent->versions.push_back(ver);
+		}
 
 		entries.push_back(ent);
 	}

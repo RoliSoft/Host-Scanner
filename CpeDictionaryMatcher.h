@@ -5,6 +5,29 @@
 #include <unordered_map>
 
 /*!
+ * Represents a sub-entry in the CPE dictionary.
+ */
+struct CpeVersionEntry
+{
+
+	/*!
+	 * Version part of the CPE name.
+	 */
+	std::string cpe;
+
+	/*!
+	 * Version number token.
+	 */
+	std::string version;
+
+	/*!
+	 * Version-specific tokens of the entry.
+	 */
+	std::vector<std::string> tokens;
+
+};
+
+/*!
  * Represents a CPE dictionary entry.
  */
 struct CpeEntry
@@ -16,19 +39,14 @@ struct CpeEntry
 	std::string cpe;
 
 	/*!
-	 * Vendor of the entry.
+	 * Common tokens of the entry.
 	 */
-	std::string vendor;
+	std::vector<std::string> tokens;
 
 	/*!
-	 * Product name of the entry.
+	 * Known versions of the entry.
 	 */
-	std::string product;
-
-	/*!
-	 * User-friendly name of the entry.
-	 */
-	std::string name;
+	std::vector<struct CpeVersionEntry*> versions;
 
 };
 
@@ -58,7 +76,7 @@ public:
 	 *
 	 * \return List of CPE aliases.
 	 */
-	static std::unordered_map<std::string, std::vector<std::string>*> CpeDictionaryMatcher::GetAliases();
+	static std::unordered_map<std::string, std::vector<std::string>*> GetAliases();
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.

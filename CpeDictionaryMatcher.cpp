@@ -3,6 +3,7 @@
 #include <mutex>
 
 using namespace std;
+using namespace boost;
 
 vector<struct CpeEntry*> CpeDictionaryMatcher::entries = vector<struct CpeEntry*>();
 unordered_map<string, vector<string>*> CpeDictionaryMatcher::aliases = unordered_map<string, vector<string>*>();
@@ -34,10 +35,11 @@ void CpeDictionaryMatcher::Scan(Service* service)
 		
 		for (auto token : ent->tokens)
 		{
-			if (banner.find(token) != string::npos)
+			smatch what;
+			if (regex_search(banner, what, token))
 			{
 				ctokens++;
-				cmatchlen += token.length();
+				cmatchlen += what[0].length();
 			}
 		}
 
@@ -55,10 +57,11 @@ void CpeDictionaryMatcher::Scan(Service* service)
 
 			for (auto token : version->tokens)
 			{
-				if (banner.find(token) != string::npos)
+				smatch what;
+				if (regex_search(banner, what, token))
 				{
 					vtokens++;
-					vmatchlen += token.length();
+					vmatchlen += what[0].length();
 				}
 			}
 
@@ -146,6 +149,9 @@ void CpeDictionaryMatcher::loadEntries()
 		return;
 	}
 
+	regex esc("[.^$|()\\[\\]{}*+?\\\\]");
+	string rep("\\\\&");
+
 	unsigned int pnum;
 	dr.Read(pnum);
 
@@ -158,11 +164,12 @@ void CpeDictionaryMatcher::loadEntries()
 		unsigned char tnum;
 		dr.Read(tnum);
 
-		ent->tokens = vector<string>();
+		ent->tokens = vector<regex>();
 
 		for (auto j = 0u; j < tnum; j++)
 		{
-			ent->tokens.push_back(dr.ReadString());
+			auto asd = regex_replace(dr.ReadString(), esc, rep, match_default | format_sed);
+			ent->tokens.push_back(regex("\\b(" + asd + ")\\b", regex::icase));
 		}
 
 		unsigned int vnum;
@@ -180,11 +187,12 @@ void CpeDictionaryMatcher::loadEntries()
 			unsigned char vtnum;
 			dr.Read(vtnum);
 
-			ver->tokens = vector<string>();
+			ver->tokens = vector<regex>();
 
 			for (auto k = 0u; k < vtnum; k++)
 			{
-				ver->tokens.push_back(dr.ReadString());
+				auto asd = regex_replace(dr.ReadString(), esc, rep, match_default | format_sed);
+				ver->tokens.push_back(regex("\\b(" + asd + ")\\b", regex::icase));
 			}
 
 			ent->versions.push_back(ver);

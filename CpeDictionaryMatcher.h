@@ -3,6 +3,7 @@
 #include "BannerProcessor.h"
 #include <string>
 #include <unordered_map>
+#include <boost/regex.hpp>
 
 /*!
  * Represents a sub-entry in the CPE dictionary.
@@ -23,7 +24,7 @@ struct CpeVersionEntry
 	/*!
 	 * Version-specific tokens of the entry.
 	 */
-	std::vector<std::string> tokens;
+	std::vector<boost::regex> tokens;
 
 };
 
@@ -41,7 +42,7 @@ struct CpeEntry
 	/*!
 	 * Common tokens of the entry.
 	 */
-	std::vector<std::string> tokens;
+	std::vector<boost::regex> tokens;
 
 	/*!
 	 * Known versions of the entry.

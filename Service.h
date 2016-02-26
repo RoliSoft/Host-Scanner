@@ -89,9 +89,9 @@ public:
 	int banlen;
 
 	/*!
-	 * CPE name of the service.
+	 * CPE names of the service.
 	 */
-	std::string cpe;
+	std::vector<std::string> cpe;
 
 	/*!
 	 * Object store reserved for the scanner.

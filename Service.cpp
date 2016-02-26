@@ -1,8 +1,10 @@
 #include "Service.h"
 
+using namespace std;
+
 Service::Service(const char* address, unsigned short port, IPPROTO protocol)
 	: address(address), port(port), protocol(protocol),
-	  alive(false), reason(AR_NotScanned), banner(nullptr), banlen(0), cpe(""), data(nullptr)
+	  alive(false), reason(AR_NotScanned), banner(nullptr), banlen(0), cpe(vector<string>()), data(nullptr)
 {
 }
 

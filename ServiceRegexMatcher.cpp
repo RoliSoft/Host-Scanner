@@ -25,8 +25,7 @@ void ServiceRegexMatcher::Scan(Service* service)
 	{
 		if (regex_match(banner, rgx->regex, match_single_line))
 		{
-			service->cpe = rgx->cpe;
-			return;
+			service->cpe.push_back(rgx->cpe);
 		}
 	}
 }

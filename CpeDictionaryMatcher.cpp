@@ -22,15 +22,12 @@ void CpeDictionaryMatcher::Scan(Service* service)
 
 	string banner(service->banner, service->banlen);
 
-	int tokens = 0;
-	int matchlen = 0;
-	string best = "";
+	auto tokens = 0;
 
 	for (auto ent : entries)
 	{
-		int ctokens = 0;
-		int cmatchlen = 0;
-		bool verfound = false;
+		auto ctokens   = 0;
+		auto verfound  = false;
 		string bestver = "";
 		
 		for (auto token : ent->tokens)
@@ -39,8 +36,12 @@ void CpeDictionaryMatcher::Scan(Service* service)
 			if (regex_search(banner, what, token))
 			{
 				ctokens++;
-				cmatchlen += what[0].length();
 			}
+		}
+
+		if (ctokens < ent->tokens.size())
+		{
+			continue;
 		}
 
 		for (auto version : ent->versions)
@@ -53,7 +54,6 @@ void CpeDictionaryMatcher::Scan(Service* service)
 			verfound = true;
 
 			int vtokens = ctokens;
-			int vmatchlen = cmatchlen;
 
 			for (auto token : version->tokens)
 			{
@@ -61,28 +61,23 @@ void CpeDictionaryMatcher::Scan(Service* service)
 				if (regex_search(banner, what, token))
 				{
 					vtokens++;
-					vmatchlen += what[0].length();
 				}
 			}
 
-			if (vmatchlen > cmatchlen)
+			if (bestver == "" || vtokens > tokens)
 			{
 				ctokens = vtokens;
-				cmatchlen = vmatchlen;
 				bestver = version->cpe;
 			}
 		}
 
-		if (verfound && cmatchlen > matchlen)
+		if (verfound)
 		{
 			tokens = ctokens;
-			matchlen = cmatchlen;
-			best = ent->cpe + ":" + bestver;
-			log(DBG, best);
+			
+			//service->cpe.push_back(ent->cpe + ":" + bestver);
 		}
 	}
-
-	service->cpe = best;
 }
 
 vector<CpeEntry*> CpeDictionaryMatcher::GetEntries()

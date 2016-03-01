@@ -307,7 +307,7 @@ void ArpPinger::prepService(Service* service)
 	// parse address
 	
 	unsigned int addr;
-	inet_pton(AF_INET, service->address, &addr);
+	inet_pton(AF_INET, service->address.c_str(), &addr);
 
 	// check which interfaces' range is this address in
 
@@ -325,7 +325,7 @@ void ArpPinger::prepService(Service* service)
 	if (iface == nullptr)
 	{
 		service->reason = AR_ScanFailed;
-		log(ERR, "Host '" + string(service->address) + "' is not local to any of the interfaces.");
+		log(ERR, "Host '" + service->address + "' is not local to any of the interfaces.");
 		return;
 	}
 

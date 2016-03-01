@@ -81,7 +81,7 @@ void IcmpPinger::initSocket(Service* service)
 	hint.ai_family = AF_UNSPEC; // allow both v4 and v6
 	hint.ai_flags = AI_NUMERICHOST; // disable DNS lookups
 
-	getaddrinfo(service->address, "echo", &hint, &info);
+	getaddrinfo(service->address.c_str(), "echo", &hint, &info);
 
 	service->protocol = info->ai_family == AF_INET6 ? IPPROTO(IPPROTO_ICMPV6) : IPPROTO(IPPROTO_ICMP);
 

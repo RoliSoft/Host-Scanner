@@ -33,7 +33,7 @@ void NmapScanner::Scan(Services* services)
 		hint.ai_flags = AI_NUMERICHOST; // disable DNS lookups
 
 		auto port = lexical_cast<string>(service->port);
-		getaddrinfo(service->address, port.c_str(), &hint, &info);
+		getaddrinfo(service->address.c_str(), port.c_str(), &hint, &info);
 
 		switch (info->ai_family)
 		{
@@ -319,10 +319,7 @@ void NmapScanner::parseXml(string xml, Services* services)
 
 								if (banner.length() != 0)
 								{
-									service->banlen = banner.length();
-									service->banner = new char[service->banlen];
-
-									memcpy(service->banner, banner.c_str(), service->banlen);
+									service->banner = banner;
 								}
 
 								break;

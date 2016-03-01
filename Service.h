@@ -55,7 +55,7 @@ public:
 	/*!
 	 * Remote address.
 	 */
-	const char* address;
+	std::string address;
 
 	/*!
 	 * Remote port.
@@ -81,12 +81,7 @@ public:
 	/*!
 	 * Service banner, if any.
 	 */
-	char* banner;
-
-	/*!
-	 * Length of the service banner.
-	 */
-	int banlen;
+	std::string banner;
 
 	/*!
 	 * CPE names of the service.
@@ -105,7 +100,7 @@ public:
 	 * \param port Remote port.
 	 * \param protocol Remote protocol, otherwise TCP.
 	 */
-	Service(const char* address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
+	Service(std::string address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
 
 	/*!
 	 * Copies the specified instance.

@@ -96,7 +96,7 @@ void TcpScanner::initSocket(Service* service)
 	hint.ai_flags = AI_NUMERICHOST; // disable DNS lookups
 
 	auto port = lexical_cast<string>(service->port);
-	getaddrinfo(service->address, port.c_str(), &hint, &info);
+	getaddrinfo(service->address.c_str(), port.c_str(), &hint, &info);
 	
 	// create socket
 
@@ -222,7 +222,7 @@ void TcpScanner::readBanner(Service* service, bool last)
 		return;
 	}
 
-	if (service->banlen > 0)
+	if (service->banner.length() > 0)
 	{
 		service->reason = AR_ReplyReceived;
 		return;
@@ -238,10 +238,7 @@ void TcpScanner::readBanner(Service* service, bool last)
 	{
 		// received a service banner
 
-		service->banlen = res;
-		service->banner = new char[res];
-
-		memcpy(service->banner, buf, res);
+		service->banner = string(buf, res);
 
 		// TODO run further protocol probes
 	}

@@ -111,10 +111,7 @@ void ShodanScanner::getHostInfo(Host* host)
 			
 			if (jdata.length() != 0)
 			{
-				service->banlen = jdata.length();
-				service->banner = new char[jdata.length()];
-
-				memcpy(service->banner, jdata.c_str(), jdata.length());
+				service->banner = jdata;
 			}
 
 			// save extended port data

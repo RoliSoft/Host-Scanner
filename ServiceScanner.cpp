@@ -7,20 +7,20 @@ void ServiceScanner::DumpResults(Services* services)
 {
 	for (auto service : *services)
 	{
-		log(MSG, string(service->address) + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + to_string(service->reason) + ")");
+		log(MSG, service->address + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + to_string(service->reason) + ")");
 
-		if (service->banlen > 0)
+		if (service->banner.length() > 0)
 		{
 			stringstream ss;
 			ss << " -> ";
 
-			for (int i = 0; i < service->banlen; i++)
+			for (int i = 0; i < service->banner.length(); i++)
 			{
 				if (service->banner[i] == '\r') continue;
 
 				if (service->banner[i] == '\n')
 				{
-					if ((service->banlen - i) > 3)
+					if ((service->banner.length() - i) > 3)
 					{
 						ss << endl << " -> ";
 					}

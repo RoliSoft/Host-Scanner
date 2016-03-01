@@ -109,7 +109,7 @@ void ServiceRegexMatcher::loadRegexes()
 			rgx->regex = regex(rgex, regex::perl);
 			regexes.push_back(rgx);
 		}
-		catch (runtime_error& re)
+		catch (runtime_error&)
 		{
 			delete rgx;
 		}

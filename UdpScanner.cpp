@@ -100,7 +100,7 @@ void UdpScanner::initSocket(Service* service)
 	hint.ai_flags = AI_NUMERICHOST; // disable DNS lookups
 
 	auto port = lexical_cast<string>(service->port);
-	getaddrinfo(service->address, port.c_str(), &hint, &info);
+	getaddrinfo(service->address.c_str(), port.c_str(), &hint, &info);
 	
 	// create socket
 
@@ -171,10 +171,7 @@ void UdpScanner::pollSocket(Service* service, bool last)
 		{
 			// save service banner
 
-			service->banlen = res;
-			service->banner = new char[res];
-
-			memcpy(service->banner, buf, res);
+			service->banner = string(buf, res);
 		}
 	}
 	else

@@ -4,14 +4,12 @@ using namespace std;
 
 void BannerProcessor::Scan(Service* service)
 {
-	if (service->banner == nullptr)
+	auto matches = Scan(service->banner);
+
+	if (matches.size() > 0)
 	{
-		return;
+		service->cpe.insert(service->cpe.end(), matches.begin(), matches.end());
 	}
-
-	auto matches = Scan(string(service->banner, service->banlen));
-
-	service->cpe.insert(service->cpe.end(), matches.begin(), matches.end());
 }
 
 BannerProcessor::~BannerProcessor()

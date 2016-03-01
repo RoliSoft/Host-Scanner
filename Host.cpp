@@ -1,6 +1,6 @@
 #include "Host.h"
 
-Host::Host(const char* address)
+Host::Host(std::string address)
 	: address(address), services(new Services())
 {
 }

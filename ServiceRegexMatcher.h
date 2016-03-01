@@ -40,20 +40,13 @@ class ServiceRegexMatcher : public BannerProcessor
 public:
 	
 	/*!
-	 * Processes the banner of a service.
-	 * 
-	 * \param service Scanned service.
-	 */
-	void Scan(Service* service) override;
-	
-	/*!
 	 * Processes the specified service banner.
 	 * 
 	 * \param banner Service banner.
 	 * 
 	 * \return Matching CPE entries.
 	 */
-	std::vector<std::string> Scan(const std::string& banner);
+	std::vector<std::string> Scan(const std::string& banner) override;
 
 	/*!
 	 * Gets the regular expressions.

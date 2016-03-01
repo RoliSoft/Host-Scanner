@@ -8,18 +8,6 @@ using namespace boost;
 vector<struct CpeEntry*> CpeDictionaryMatcher::entries = vector<struct CpeEntry*>();
 unordered_map<string, vector<string>*> CpeDictionaryMatcher::aliases = unordered_map<string, vector<string>*>();
 
-void CpeDictionaryMatcher::Scan(Service* service)
-{
-	if (service->banner == nullptr)
-	{
-		return;
-	}
-
-	auto matches = Scan(string(service->banner, service->banlen));
-
-	service->cpe.insert(service->cpe.end(), matches.begin(), matches.end());
-}
-
 vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 {
 	if (entries.size() == 0)

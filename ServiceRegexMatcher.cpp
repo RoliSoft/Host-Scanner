@@ -7,18 +7,6 @@ using namespace boost;
 
 vector<struct ServiceRegex*> ServiceRegexMatcher::regexes = vector<struct ServiceRegex*>();
 
-void ServiceRegexMatcher::Scan(Service* service)
-{
-	if (service->banner == nullptr)
-	{
-		return;
-	}
-
-	auto matches = Scan(string(service->banner, service->banlen));
-
-	service->cpe.insert(service->cpe.end(), matches.begin(), matches.end());
-}
-
 vector<string> ServiceRegexMatcher::Scan(const string& banner)
 {
 	if (regexes.size() == 0)

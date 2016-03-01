@@ -10,17 +10,29 @@ unordered_map<string, vector<string>*> CpeDictionaryMatcher::aliases = unordered
 
 void CpeDictionaryMatcher::Scan(Service* service)
 {
-	if (service->banlen == 0 || service->banner == nullptr)
+	if (service->banner == nullptr)
 	{
 		return;
 	}
 
+	auto matches = Scan(string(service->banner, service->banlen));
+
+	service->cpe.insert(service->cpe.end(), matches.begin(), matches.end());
+}
+
+vector<string> CpeDictionaryMatcher::Scan(const string& banner)
+{
 	if (entries.size() == 0)
 	{
 		loadEntries();
 	}
 
-	string banner(service->banner, service->banlen);
+	vector<string> matches;
+
+	if (banner.length() == 0)
+	{
+		return matches;
+	}
 
 	auto tokens = 0;
 
@@ -75,9 +87,11 @@ void CpeDictionaryMatcher::Scan(Service* service)
 		{
 			tokens = ctokens;
 			
-			//service->cpe.push_back(ent->cpe + ":" + bestver);
+			matches.push_back(ent->cpe + ":" + bestver);
 		}
 	}
+
+	return matches;
 }
 
 vector<CpeEntry*> CpeDictionaryMatcher::GetEntries()

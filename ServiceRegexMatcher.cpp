@@ -9,25 +9,39 @@ vector<struct ServiceRegex*> ServiceRegexMatcher::regexes = vector<struct Servic
 
 void ServiceRegexMatcher::Scan(Service* service)
 {
-	if (service->banlen == 0 || service->banner == nullptr)
+	if (service->banner == nullptr)
 	{
 		return;
 	}
 
+	auto matches = Scan(string(service->banner, service->banlen));
+
+	service->cpe.insert(service->cpe.end(), matches.begin(), matches.end());
+}
+
+vector<string> ServiceRegexMatcher::Scan(const string& banner)
+{
 	if (regexes.size() == 0)
 	{
 		loadRegexes();
 	}
 
-	string banner(service->banner, service->banlen);
+	vector<string> matches;
+
+	if (banner.length() == 0)
+	{
+		return matches;
+	}
 
 	for (auto rgx : regexes)
 	{
 		if (regex_match(banner, rgx->regex, match_single_line))
 		{
-			service->cpe.push_back(rgx->cpe);
+			matches.push_back(rgx->cpe);
 		}
 	}
+
+	return matches;
 }
 
 vector<ServiceRegex*> ServiceRegexMatcher::GetRegexes()

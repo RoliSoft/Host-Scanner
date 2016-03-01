@@ -28,7 +28,10 @@
 #include "IcmpPinger.h"
 #include "ArpPinger.h"
 #include "NmapScanner.h"
+#include "HttpTokenizer.h"
+#include "ThreeDigitTokenizer.h"
 #include <boost/test/unit_test.hpp>
+#include <boost/algorithm/string.hpp>
 #include <iostream>
 
 #ifndef BOOST_TEST_WARN
@@ -91,6 +94,110 @@ struct TestSetup
 
 BOOST_GLOBAL_FIXTURE(TestSetup);
 
+//---------------------------------------------------------------------------------------------------------------------
+// Tokenizer Tests
+//---------------------------------------------------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(TokenizeAuto)
+{
+	string http_bnr = "HTTP/1.1 200 OK\r\nServer: tokenizer-test\r\n\r\n42";
+	string smtp_bnr = "220 127.0.0.1 Tokenizer ESMTP Test ready";
+	string fake_bnr = "Quidquid latine dictum sit altum videtur.";
+
+	auto http_tok = ProtocolTokenizer::AutoTokenize(http_bnr);
+	auto smtp_tok = ProtocolTokenizer::AutoTokenize(smtp_bnr);
+	auto fake_tok = ProtocolTokenizer::AutoTokenize(fake_bnr);
+
+	BOOST_TEST_CHECK(http_tok.size() > 0, "Failed to extract any tokens from HTTP header.");
+	BOOST_TEST_CHECK(smtp_tok.size() > 0, "Failed to extract any tokens from SMTP header.");
+	BOOST_TEST_CHECK(fake_tok.size() > 0, "Failed to extract any tokens from fake header.");
+
+	trim(http_tok[0]);
+	trim(smtp_tok[0]);
+	trim(fake_tok[0]);
+
+	BOOST_TEST_CHECK(http_tok[0] == "tokenizer-test",       "Erroneous server name extracted from HTTP header.");
+	BOOST_TEST_CHECK(smtp_tok[0] == "Tokenizer ESMTP Test", "Erroneous server name extracted from SMTP header.");
+	BOOST_TEST_CHECK(fake_tok[0] == fake_bnr,               "Erroneous token returned for fake header.");
+}
+
+BOOST_AUTO_TEST_CASE(TokenizeHttp)
+{
+	HttpTokenizer tk;
+
+	// banner compiled from various header lines seen in the wild via shodan
+
+	string banner = "HTTP/1.1 200 OK\r\nDate: Mon, 29 Feb 2016 21:24:21 GMT\r\nServer: nginx/1.4.6 (Ubuntu)\r\nServer: Apache-Coyote/1.1\r\nServer: Apache/2.2.15 (CentOS)\r\nServer: Apache/2.2.8 (Ubuntu) PHP/5.2.4-2ubuntu5.17 with Suhosin-Patch mod_ssl/2.2.8 OpenSSL/0.9.8g\r\nServer: Apache/2.0.46 (Red Hat) mod_perl/1.99_09 Perl/v5.8.0 mod_python/3.0.3 Python/2.2.3 mod_ssl/2.0.46 OpenSSL/0.9.7a DAV/2 FrontPage/5.0.2.2635 PHP/4.4.0 JRun/4.0 mod_jk/1.2.3-dev Sun-ONE-ASP/4.0.2\r\nServer: Apache/2.2.29 (Unix) mod_ssl/2.2.29 OpenSSL/1.0.1e-fips mod_jk/1.2.37 mod_bwlimited/1.4\r\nServer: Apache/1.3.27 (Unix)  (Red-Hat/Linux) mod_jk mod_ssl/2.8.12 OpenSSL/0.9.6m\r\nServer: Apache/2.2.3 (Debian) mod_jk/1.2.18 PHP/4.4.4-8+etch6 mod_ssl/2.2.3 OpenSSL/0.9.8c\r\nServer: Microsoft-IIS/7.5\r\nServer: cloudflare-nginx\r\nX-Powered-By: PHP/5.6.10\r\nX-Powered-By: PHP/5.3.9-ZS5.6.0 ZendServer/5.0\r\nX-Powered-By: PHP/5.3.3-7+squeeze14\r\nX-Powered-By: PHP/5.3.22-1~dotdeb.0\r\nX-Powered-By: Servlet 2.5; JBoss-5.0/JBossWeb-2.1\r\nX-Powered-By: Servlet 2.4; JBoss-4.2.3.GA (build: SVNTag=JBoss_4_2_3_GA date=201001210934)/JBossWeb-2.0\r\nX-AspNetMvc-Version: 4.0\r\nX-AspNet-Version: 4.0.30319\r\nX-Powered-By: ASP.NET\r\nX-Page-Speed: 1.9.32.3-4448\r\nSet-Cookie: OJSSID=xxxxxxxxxxxxxxxxxxxxxxxxxx; path=/\r\nSet-Cookie: ASP.NET_SessionId=xxxxxxxxxxxxxxxxxxxxxxxx; path=/; HttpOnly\r\nCache-Control: public\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\nwhatever";
+
+	BOOST_TEST_CHECK(tk.CanTokenize(banner), "Valid HTTP header reported as unsupported.");
+
+	auto tokens = tk.Tokenize(banner);
+
+	BOOST_TEST_CHECK(tokens.size() > 0, "Failed to extract any tokens from HTTP header.");
+
+	vector<string> reference = {
+		"nginx/1.4.6", "Ubuntu", "Apache-Coyote/1.1", "Apache/2.2.15", "CentOS", "Apache/2.2.8",
+		"Ubuntu", "PHP/5.2.4-2ubuntu5.17", "with", "Suhosin-Patch", "mod_ssl/2.2.8", "OpenSSL/0.9.8g",
+		"Apache/2.0.46", "Red", "Hat", "mod_perl/1.99_09", "Perl", "v5.8.0", "mod_python/3.0.3",
+		"Python/2.2.3", "mod_ssl/2.0.46", "OpenSSL/0.9.7a", "DAV/2", "FrontPage/5.0.2.2635",
+		"PHP/4.4.0", "JRun/4.0", "mod_jk/1.2.3-dev", "Sun-ONE-ASP/4.0.2", "Apache/2.2.29", "Unix",
+		"mod_ssl/2.2.29", "OpenSSL/1.0.1e-fips", "mod_jk/1.2.37", "mod_bwlimited/1.4", "Apache/1.3.27",
+		"Unix", "Red-Hat", "Linux", "mod_jk", "mod_ssl/2.8.12", "OpenSSL/0.9.6m", "Apache/2.2.3",
+		"Debian", "mod_jk/1.2.18", "PHP/4.4.4-8+etch6", "mod_ssl/2.2.3", "OpenSSL/0.9.8c",
+		"Microsoft-IIS/7.5", "cloudflare-nginx", "PHP/5.6.10", "PHP/5.3.9-ZS5.6.0", "ZendServer/5.0",
+		"PHP/5.3.3-7+squeeze14", "PHP/5.3.22-1~dotdeb.0", "Servlet/2.5;", "JBoss-5.0", "JBossWeb-2.1",
+		"Servlet/2.4;", "JBoss-4.2.3.GA", "build", "SVNTag", "JBoss_4_2_3_GA", "date", "201001210934",
+		"JBossWeb-2.0", "AspNetMvc-Version/4.0", "AspNet-Version/4.0.30319", "ASP.NET", "Page-Speed/1.9.32.3-4448"
+	};
+
+	BOOST_TEST_CHECK(tokens.size() == reference.size(), "Size mismatch between extracted tokens array and reference tokens.");
+
+	for (auto i = 0; i < min(tokens.size(), reference.size()); i++)
+	{
+		trim(tokens[i]);
+		BOOST_TEST_CHECK(tokens[i] == reference[i], "Value mismatch between extracted token and reference token.");
+	}
+}
+
+BOOST_AUTO_TEST_CASE(TokenizeThreeDigit)
+{
+	ThreeDigitTokenizer tk;
+
+	// banner compiled from various server responses seen in the wild via shodan
+
+	string banner = "220-xxx.xxx.xxx.xxx ESMTP Exim 4.86 #2 Tue, 01 Mar 2016 15:29:04 +0800 \r\n220-We do not authorize the use of this system to transport unsolicited, \r\n220 and/or bulk e-mail.\r\n250-xxx.xxx.xxx.xxxHello xxx.xxx.xxx.xxx [xxx.xxx.xxx.xxx]\r\n250-SIZE 52428800\r\n250-8BITMIME\r\n200 Kerio Connect 9.0.0 NNTP server ready\r\n200 NNTP Service 6.0.3790.3959 Version: 6.0.3790.3959 Posting Allowed \r\n220 Welcome to Xxxx Xxxx Xxxx, SNPP Gateway Ready\r\n220 xxx.xxx.xxx.xxx ESMTP Sendmail Ready; Tue, 1 Mar 2016 16:30:15 +0900\r\n250-xxx.xxx.xxx.xxx Hello xxx.xxx.xxx.xxx [xxx.xxx.xxx.xxx], pleased to meet you\r\n250-ENHANCEDSTATUSCODES\r\n250-PIPELINING\r\n250-8BITMIME\r\n250-SIZE 52428800\r\n220 xxx.xxx.xxx.xxx ESMTP Postfix (Debian/GNU)\r\n250-xxx.xxx.xxx.xxx\r\n250-SIZE 10240000\r\n220 xxx.xxx.xxx.xxx ESMTP Postfix\r\n220 mail.server.server ESMTP MailEnable Service, Version: 8.04-- ready at 03/01/16 09:28:32\r\n250-server.server [xxx.xxx.xxx.xxx], this server offers 4 extensions\r\n250-AUTH LOGIN\r\n250-SIZE 5120000\r\n250-HELP\r\n250 AUTH=LOGIN\r\n220 xxx.xxx.xxx.xxx Microsoft ESMTP MAIL Service ready at Tue, 1 Mar 2016 15:31:23 +0800\r\n250-xxx.xxx.xxx.xxx Hello [xxx.xxx.xxx.xxx]\r\n250-SIZE 31457280\r\n250-PIPELINING\r\n250-DSN\r\n250-ENHANCEDSTATUSCODES\r\n250-STARTTLS\r\n220 xxx.xxx.xxx.xxx ESMTP IdeaSmtpServer v0.80.1 ready.\r\n250-xxx.xxx.xxx.xxx Hello xxx.xxx.xxx.xxx [xxx.xxx.xxx.xxx], pleased to meet you\r\n250-PIPELINING\r\n250-ENHANCEDSTATUSCODES\r\n250-SIZE\r\n250-8BITMIME\r\n250-AUTH PLAIN LOGIN\r\n250-AUTH=PLAIN LOGIN\r\n220 xxx.xxx.xxx.xxx Microsoft ESMTP MAIL Service, Version: 7.0.6002.18264 ready at  Tue, 1 Mar 2016 00:32:39 -0700 \r\n250-xxx.xxx.xxx.xxx Hello [xxx.xxx.xxx.xxx]\r\n250-TURN\r\n250-SIZE 2097152\r\n250-ETRN\r\n250-PIPELINING\r\n250-DSN\r\n220 xxx.xxx.xxx.xxx Kerio Connect 8.5.2 patch 1 ESMTP ready\r\n250-xxx.xxx.xxx.xxx\r\n250-AUTH CRAM-MD5 PLAIN LOGIN DIGEST-MD5\r\n250-SIZE 20971520\r\n250-ENHANCEDSTATUSCODES\r\n250-8BITMIME\r\n250-PIPELINING";
+
+	BOOST_TEST_CHECK(tk.CanTokenize(banner), "Valid SMTP banner reported as unsupported.");
+
+	auto tokens = tk.Tokenize(banner);
+
+	BOOST_TEST_CHECK(tokens.size() > 0, "Failed to extract any tokens from SMTP banner.");
+
+	vector<string> reference = {
+		"ESMTP Exim 4.86 #2",
+		"ESMTP Sendmail",
+		"ESMTP Postfix",
+		"ESMTP Postfix",
+		"ESMTP MailEnable Service, Version: 8.04--",
+		"Microsoft ESMTP MAIL Service",
+		"ESMTP IdeaSmtpServer v0.80.1",
+		"Microsoft ESMTP MAIL Service, Version: 7.0.6002.18264",
+		"Kerio Connect 8.5.2 patch 1 ESMTP"
+	};
+
+	BOOST_TEST_CHECK(tokens.size() == reference.size(), "Size mismatch between extracted tokens array and reference tokens.");
+
+	for (auto i = 0; i < min(tokens.size(), reference.size()); i++)
+	{
+		trim(tokens[i]);
+		BOOST_TEST_CHECK(tokens[i] == reference[i], "Value mismatch between extracted token and reference token.");
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Factory Tests
+//---------------------------------------------------------------------------------------------------------------------
+
 BOOST_AUTO_TEST_CASE(PortScanFactory)
 {
 	auto tcp = ServiceScannerFactory::Get(IPPROTO_TCP);
@@ -117,6 +224,10 @@ BOOST_AUTO_TEST_CASE(PortScanFactory)
 	BOOST_TEST_CHECK((typeid(*nmap) == typeid(NmapScanner)), "Factory should have spawned NmapScanner for <IPPROTO_NONE,external>.");
 	delete nmap;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// Internal Port Scanner Tests
+//---------------------------------------------------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 {
@@ -273,6 +384,10 @@ BOOST_AUTO_TEST_CASE(ArpPing)
 
 	freeServices(servs);
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// External Port Scanner Tests
+//---------------------------------------------------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 {

@@ -1,6 +1,7 @@
 #include "ServiceRegexMatcher.h"
-#include <mutex>
 #include "DataReader.h"
+#include <boost/algorithm/string/replace.hpp>
+#include <mutex>
 
 using namespace std;
 using namespace boost;
@@ -21,11 +22,44 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 		return matches;
 	}
 
+	static regex bsrgx("\\$(\\d+)", regex::perl);
+	static regex vtrgx("^v(?:er(?:sion)?)? *(?=\\d)", regex::perl | regex::icase);
+
 	for (auto rgx : regexes)
 	{
-		if (regex_match(banner, rgx->regex, match_single_line))
+		match_results<string::const_iterator> match;
+
+		if (regex_search(banner, match, rgx->regex, match_single_line))
 		{
-			matches.push_back(rgx->cpe);
+			auto cpe = rgx->cpe;
+
+			auto cpeHasRgx = cpe.find('$') != string::npos;
+			auto verHasRgx = rgx->version.length() > 0 && rgx->version.find('$') != string::npos;
+
+			if (verHasRgx && !cpeHasRgx)
+			{
+				// TODO check whether CPE already has a version field or not
+
+				cpe += ":" + rgx->version;
+				cpeHasRgx = true;
+			}
+
+			if (cpeHasRgx)
+			{
+				sregex_token_iterator bsit(cpe.begin(), cpe.end(), bsrgx, 1);
+				sregex_token_iterator end;
+
+				for (; bsit != end; ++bsit)
+				{
+					auto nums = (*bsit).str();
+					auto numi = atoi(nums.c_str());
+					auto vals = regex_replace(match[numi].str(), vtrgx, "");
+
+					replace_first(cpe, "$" + nums, vals);
+				}
+			}
+
+			matches.push_back(cpe);
 		}
 	}
 

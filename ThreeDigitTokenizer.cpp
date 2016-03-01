@@ -25,7 +25,7 @@ vector<string> ThreeDigitTokenizer::Tokenize(const string& banner)
 
 	// try extracting tokens around the "ESMTP" word in messages with the status 220
 
-	static regex s1rgx("^220[- ][A-Za-z0-9\\.\\-_:]+([^\\r\\n]*?E?SMTP[^\\r\\n]*?)(?: *\\(|\\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|ready)\\b|$)", regex::perl | regex::icase);
+	static regex s1rgx("^2[02]0[- ][A-Za-z0-9\\.\\-_:]+([^\\r\\n]*?E?SMTP[^\\r\\n]*?)(?: *\\(|\\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|ready)\\b|$)", regex::perl | regex::icase);
 
 	sregex_token_iterator s1it(banner.begin(), banner.end(), s1rgx, { 1 });
 	sregex_token_iterator end;
@@ -40,9 +40,9 @@ vector<string> ThreeDigitTokenizer::Tokenize(const string& banner)
 		return lines;
 	}
 
-	// retry previous regex, this time without the hostname removal addition
+	// loosen previous regex by removing the hostname removal part
 
-	static regex s2rgx("^220[- ][^\\r\\n]*?((?:Microsoft *)?E?SMTP[^\\r\\n]*?)(?: *\\(|\\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|ready)\\b|$)", regex::perl | regex::icase);
+	static regex s2rgx("^2[02]0[- ][^\\r\\n]*?((?:Microsoft *)?E?SMTP[^\\r\\n]*?)(?: *\\(|\\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|ready)\\b|$)", regex::perl | regex::icase);
 
 	sregex_token_iterator s2it(banner.begin(), banner.end(), s2rgx, { 1 });
 
@@ -56,9 +56,9 @@ vector<string> ThreeDigitTokenizer::Tokenize(const string& banner)
 		return lines;
 	}
 
-	// try searching for NNTP and SNPP banner lines
+	// loosen it further and add additional services
 
-	static regex s3rgx("^2[02]0[- ]([^\\r\\n]*(?:NNTP|SNPP)[^\\r\\n]*)$", regex::perl | regex::icase);
+	static regex s3rgx("^2[02]0[- ]([^\\r\\n]*(?:E?SMTP|SNPP|NNTP|FTP)[^\\r\\n]*)$", regex::perl | regex::icase);
 
 	sregex_token_iterator s3it(banner.begin(), banner.end(), s3rgx, { 1 });
 

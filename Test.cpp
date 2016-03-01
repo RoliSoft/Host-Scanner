@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 20 should not be alive.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 25 should be alive.");
 
-	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable.");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 20 should not be alive.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 25 should be alive.");
 
-	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable.");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 53 on 178.* should not answer.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 208.* should answer.");
 
-	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 178.* reason should either be TimedOut or IcmpUnreachable.");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 208.* reason should be ReplyReceived.");
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 53 on 2a03.* should not answer.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 2620.* should answer.");
 
-	BOOST_TEST_CHECK(servs[1]->banlen > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 2a03.* reason should either be TimedOut or IcmpUnreachable.");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 2620.* reason should be ReplyReceived.");
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 
 	BOOST_TEST_CHECK(servs[0]->alive, "Port 25 should be alive.");
 
-	BOOST_TEST_CHECK(servs[0]->banlen > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK(servs[0]->banner.length() > 0, "Failed to grab service banner.");
 
 	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
 
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
 
 	BOOST_TEST_CHECK(servs[0]->alive, "Port 25 should be alive.");
 
-	BOOST_TEST_CHECK(servs[0]->banlen > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK(servs[0]->banner.length() > 0, "Failed to grab service banner.");
 
 	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
 

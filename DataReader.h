@@ -46,7 +46,7 @@ public:
 	/*!
 	 * Reads the next field as a numeric of type `T` from the file.
 	 *
-	 * \return Field as numeric of type `T`.
+	 * \param value Reference to variable where to store numeric of type `T`.
 	 */
 	template <class T>
 	void Read(T& value)

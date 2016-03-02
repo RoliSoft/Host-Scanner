@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(TokenizeHttp)
 
 	BOOST_TEST_CHECK(tokens.size() == reference.size(), "Size mismatch between extracted and reference tokens array. Expected " + to_string(reference.size()) + " items, got " + to_string(tokens.size()) + " items.");
 
-	for (auto i = 0; i < min(tokens.size(), reference.size()); i++)
+	for (auto i = 0u; i < min(tokens.size(), reference.size()); i++)
 	{
 		trim(tokens[i]);
 		BOOST_TEST_CHECK(tokens[i] == reference[i], "Value mismatch between extracted and reference token. Expected `" + reference[i] + "`, got `" + tokens[i] + "`.");
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(TokenizeThreeDigit)
 
 	BOOST_TEST_CHECK(tokens.size() == reference.size(), "Size mismatch between extracted and reference tokens array. Expected " + to_string(reference.size()) + " items, got " + to_string(tokens.size()) + " items.");
 
-	for (auto i = 0; i < min(tokens.size(), reference.size()); i++)
+	for (auto i = 0u; i < min(tokens.size(), reference.size()); i++)
 	{
 		trim(tokens[i]);
 		BOOST_TEST_CHECK(tokens[i] == reference[i], "Value mismatch between extracted and reference token. Expected `" + reference[i] + "`, got `" + tokens[i] + "`.");
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(MatchServiceRegex)
 		"a:dovecot:dovecot",
 	};
 
-	for (auto i = 0; i < banners.size(); i++)
+	for (auto i = 0u; i < banners.size(); i++)
 	{
 		auto cpes = sm.Scan(banners[i]);
 

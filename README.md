@@ -42,11 +42,11 @@ To compile and run the project, you must first install the dependencies, which c
 
  * Debian/Ubuntu/Kali:
  
-        apt install build-essential cmake libcurl4-openssl-dev libboost-all-dev
+        apt install build-essential cmake libcurl4-openssl-dev libboost-all-dev libz-dev
 
  * RHEL/CentOS/Fedora:
 
-        yum install gcc-c++ make cmake libcurl-devel boost-devel-static
+        yum install gcc-c++ make cmake libcurl-devel boost-devel-static zlib-devel
 
  * FreeBSD:
 
@@ -54,7 +54,7 @@ To compile and run the project, you must first install the dependencies, which c
 
  * Mac OS X: (with [Homebrew](http://brew.sh/))
 
-        brew install cmake curl boost
+        xcode-select --install && brew install cmake curl boost
 
 After the dependencies have been installed, you can check out the repository and compile it with the following commands:
 
@@ -92,9 +92,11 @@ You'll need a fairly new compiler, as C++14 features are used in the code. As fo
    * Windows 10 / Visual Studio 2015
 
  * Linux
-   * Debian Sid / gcc 5.2.1, clang 3.8.0
-   * Kali Linux 2 / gcc 4.9.2, clang 3.5.0
- 
+   * Debian stable, unstable / gcc, clang
+   * Fedora latest, rawhide / gcc, clang
+
+The project was developed with support in mind for the following platforms, however continuous integration is not available for these platforms, therefore builds might break until tested or otherwise observed:
+
  * BSD/Darwin
    * FreeBSD 11 / clang 3.7.0
    * OS X 10.11 / AppleClang 7.0.0

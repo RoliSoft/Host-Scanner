@@ -117,9 +117,9 @@ BOOST_AUTO_TEST_CASE(TokenizeAuto)
 	trim(smtp_tok[0]);
 	trim(fake_tok[0]);
 
-	BOOST_TEST_CHECK(http_tok[0] == "tokenizer-test",       "Erroneous server name extracted from HTTP header.");
-	BOOST_TEST_CHECK(smtp_tok[0] == "Tokenizer ESMTP Test", "Erroneous server name extracted from SMTP header.");
-	BOOST_TEST_CHECK(fake_tok[0] == fake_bnr,               "Erroneous token returned for fake header.");
+	BOOST_TEST_CHECK(http_tok[0] == "tokenizer-test",       "Erroneous server name extracted from HTTP header. Expected `tokenizer-test`, got `" + http_tok[0] + "`.");
+	BOOST_TEST_CHECK(smtp_tok[0] == "Tokenizer ESMTP Test", "Erroneous server name extracted from SMTP header. Expected `Tokenizer ESMTP Test`, got `" + smtp_tok[0] + "`.");
+	BOOST_TEST_CHECK(fake_tok[0] == fake_bnr,               "Erroneous token returned for fake header. Expected `" + fake_bnr + "`, got `" + fake_tok[0] + "`.");
 }
 
 BOOST_AUTO_TEST_CASE(TokenizeHttp)
@@ -151,12 +151,12 @@ BOOST_AUTO_TEST_CASE(TokenizeHttp)
 		"JBossWeb-2.0", "AspNetMvc-Version/4.0", "AspNet-Version/4.0.30319", "ASP.NET", "Page-Speed/1.9.32.3-4448"
 	};
 
-	BOOST_TEST_CHECK(tokens.size() == reference.size(), "Size mismatch between extracted tokens array and reference tokens.");
+	BOOST_TEST_CHECK(tokens.size() == reference.size(), "Size mismatch between extracted and reference tokens array. Expected " + to_string(reference.size()) + " items, got " + to_string(tokens.size()) + " items.");
 
 	for (auto i = 0; i < min(tokens.size(), reference.size()); i++)
 	{
 		trim(tokens[i]);
-		BOOST_TEST_CHECK(tokens[i] == reference[i], "Value mismatch between extracted token and reference token.");
+		BOOST_TEST_CHECK(tokens[i] == reference[i], "Value mismatch between extracted and reference token. Expected `" + reference[i] + "`, got `" + tokens[i] + "`.");
 	}
 }
 
@@ -186,12 +186,12 @@ BOOST_AUTO_TEST_CASE(TokenizeThreeDigit)
 		"Kerio Connect 8.5.2 patch 1 ESMTP"
 	};
 
-	BOOST_TEST_CHECK(tokens.size() == reference.size(), "Size mismatch between extracted tokens array and reference tokens.");
+	BOOST_TEST_CHECK(tokens.size() == reference.size(), "Size mismatch between extracted and reference tokens array. Expected " + to_string(reference.size()) + " items, got " + to_string(tokens.size()) + " items.");
 
 	for (auto i = 0; i < min(tokens.size(), reference.size()); i++)
 	{
 		trim(tokens[i]);
-		BOOST_TEST_CHECK(tokens[i] == reference[i], "Value mismatch between extracted token and reference token.");
+		BOOST_TEST_CHECK(tokens[i] == reference[i], "Value mismatch between extracted and reference token. Expected `" + reference[i] + "`, got `" + tokens[i] + "`.");
 	}
 }
 
@@ -223,9 +223,9 @@ BOOST_AUTO_TEST_CASE(MatchServiceRegex)
 	{
 		auto cpes = sm.Scan(banners[i]);
 
-		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner.");
-		BOOST_TEST_CHECK(cpes.size() < 2, "Multiple CPEs extracted from banner.");
-		BOOST_TEST_CHECK(cpes[0] == reference[i], "Value mismatch between extracted CPE and reference CPE.");
+		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner " + to_string(i) + ".");
+		BOOST_TEST_CHECK(cpes.size() < 2, "Multiple CPEs extracted from banner " + to_string(i) + ": `" + algorithm::join(cpes, "`") + "`");
+		BOOST_TEST_CHECK(cpes[0] == reference[i], "Value mismatch between extracted and reference CPE. Expected `" + reference[i] + "`, got `" + cpes[0] + "`.");
 	}
 }
 
@@ -236,27 +236,27 @@ BOOST_AUTO_TEST_CASE(MatchServiceRegex)
 BOOST_AUTO_TEST_CASE(PortScanFactory)
 {
 	auto tcp = ServiceScannerFactory::Get(IPPROTO_TCP);
-	BOOST_TEST_CHECK((typeid(*tcp) == typeid(TcpScanner)), "Factory should have spawned TcpScanner for IPPROTO_TCP.");
+	BOOST_TEST_CHECK((typeid(*tcp) == typeid(TcpScanner)), "Factory should have spawned TcpScanner for IPPROTO_TCP, but instead spawned `" + string(typeid(*tcp).name()) + "`.");
 	delete tcp;
 
 	auto udp = ServiceScannerFactory::Get(IPPROTO_UDP);
-	BOOST_TEST_CHECK((typeid(*udp) == typeid(UdpScanner)), "Factory should have spawned UdpScanner for IPPROTO_UDP.");
+	BOOST_TEST_CHECK((typeid(*udp) == typeid(UdpScanner)), "Factory should have spawned UdpScanner for IPPROTO_UDP, but instead spawned `" + string(typeid(*udp).name()) + "`.");
 	delete udp;
 
 	auto arp = ServiceScannerFactory::Get(IPPROTO_NONE);
-	BOOST_TEST_CHECK((typeid(*arp) == typeid(ArpPinger)), "Factory should have spawned ArpPinger for IPPROTO_NONE.");
+	BOOST_TEST_CHECK((typeid(*arp) == typeid(ArpPinger)), "Factory should have spawned ArpPinger for IPPROTO_NONE, but instead spawned `" + string(typeid(*arp).name()) + "`.");
 	delete arp;
 
 	auto icmp = ServiceScannerFactory::Get(IPPROTO_ICMP);
-	BOOST_TEST_CHECK((typeid(*icmp) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMP.");
+	BOOST_TEST_CHECK((typeid(*icmp) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMP, but instead spawned `" + string(typeid(*icmp).name()) + "`.");
 	delete icmp;
 
 	auto icmp6 = ServiceScannerFactory::Get(IPPROTO_ICMPV6);
-	BOOST_TEST_CHECK((typeid(*icmp6) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMPV6.");
+	BOOST_TEST_CHECK((typeid(*icmp6) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMPV6, but instead spawned `" + string(typeid(*icmp6).name()) + "`.");
 	delete icmp6;
 
 	auto nmap = ServiceScannerFactory::Get(IPPROTO_NONE, true);
-	BOOST_TEST_CHECK((typeid(*nmap) == typeid(NmapScanner)), "Factory should have spawned NmapScanner for <IPPROTO_NONE,external>.");
+	BOOST_TEST_CHECK((typeid(*nmap) == typeid(NmapScanner)), "Factory should have spawned NmapScanner for <IPPROTO_NONE,external>, but instead spawned `" + string(typeid(*nmap).name()) + "`.");
 	delete nmap;
 }
 
@@ -267,8 +267,8 @@ BOOST_AUTO_TEST_CASE(PortScanFactory)
 BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 {
 	Services servs = {
-		new Service("178.62.249.168", 20),
-		new Service("178.62.249.168", 25)
+		new Service("178.62.249.168", 20), // euvps.rolisoft.net
+		new Service("178.62.249.168", 25)  // euvps.rolisoft.net
 	};
 
 	TcpScanner scan;
@@ -279,8 +279,8 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 
 	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable.");
-	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + to_string(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -288,8 +288,8 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 {
 	Services servs = {
-		new Service("2a03:b0c0:2:d0::19:6001", 20),
-		new Service("2a03:b0c0:2:d0::19:6001", 25)
+		new Service("2a03:b0c0:2:d0::19:6001", 20), // euvps.rolisoft.net
+		new Service("2a03:b0c0:2:d0::19:6001", 25)  // euvps.rolisoft.net
 	};
 
 	TcpScanner scan;
@@ -300,8 +300,8 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 
 	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable.");
-	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + to_string(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(UdpPayloadLoader)
 
 	auto payloads = udp.GetPayloads();
 
-	BOOST_TEST_CHECK((payloads.size() >= 2), "Payloads list should contain at least two entries.");
+	BOOST_TEST_CHECK((payloads.size() >= 2), "Payloads list should contain at least two entries instead of " + to_string(payloads.size()) + ".");
 
 	BOOST_TEST_CHECK((payloads.find(0)  != payloads.end()), "Payloads list should contain generic payload.");
 	BOOST_TEST_CHECK((payloads.find(53) != payloads.end()), "Payloads list should contain DNS payload.");
@@ -321,8 +321,8 @@ BOOST_AUTO_TEST_CASE(UdpPayloadLoader)
 BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 {
 	Services servs = {
-		new Service("178.62.249.168", 53, IPPROTO_UDP),
-		new Service("208.67.222.222", 53, IPPROTO_UDP)
+		new Service("178.62.249.168", 53, IPPROTO_UDP), // euvps.rolisoft.net
+		new Service("208.67.222.222", 53, IPPROTO_UDP)  // OpenDNS
 	};
 
 	UdpScanner scan;
@@ -333,8 +333,8 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 
 	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 178.* reason should either be TimedOut or IcmpUnreachable.");
-	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 208.* reason should be ReplyReceived.");
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 178.* reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 208.* reason should be ReplyReceived, it is instead " + to_string(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -342,8 +342,8 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 {
 	Services servs = {
-		new Service("2a03:b0c0:2:d0::19:6001", 53, IPPROTO_UDP),
-		new Service("2620:0:ccc::2", 53, IPPROTO_UDP)
+		new Service("2a03:b0c0:2:d0::19:6001", 53, IPPROTO_UDP), // euvps.rolisoft.net
+		new Service("2620:0:ccc::2", 53, IPPROTO_UDP) // OpenDNS
 	};
 
 	UdpScanner scan;
@@ -354,8 +354,8 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 
 	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 2a03.* reason should either be TimedOut or IcmpUnreachable.");
-	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 2620.* reason should be ReplyReceived.");
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 2a03.* reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 2620.* reason should be ReplyReceived, it is instead " + to_string(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -363,8 +363,8 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 {
 	Services servs = {
-		new Service("178.62.249.168", 0, IPPROTO_ICMP),
-		new Service("0.0.1.0", 0, IPPROTO_ICMP)
+		new Service("178.62.249.168", 0, IPPROTO_ICMP), // euvps.rolisoft.net
+		new Service("0.0.1.0", 0, IPPROTO_ICMP) // bogon
 	};
 
 	IcmpPinger scan;
@@ -373,8 +373,8 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 	BOOST_TEST_CHECK( servs[0]->alive, "178.* should answer.");
 	BOOST_TEST_CHECK(!servs[1]->alive, "0.* should not answer.");
 	
-	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "178.* reason should be ReplyReceived.");
-	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0.* reason should either be TimedOut or IcmpUnreachable.");
+	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "178.* reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0.* reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -382,8 +382,8 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 {
 	Services servs = {
-		new Service("2a03:b0c0:2:d0::19:6001", 0, IPPROTO_ICMPV6),
-		new Service("0100::", 0, IPPROTO_ICMPV6)
+		new Service("2a03:b0c0:2:d0::19:6001", 0, IPPROTO_ICMPV6), // euvps.rolisoft.net
+		new Service("0100::", 0, IPPROTO_ICMPV6) // bogon
 	};
 
 	IcmpPinger scan;
@@ -392,8 +392,8 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 	BOOST_TEST_CHECK( servs[0]->alive, "2a03.* should answer.");
 	BOOST_TEST_CHECK(!servs[1]->alive, "0100.* should not answer.");
 	
-	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "2a03.* reason should be ReplyReceived.");
-	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0100.* reason should either be TimedOut or IcmpUnreachable.");
+	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "2a03.* reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0100.* reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -401,9 +401,9 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 BOOST_AUTO_TEST_CASE(ArpPing)
 {
 	Services servs = {
-		new Service("192.168.1.1", 0, IPPROTO_NONE),
-		new Service("192.168.1.2", 0, IPPROTO_NONE),
-		new Service("178.62.249.168", 0, IPPROTO_NONE),
+		new Service("192.168.1.1", 0, IPPROTO_NONE), // bogon
+		new Service("192.168.1.2", 0, IPPROTO_NONE), // bogon
+		new Service("178.62.249.168", 0, IPPROTO_NONE), // euvps.rolisoft.net
 	};
 
 	ArpPinger scan;
@@ -413,9 +413,9 @@ BOOST_AUTO_TEST_CASE(ArpPing)
 	BOOST_TEST_CHECK(!servs[1]->alive, "*.2 should not answer.");
 	BOOST_TEST_CHECK(!servs[2]->alive, "178.* should not answer.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "*.1 reason should be ReplyReceived.");
-	BOOST_TEST_CHECK(servs[1]->reason == AR_TimedOut, "*.2 reason should be TimedOut.");
-	BOOST_TEST_CHECK(servs[2]->reason == AR_ScanFailed, "178.* reason should be ScanFailed.");
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "*.1 reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK(servs[1]->reason == AR_TimedOut, "*.2 reason should be TimedOut, it is instead " + to_string(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK(servs[2]->reason == AR_ScanFailed, "178.* reason should be ScanFailed, it is instead " + to_string(servs[2]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(ArpPing)
 BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 {
 	Services servs = {
-		new Service("178.62.249.168", 25)
+		new Service("178.62.249.168", 25) // euvps.rolisoft.net
 	};
 
 	NmapScanner scan;
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 
 	BOOST_TEST_CHECK(servs[0]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
 {
 	Services servs = {
-		new Service("2a03:b0c0:2:d0::19:6001", 25)
+		new Service("2a03:b0c0:2:d0::19:6001", 25) // euvps.rolisoft.net
 	};
 
 	NmapScanner scan;
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
 
 	BOOST_TEST_CHECK(servs[0]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived.");
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
 
 	freeServices(servs);
 }

@@ -22,11 +22,11 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 		return matches;
 	}
 
-	auto tokens = 0;
+	auto tokens = 0u;
 
 	for (auto ent : entries)
 	{
-		auto ctokens   = 0;
+		auto ctokens   = 0u;
 		auto verfound  = false;
 		string bestver = "";
 		
@@ -53,7 +53,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 			verfound = true;
 
-			int vtokens = ctokens;
+			auto vtokens = ctokens;
 
 			for (auto token : version->tokens)
 			{

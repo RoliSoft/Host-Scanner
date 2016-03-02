@@ -14,7 +14,7 @@ void ServiceScanner::DumpResults(Services* services)
 			stringstream ss;
 			ss << " -> ";
 
-			for (int i = 0; i < service->banner.length(); i++)
+			for (auto i = 0u; i < service->banner.length(); i++)
 			{
 				if (service->banner[i] == '\r') continue;
 

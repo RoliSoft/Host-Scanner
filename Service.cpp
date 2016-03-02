@@ -11,7 +11,7 @@ Service::Service(string address, unsigned short port, IPPROTO protocol)
 
 string Service::ReasonString(AliveReason reason)
 {
-	static unordered_map<AliveReason, string> reasons = {
+	static unordered_map<int, string> reasons = {
 		{ AR_ScanFailed,        "ScanFailed" },
 		{ AR_NotScanned,        "NotScanned" },
 		{ AR_InProgress,        "InProgress" },

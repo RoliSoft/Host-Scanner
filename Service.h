@@ -110,6 +110,15 @@ public:
 	Service(const Service& service) = default;
 
 	/*!
+	 * Resolves the value of the enum `AliveReason` to its textual representation.
+	 *
+	 * \param reason Enum value.
+	 *
+	 * \return Textual representation.
+	 */
+	static std::string ReasonString(AliveReason reason);
+
+	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~Service();

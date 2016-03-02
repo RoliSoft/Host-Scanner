@@ -7,7 +7,7 @@ void ServiceScanner::DumpResults(Services* services)
 {
 	for (auto service : *services)
 	{
-		log(MSG, service->address + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + to_string(service->reason) + ")");
+		log(MSG, service->address + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + Service::ReasonString(service->reason) + ")");
 
 		if (service->banner.length() > 0)
 		{

@@ -279,8 +279,8 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 
 	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + to_string(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -300,8 +300,8 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 
 	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + to_string(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -333,8 +333,8 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 
 	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 178.* reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 208.* reason should be ReplyReceived, it is instead " + to_string(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 178.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 208.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -354,8 +354,8 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 
 	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 2a03.* reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 2620.* reason should be ReplyReceived, it is instead " + to_string(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 2a03.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 2620.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -373,8 +373,8 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 	BOOST_TEST_CHECK( servs[0]->alive, "178.* should answer.");
 	BOOST_TEST_CHECK(!servs[1]->alive, "0.* should not answer.");
 	
-	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "178.* reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0.* reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "178.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -392,8 +392,8 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 	BOOST_TEST_CHECK( servs[0]->alive, "2a03.* should answer.");
 	BOOST_TEST_CHECK(!servs[1]->alive, "0100.* should not answer.");
 	
-	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "2a03.* reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0100.* reason should either be TimedOut or IcmpUnreachable, it is instead " + to_string(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "2a03.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0100.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -413,9 +413,9 @@ BOOST_AUTO_TEST_CASE(ArpPing)
 	BOOST_TEST_CHECK(!servs[1]->alive, "*.2 should not answer.");
 	BOOST_TEST_CHECK(!servs[2]->alive, "178.* should not answer.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "*.1 reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK(servs[1]->reason == AR_TimedOut, "*.2 reason should be TimedOut, it is instead " + to_string(servs[1]->reason) + ".");
-	BOOST_TEST_CHECK(servs[2]->reason == AR_ScanFailed, "178.* reason should be ScanFailed, it is instead " + to_string(servs[2]->reason) + ".");
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "*.1 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK(servs[1]->reason == AR_TimedOut,      "*.2 reason should be TimedOut, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK(servs[2]->reason == AR_ScanFailed,    "178.* reason should be ScanFailed, it is instead " + Service::ReasonString(servs[2]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 
 	BOOST_TEST_CHECK(servs[0]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
 
 	BOOST_TEST_CHECK(servs[0]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + to_string(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 
 	freeServices(servs);
 }

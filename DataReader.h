@@ -2,8 +2,11 @@
 #include "Stdafx.h"
 #include <fstream>
 #include <tuple>
-#include <boost/endian/conversion.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
+
+#if BOOST_VERSION >= 105800
+	#include <boost/endian/conversion.hpp>
+#endif
 
 /*!
  * Implements a file stream wrapper for reading binary data files.
@@ -49,7 +52,9 @@ public:
 	void Read(T& value)
 	{
 		bs->sgetn(reinterpret_cast<char*>(&value), sizeof(T));
+#if BOOST_VERSION >= 105800
 		boost::endian::little_to_native_inplace(value);
+#endif
 	}
 	
 	/*!

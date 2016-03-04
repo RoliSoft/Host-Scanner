@@ -49,7 +49,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 		}
 
 		auto bestdist   = UINT_MAX;
-		auto besttokens = 0;
+		auto besttokens = 0u;
 		auto bestcpe    = string();
 
 		// if so, check if any associated versions are also in the input
@@ -66,7 +66,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 			// if the version number was found, check if the tokens associated
 			// to this version are also present
 
-			auto dist = 0;
+			auto dist = 0u;
 			auto vertok = true;
 
 			for (auto token : version->tokens)

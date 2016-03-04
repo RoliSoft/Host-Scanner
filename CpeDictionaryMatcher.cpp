@@ -24,6 +24,8 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 	for (auto ent : entries)
 	{
+		vector<int> namepos;
+
 		// check if all the tokens from the name are in the input
 
 		auto nametok = true;
@@ -31,11 +33,14 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 		for (auto token : ent->tokens)
 		{
 			smatch what;
+
 			if (!regex_search(banner, what, token))
 			{
 				nametok = false;
 				break;
 			}
+
+			namepos.push_back(what.position());
 		}
 
 		if (!nametok)
@@ -43,11 +48,17 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 			continue;
 		}
 
+		auto bestdist   = UINT_MAX;
+		auto besttokens = 0;
+		auto bestcpe    = string();
+
 		// if so, check if any associated versions are also in the input
 
 		for (auto version : ent->versions)
 		{
-			if (banner.find(version->version) == string::npos)
+			auto verpos = banner.find(version->version);
+
+			if (verpos == string::npos)
 			{
 				continue;
 			}
@@ -55,16 +66,20 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 			// if the version number was found, check if the tokens associated
 			// to this version are also present
 
+			auto dist = 0;
 			auto vertok = true;
 
 			for (auto token : version->tokens)
 			{
 				smatch what;
+
 				if (!regex_search(banner, what, token))
 				{
 					vertok = false;
 					break;
 				}
+
+				dist += abs(int(what.position()) - int(verpos));
 			}
 
 			if (!vertok)
@@ -72,7 +87,26 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 				continue;
 			}
 
-			matches.push_back(ent->cpe + ":" + version->cpe);
+			// if so, calculate distance from version to the tokens in the name
+			
+			for (auto npos : namepos)
+			{
+				dist += abs(npos - int(verpos));
+			}
+
+			// check against current best
+
+			if (version->tokens.size() > besttokens || (version->tokens.size() == besttokens && dist <= bestdist))
+			{
+				bestdist   = dist;
+				besttokens = version->tokens.size();
+				bestcpe    = ent->cpe + ":" + version->cpe;
+			}
+		}
+
+		if (bestcpe.length() != 0)
+		{
+			matches.push_back(bestcpe);
 		}
 	}
 

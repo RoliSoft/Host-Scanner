@@ -22,27 +22,28 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 		return matches;
 	}
 
-	auto tokens = 0u;
-
 	for (auto ent : entries)
 	{
-		auto ctokens   = 0u;
-		auto verfound  = false;
-		string bestver = "";
-		
+		// check if all the tokens from the name are in the input
+
+		auto nametok = true;
+
 		for (auto token : ent->tokens)
 		{
 			smatch what;
-			if (regex_search(banner, what, token))
+			if (!regex_search(banner, what, token))
 			{
-				ctokens++;
+				nametok = false;
+				break;
 			}
 		}
 
-		if (ctokens < ent->tokens.size())
+		if (!nametok)
 		{
 			continue;
 		}
+
+		// if so, check if any associated versions are also in the input
 
 		for (auto version : ent->versions)
 		{
@@ -51,31 +52,27 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 				continue;
 			}
 
-			verfound = true;
+			// if the version number was found, check if the tokens associated
+			// to this version are also present
 
-			auto vtokens = ctokens;
+			auto vertok = true;
 
 			for (auto token : version->tokens)
 			{
 				smatch what;
-				if (regex_search(banner, what, token))
+				if (!regex_search(banner, what, token))
 				{
-					vtokens++;
+					vertok = false;
+					break;
 				}
 			}
 
-			if (bestver == "" || vtokens > tokens)
+			if (!vertok)
 			{
-				ctokens = vtokens;
-				bestver = version->cpe;
+				continue;
 			}
-		}
 
-		if (verfound)
-		{
-			tokens = ctokens;
-			
-			matches.push_back(ent->cpe + ":" + bestver);
+			matches.push_back(ent->cpe + ":" + version->cpe);
 		}
 	}
 

@@ -31,6 +31,7 @@
 #include "HttpTokenizer.h"
 #include "ThreeDigitTokenizer.h"
 #include "ServiceRegexMatcher.h"
+#include "CpeDictionaryMatcher.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
@@ -226,6 +227,38 @@ BOOST_AUTO_TEST_CASE(MatchServiceRegex)
 		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner " + to_string(i) + ".");
 		BOOST_TEST_CHECK(cpes.size() < 2, "Multiple CPEs extracted from banner " + to_string(i) + ": `" + algorithm::join(cpes, "`") + "`");
 		BOOST_TEST_CHECK(cpes[0] == reference[i], "Value mismatch between extracted and reference CPE. Expected `" + reference[i] + "`, got `" + cpes[0] + "`.");
+	}
+}
+
+BOOST_AUTO_TEST_CASE(MatchCpeDictionary)
+{
+	CpeDictionaryMatcher cm;
+
+	// banners contain version numbers listed within the CPE dictionary as they serve as a crucial token
+
+	vector<string> banners = {
+		"Cisco IOS Software, ME340x Software (ME340x-METROIPACCESS-M), Version 12.2(53)SE, RELEASE SOFTWARE (fc2)\r\nTechnical Support: http://www.cisco.com/techsupport\r\nCopyright (c) 1986-2009 by Cisco Systems, Inc.\r\nCompiled Sun 13-Dec-09 17:46 by prod_rel_team",
+		"220-xxx.xxx.xxx.xxx 2.12 ESMTP Exim 3.14 #2 Wed, 02 Mar 2016 06:44:36 -0700 \r\n220-We do not authorize the use of this system to transport unsolicited, \r\n220 and/or bulk e-mail.\r\n250-xxx.xxx.xxx.xxx Hello xxx.xxx.xxx.xxx [xxx.xxx.xxx.xxx]\r\n250-SIZE 52428800\r\n250-8BITMIME\r\n250-PIPELINING",
+		"HTTP/1.1 400 Bad Request\r\nServer: nginx/1.1.2 PHP/5.2.4-2ubuntu5.1.1 with Suhosin-Patch\r\nDate: Wed, 02 Mar 2016 13:47:28 GMT\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 166\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body bgcolor=\"white\">\r\n<center><h1>400 Bad Request</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>"
+	};
+
+	vector<vector<string>> reference = {
+		{ "o:cisco:ios:12.2se" },
+		{ "a:exim:exim:3.14" },
+		{ "a:nginx:nginx:1.1.2", "a:php:php:5.2.4" }
+	};
+
+	for (auto i = 0u; i < banners.size(); i++)
+	{
+		auto cpes = cm.Scan(banners[i]);
+
+		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner " + to_string(i) + ".");
+		BOOST_TEST_CHECK(cpes.size() == reference[i].size(), "Size mismatch between extracted and reference CPEs array. Expected " + to_string(reference[i].size()) + " items, got " + to_string(cpes.size()) + " items.");
+		
+		for (auto j = 0u; j < min(cpes.size(), reference[i].size()); j++)
+		{
+			BOOST_TEST_CHECK(cpes[j] == reference[i][j], "Value mismatch between extracted and reference CPE. Expected `" + reference[i][j] + "`, got `" + cpes[j] + "`.");
+		}
 	}
 }
 

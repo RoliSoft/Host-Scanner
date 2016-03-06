@@ -243,6 +243,34 @@ BOOST_AUTO_TEST_CASE(TokenizeThreeDigit)
 //---------------------------------------------------------------------------------------------------------------------
 
 /*!
+ * Tests automatic service matching.
+ * 
+ * The automatic matcher calls each supported matcher and merges the results.
+ * 
+ * The banner being tested against contains a product with an inexistent version numbers in order to test
+ * pattern-based version extraction, and another product whose version number is listed within the CPE
+ * dictionary but has no regular expression defined in the pattern matcher's database.
+ */
+BOOST_AUTO_TEST_CASE(MatchAuto)
+{
+	string banner = "HTTP/1.1 200 OK\r\nServer: Apache/31.33.7 PHP/5.2.4-2ubuntu5.2.5\r\n\r\n2600";
+
+	auto cpes = BannerProcessor::AutoProcess(banner);
+
+	vector<string> reference = {
+		"a:apache:http_server:31.33.7",
+		"a:php:php:5.2.4"
+	};
+
+	BOOST_TEST_CHECK(cpes.size() == reference.size(), "Size mismatch between extracted and reference CPEs array. Expected " + to_string(reference.size()) + " items, got " + to_string(cpes.size()) + " items.");
+
+	for (auto i = 0u; i < min(cpes.size(), reference.size()); i++)
+	{
+		BOOST_TEST_CHECK(cpes[i] == reference[i], "Value mismatch between extracted and reference CPE. Expected `" + reference[i] + "`, got `" + cpes[i] + "`.");
+	}
+}
+
+/*!
  * Tests the service banner pattern matcher.
  * 
  * This test requires a "cpe-regex" data file to be present in order to run. The purpose of this matcher is to
@@ -270,7 +298,7 @@ BOOST_AUTO_TEST_CASE(MatchServiceRegex)
 		"a:openbsd:openssh:13.37",
 		"a:exim:exim:13.37",
 		"a:igor_sysoev:nginx:13.37",
-		"a:dovecot:dovecot",
+		"a:dovecot:dovecot"
 	};
 
 	for (auto i = 0u; i < banners.size(); i++)

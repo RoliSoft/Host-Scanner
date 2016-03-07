@@ -35,6 +35,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
+#include "VulnerabilityLookup.h"
 
 #ifndef BOOST_TEST_WARN
 #define BOOST_TEST_WARN(a,m) BOOST_CHECK(a)
@@ -348,6 +349,72 @@ BOOST_AUTO_TEST_CASE(MatchCpeDictionary)
 		for (auto j = 0u; j < min(cpes.size(), reference[i].size()); j++)
 		{
 			BOOST_TEST_CHECK(cpes[j] == reference[i][j], "Value mismatch between extracted and reference CPE. Expected `" + reference[i][j] + "`, got `" + cpes[j] + "`.");
+		}
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Vulnerability Lookup Tests
+//---------------------------------------------------------------------------------------------------------------------
+
+/*!
+ * Tests the vulnerability lookup mechanism.
+ * 
+ * The automatic matcher calls each supported matcher and merges the results.
+ * 
+ * The banner being tested against contains a product with an inexistent version numbers in order to test
+ * pattern-based version extraction, and another product whose version number is listed within the CPE
+ * dictionary but has no regular expression defined in the pattern matcher's database.
+ */
+BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
+{
+	VulnerabilityLookup vl;
+
+	vector<string> cpes = {
+		"a:apache:http_server:2.2.22",
+		"a:php:php:5.5.5"
+	};
+
+	unordered_map<string, vector<string>> reference = {
+		{ "a:apache:http_server:2.2.22", {
+			"2013-6712", "2015-6836"
+		}},
+		{ "a:php:php:5.5.5", {
+			"2012-2687", "2014-0231"
+		}}
+	};
+
+	auto cves = vl.Scan(cpes);
+
+	BOOST_TEST_CHECK(cves.size() > 0, "Failed to find any vulnerabilities for the specified CPEs.");
+
+	for (auto& entry : reference)
+	{
+		auto cveit = cves.find(entry.first);
+
+		BOOST_TEST_CHECK(cveit != cves.end(), "Failed to find any vulnerabilities for the CPE `" + entry.first + "`.");
+
+		if (cveit == cves.end())
+		{
+			continue;
+		}
+
+		auto ccves = (*cveit).second;
+
+		for (auto& cve : entry.second)
+		{
+			auto found = false;
+
+			for (auto& dcve : ccves)
+			{
+				if (cve == dcve->cve)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			BOOST_TEST_CHECK(found, "Failed to find vulnerability `" + cve + "` for the CPE `" + entry.first + "`.");
 		}
 	}
 }

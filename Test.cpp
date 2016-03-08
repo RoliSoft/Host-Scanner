@@ -75,7 +75,7 @@ void log(int level, const string& msg)
 		return;
 	}
 
-	cerr << msg << endl;
+	BOOST_TEST_WARN(false, msg);
 }
 
 /*!

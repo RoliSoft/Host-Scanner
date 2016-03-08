@@ -265,6 +265,8 @@ BOOST_AUTO_TEST_CASE(MatchAuto)
 
 	BOOST_TEST_CHECK(cpes.size() == reference.size(), "Size mismatch between extracted and reference CPEs array. Expected " + to_string(reference.size()) + " items, got " + to_string(cpes.size()) + " items.");
 
+	sort(cpes.begin(), cpes.end());
+
 	for (auto i = 0u; i < min(cpes.size(), reference.size()); i++)
 	{
 		BOOST_TEST_CHECK(cpes[i] == reference[i], "Value mismatch between extracted and reference CPE. Expected `" + reference[i] + "`, got `" + cpes[i] + "`.");
@@ -346,6 +348,8 @@ BOOST_AUTO_TEST_CASE(MatchCpeDictionary)
 		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner " + to_string(i) + ".");
 		BOOST_TEST_CHECK(cpes.size() == reference[i].size(), "Size mismatch between extracted and reference CPEs array. Expected " + to_string(reference[i].size()) + " items, got " + to_string(cpes.size()) + " items.");
 		
+		sort(cpes.begin(), cpes.end());
+
 		for (auto j = 0u; j < min(cpes.size(), reference[i].size()); j++)
 		{
 			BOOST_TEST_CHECK(cpes[j] == reference[i][j], "Value mismatch between extracted and reference CPE. Expected `" + reference[i][j] + "`, got `" + cpes[j] + "`.");

@@ -32,10 +32,10 @@
 #include "ThreeDigitTokenizer.h"
 #include "ServiceRegexMatcher.h"
 #include "CpeDictionaryMatcher.h"
+#include "VulnerabilityLookup.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
-#include "VulnerabilityLookup.h"
 
 #ifndef BOOST_TEST_WARN
 #define BOOST_TEST_WARN(a,m) BOOST_CHECK(a)
@@ -381,10 +381,10 @@ BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 
 	unordered_map<string, vector<string>> reference = {
 		{ "a:apache:http_server:2.2.22", {
-			"2013-6712", "2015-6836"
+			"2012-2687", "2014-0231"
 		}},
 		{ "a:php:php:5.5.5", {
-			"2012-2687", "2014-0231"
+			"2013-6712", "2015-6836"
 		}}
 	};
 

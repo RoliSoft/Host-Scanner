@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 	{
 		auto cveit = cves.find(entry.first);
 
-		BOOST_TEST_CHECK(cveit != cves.end(), "Failed to find any vulnerabilities for the CPE `" + entry.first + "`.");
+		BOOST_TEST_CHECK((cveit != cves.end()), "Failed to find any vulnerabilities for the CPE `" + entry.first + "`.");
 
 		if (cveit == cves.end())
 		{

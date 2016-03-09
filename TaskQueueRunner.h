@@ -18,11 +18,14 @@
 class TaskQueueRunner
 {
 public:
-	
+
 	/*!
 	 * Initializes a new instance of this class.
+	 *
+	 * \param capacity The total number of tasks to allocate space for.
+	 * \param batch The number of tasks to execute in one batch.
 	 */
-	TaskQueueRunner();
+	TaskQueueRunner(int capacity, int batch);
 
 	/*!
 	 * Enqueues a task for execution.
@@ -44,6 +47,11 @@ public:
 	~TaskQueueRunner();
 
 private:
+
+	/*!
+	 * The number of tasks to execute in one batch.
+	 */
+	int batch;
 
 	/*!
 	 * The queue of tasks currently being executed and are waiting for the result

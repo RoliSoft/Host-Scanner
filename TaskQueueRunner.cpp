@@ -2,8 +2,8 @@
 
 using namespace boost;
 
-TaskQueueRunner::TaskQueueRunner()
-	: running(100), pending(100)
+TaskQueueRunner::TaskQueueRunner(int capacity, int batch)
+	: batch(batch), running(batch), pending(capacity)
 {
 }
 
@@ -14,7 +14,7 @@ void TaskQueueRunner::Enqueue(void* task)
 
 void TaskQueueRunner::Run()
 {
-	for (int i = 0; i < 10; i++)
+	for (auto i = 0; i < batch; i++)
 	{
 		void* task;
 
@@ -30,52 +30,27 @@ void TaskQueueRunner::Run()
 
 	while (!pending.empty() || !running.empty())
 	{
-		void* first = nullptr;
-		auto loop   = true;
+		void* task;
 
-		while (!running.empty() && loop)
+		if (!running.pop(task))
 		{
-			void* task;
+			break;
+		}
 
-			if (!running.pop(task))
+		auto result = reinterpret_cast<void*(*)(void)>(task)();
+
+		if (result == nullptr)
+		{
+			void* next;
+
+			if (pending.pop(next))
 			{
-				break;
+				running.push(next);
 			}
-
-			if (task == first)
-			{
-				loop = false;
-			}
-
-			auto result = reinterpret_cast<void*(*)(void)>(task)();
-
-			if (result == nullptr)
-			{
-				void* next;
-
-				if (pending.pop(next))
-				{
-					running.push(next);
-
-					if (first == task || first == nullptr)
-					{
-						first = next;
-					}
-				}
-				else
-				{
-					first = nullptr;
-				}
-			}
-			else
-			{
-				running.push(result);
-
-				if (first == task || first == nullptr)
-				{
-					first = result;
-				}
-			}
+		}
+		else
+		{
+			running.push(result);
 		}
 	}
 }

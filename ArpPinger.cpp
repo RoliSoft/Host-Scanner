@@ -40,7 +40,7 @@
 using namespace std;
 
 ArpPinger::ArpPinger()
-	: interfaces(vector<Interface*>())
+	: interfaces()
 {
 }
 

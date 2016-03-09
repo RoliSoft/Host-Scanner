@@ -5,7 +5,7 @@ using namespace std;
 
 Service::Service(string address, unsigned short port, IPPROTO protocol)
 	: address(address), port(port), protocol(protocol),
-	  alive(false), reason(AR_NotScanned), banner(""), cpe(vector<string>()), data(nullptr)
+	  alive(false), reason(AR_NotScanned), banner(""), cpe(), data(nullptr)
 {
 }
 

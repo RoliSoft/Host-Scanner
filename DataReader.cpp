@@ -11,7 +11,8 @@ using namespace std;
 namespace io = boost::iostreams;
 namespace fs = boost::filesystem;
 
-DataReader::DataReader() : fs(nullptr), bs(nullptr)
+DataReader::DataReader()
+	: fs(nullptr), bs(nullptr)
 {
 }
 

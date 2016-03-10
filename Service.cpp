@@ -15,7 +15,7 @@ string Service::ReasonString(AliveReason reason)
 		{ AR_ScanFailed,        "ScanFailed" },
 		{ AR_NotScanned,        "NotScanned" },
 		{ AR_InProgress,        "InProgress" },
-		{ AR_InProgress2,       "InProgress2" },
+		{ AR_InProgress_Extra,  "InProgressExtra" },
 		{ AR_TimedOut,          "TimedOut" },
 		{ AR_IcmpUnreachable,   "IcmpUnreachable" },
 		{ AR_ReplyReceived,     "ReplyReceived" }

@@ -50,29 +50,16 @@ public:
 	 * Indicates whether to run protocol-tailored scripts.
 	 */
 	bool runScripts = true;
-
+	
 	/*!
-	 * Scans a service to determine aliveness.
+	 * Get a task which scans a service to determine its aliveness.
+	 *
+	 * \param service Service to scan.
 	 * 
-	 * \param service Service.
+	 * \return Task to scan the specified service.
 	 */
-	void Scan(Service* service) override;
-
-	/*!
-	 * Scans a list of services to determine aliveness.
-	 * 
-	 * \param services List of services.
-	 */
-	void Scan(Services* services) override;
-
-	void* MakeTask(Service* service);
-
-	void* Task1(Service* service);
-
-	void* Task2(Service* service);
-
-	void* Task3(Service* service);
-
+	void* GetTask(Service* service) override;
+	
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
@@ -81,27 +68,33 @@ public:
 private:
 
 	/*!
-	 * Initializes the sockets and starts the non-blocking connection.
+	 * Initializes the socket and starts the non-blocking connection.
 	 *
 	 * \param service Service.
+	 * 
+	 * \return Next task, or `nullptr` if failed to initialize socket.
 	 */
-	void initSocket(Service* service);
+	void* initSocket(Service* service);
 
 	/*!
-	 * Collects the results of the socket connections.
+	 * Collects the result of the socket connection.
 	 *
 	 * \param service Service.
-	 * \param last Whether this is the last iteration.
+	 *
+	 * \return Same task if no data received yet, otherwise next task to
+	 * 		   read banner, or `nullptr` if failed to read from socket.
 	 */
-	void pollSocket(Service* service, bool last = false);
+	void* pollSocket(Service* service);
 
 	/*!
 	 * Reads the banner from the specified service.
 	 * This requires that the service have a connected socket.
 	 *
 	 * \param service Service.
-	 * \param last Whether this is the last iteration.
+	 *
+	 * \return Same task if no data received yet, or `nullptr` if succeeded in
+	 * 		   reading the banner or socket disconnected while trying to do so.
 	 */
-	void readBanner(Service* service, bool last = false);
+	void* readBanner(Service* service);
 
 };

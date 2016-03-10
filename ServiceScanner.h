@@ -10,18 +10,13 @@ class ServiceScanner
 public:
 
 	/*!
-	 * Scans a service to determine aliveness.
+	 * Get a task which scans a service to determine its aliveness.
+	 *
+	 * \param service Service to scan.
 	 * 
-	 * \param service Service.
+	 * \return Task to scan the specified service.
 	 */
-	virtual void Scan(Service* service) = 0;
-
-	/*!
-	 * Scans a list of services to determine aliveness.
-	 * 
-	 * \param services List of services.
-	 */
-	virtual void Scan(Services* services) = 0;
+	virtual void* GetTask(Service* service) = 0;
 
 	/*!
 	 * Dumps the scan results into the standard output.

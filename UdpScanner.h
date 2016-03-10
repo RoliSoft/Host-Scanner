@@ -64,26 +64,15 @@ public:
 	 * Indicates whether to run protocol-tailored scripts.
 	 */
 	bool runScripts = true;
-
+	
 	/*!
-	 * Scans a service to determine aliveness.
+	 * Get a task which scans a service to determine its aliveness.
+	 *
+	 * \param service Service to scan.
 	 * 
-	 * \param service Service.
+	 * \return Task to scan the specified service.
 	 */
-	void Scan(Service* service) override;
-
-	/*!
-	 * Scans a list of services to determine aliveness.
-	 * 
-	 * \param services List of services.
-	 */
-	void Scan(Services* services) override;
-
-	void* MakeTask(Service* service);
-
-	void* Task1(Service* service);
-
-	void* Task2(Service* service);
+	void* GetTask(Service* service) override;
 
 	/*!
 	 * Gets the port-mapped protocol payloads.
@@ -105,19 +94,23 @@ private:
 	static std::unordered_map<unsigned short, struct Payload*> payloads;
 
 	/*!
-	 * Sends a datagram to each requested service, with crafted packet, when available.
+	 * Sends a datagram to the requested service, with crafted packet, when available.
 	 *
 	 * \param service Service.
+	 *
+	 * \return Next task, or `nullptr` if failed to initialize socket.
 	 */
-	void initSocket(Service* service);
+	void* initSocket(Service* service);
 
 	/*!
-	 * Receives the responses.
+	 * Receives the response.
 	 *
 	 * \param service Service.
-	 * \param last Whether this is the last iteration.
+	 *
+	 * \return Same task if no data received yet, otherwise next task to
+	 * 		   read banner, or `nullptr` if failed to read from socket.
 	 */
-	void pollSocket(Service* service, bool last = false);
+	void* pollSocket(Service* service);
 
 	/*!
 	 * Loads the payload database from external file.

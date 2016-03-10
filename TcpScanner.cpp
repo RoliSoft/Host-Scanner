@@ -8,134 +8,12 @@
 using namespace std;
 using namespace boost;
 
-void TcpScanner::Scan(Service* service)
+void* TcpScanner::GetTask(Service* service)
 {
-	initSocket(service);
-
-	int iters = timeout / 10;
-
-	for (int i = 0; i <= iters; i++)
-	{
-		if (i != 0)
-		{
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-
-		switch (service->reason)
-		{
-		case AR_InProgress:
-			pollSocket(service, i == iters - 1);
-			break;
-
-		case AR_InProgress2:
-			readBanner(service, i == iters - 1);
-			break;
-
-		default:
-			continue;
-		}
-
-		if (service->reason != AR_InProgress && service->reason != AR_InProgress2)
-		{
-			break;
-		}
-	}
+	return MFN_TO_PTR(TcpScanner::initSocket, this, service);
 }
 
-void TcpScanner::Scan(Services* services)
-{
-	for (auto service : *services)
-	{
-		initSocket(service);
-	}
-
-	int iters = timeout / 10;
-	int left = services->size();
-
-	for (int i = 0; i <= iters; i++)
-	{
-		if (i != 0)
-		{
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-
-		for (auto service : *services)
-		{
-			switch (service->reason)
-			{
-			case AR_InProgress:
-				pollSocket(service, i == iters - 1);
-				break;
-
-			case AR_InProgress2:
-				readBanner(service, i == iters - 1);
-				break;
-
-			default:
-				continue;
-			}
-
-			if (service->reason != AR_InProgress && service->reason != AR_InProgress2)
-			{
-				left--;
-			}
-		}
-
-		if (left <= 0)
-		{
-			break;
-		}
-	}
-}
-
-void* TcpScanner::MakeTask(Service* service)
-{
-	return MFN_TO_PTR(TcpScanner::Task1, this, service);
-}
-
-void* TcpScanner::Task1(Service* service)
-{
-	initSocket(service);
-
-	return MFN_TO_PTR(TcpScanner::Task2, this, service);
-}
-
-void* TcpScanner::Task2(Service* service)
-{
-	if (service->reason == AR_InProgress)
-	{
-		pollSocket(service, false);
-	}
-
-	if (service->reason == AR_InProgress)
-	{
-		return MFN_TO_PTR(TcpScanner::Task2, this, service);
-	}
-
-	if (service->reason == AR_InProgress2)
-	{
-		return MFN_TO_PTR(TcpScanner::Task3, this, service);
-	}
-	
-	return nullptr;
-}
-
-void* TcpScanner::Task3(Service* service)
-{
-	if (service->reason == AR_InProgress2)
-	{
-		readBanner(service, false);
-	}
-
-	if (service->reason == AR_InProgress2)
-	{
-		return MFN_TO_PTR(TcpScanner::Task3, this, service);
-	}
-
-	return nullptr;
-}
-
-void TcpScanner::initSocket(Service* service)
+void* TcpScanner::initSocket(Service* service)
 {
 	// parse address
 
@@ -177,13 +55,17 @@ void TcpScanner::initSocket(Service* service)
 	// clean-up
 
 	freeaddrinfo(info);
+
+	// return next task
+
+	return MFN_TO_PTR(TcpScanner::pollSocket, this, service);
 }
 
-void TcpScanner::pollSocket(Service* service, bool last)
+void* TcpScanner::pollSocket(Service* service)
 {
 	if (service->reason != AR_InProgress || service->data == nullptr)
 	{
-		return;
+		return nullptr;
 	}
 
 	TIMEVAL tv = { 0, 0 };
@@ -191,7 +73,7 @@ void TcpScanner::pollSocket(Service* service, bool last)
 
 	// check if socket is writable, which basically means the connection was successful
 
-	// for some reason, Linux requires the first parameter to be counterintuitively socket+1, while Windows doesn't
+	// for some reason, Linux requires the first parameter to be counterintuitively socket+1, while Windows doesn't.
 	// time spent searching for this error: ~1.5 hours
 
 	select(
@@ -232,11 +114,10 @@ void TcpScanner::pollSocket(Service* service, bool last)
 	{
 		if (grabBanner)
 		{
-			service->reason = AR_InProgress2;
+			service->reason = AR_InProgress_Extra;
 			data->timeout   = chrono::system_clock::now() + chrono::milliseconds(timeout);
 
-			readBanner(service, last);
-			return;
+			return readBanner(service);
 		}
 		else
 		{
@@ -254,7 +135,10 @@ void TcpScanner::pollSocket(Service* service, bool last)
 		{
 			FD_ZERO(data->fdset);
 			FD_SET(data->socket, data->fdset);
-			return;
+
+			// return the current task to try polling the socket again
+
+			return MFN_TO_PTR(TcpScanner::pollSocket, this, service);
 		}
 	}
 
@@ -266,19 +150,17 @@ void TcpScanner::pollSocket(Service* service, bool last)
 
 	delete data->fdset;
 	delete data;
+
+	// return end-of-task
+
+	return nullptr;
 }
 
-void TcpScanner::readBanner(Service* service, bool last)
+void* TcpScanner::readBanner(Service* service)
 {
-	if (service->reason != AR_InProgress2 || service->data == nullptr)
+	if (service->reason != AR_InProgress_Extra || service->data == nullptr)
 	{
-		return;
-	}
-
-	if (service->banner.length() > 0)
-	{
-		service->reason = AR_ReplyReceived;
-		return;
+		return nullptr;
 	}
 
 	auto data = reinterpret_cast<TcpScanData*>(service->data);
@@ -292,12 +174,12 @@ void TcpScanner::readBanner(Service* service, bool last)
 		// received a service banner
 
 		service->banner = string(buf, res);
-
-		// TODO run further protocol probes
 	}
-	else if (!last)
+	else if (data->timeout >= chrono::system_clock::now())
 	{
-		return;
+		// return the current task to try polling the socket again
+
+		return MFN_TO_PTR(TcpScanner::readBanner, this, service);
 	}
 
 	service->reason = AR_ReplyReceived;
@@ -311,6 +193,10 @@ void TcpScanner::readBanner(Service* service, bool last)
 
 	delete data->fdset;
 	delete data;
+
+	// return end-of-task
+
+	return nullptr;
 }
 
 TcpScanner::~TcpScanner()

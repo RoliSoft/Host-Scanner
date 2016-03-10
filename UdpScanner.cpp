@@ -20,110 +20,17 @@ namespace fs = boost::filesystem;
 
 unordered_map<unsigned short, struct Payload*> UdpScanner::payloads = unordered_map<unsigned short, struct Payload*>();
 
-void UdpScanner::Scan(Service* service)
+void* UdpScanner::GetTask(Service* service)
 {
 	if (payloads.size() == 0)
 	{
 		loadPayloads();
 	}
 
-	initSocket(service);
-
-	int iters = timeout / 10;
-
-	for (int i = 0; i <= iters; i++)
-	{
-		if (i != 0)
-		{
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-
-		pollSocket(service, i == iters - 1);
-
-		if (service->reason != AR_InProgress)
-		{
-			break;
-		}
-	}
+	return MFN_TO_PTR(UdpScanner::initSocket, this, service);
 }
 
-void UdpScanner::Scan(Services* services)
-{
-	if (payloads.size() == 0)
-	{
-		loadPayloads();
-	}
-
-	for (auto service : *services)
-	{
-		initSocket(service);
-	}
-
-	int iters = timeout / 10;
-	int left = services->size();
-
-	for (int i = 0; i <= iters; i++)
-	{
-		if (i != 0)
-		{
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-
-		for (auto service : *services)
-		{
-			if (service->reason != AR_InProgress)
-			{
-				continue;
-			}
-
-			pollSocket(service, i == iters - 1);
-
-			if (service->reason != AR_InProgress)
-			{
-				left--;
-			}
-		}
-
-		if (left <= 0)
-		{
-			break;
-		}
-	}
-}
-
-void* UdpScanner::MakeTask(Service* service)
-{
-	if (payloads.size() == 0)
-	{
-		loadPayloads();
-	}
-
-	return MFN_TO_PTR(UdpScanner::Task1, this, service);
-}
-
-void* UdpScanner::Task1(Service* service)
-{
-	initSocket(service);
-
-	return MFN_TO_PTR(UdpScanner::Task2, this, service);
-}
-
-void* UdpScanner::Task2(Service* service)
-{
-	if (service->reason == AR_InProgress)
-	{
-		pollSocket(service, false);
-	}
-
-	if (service->reason == AR_InProgress)
-	{
-		return MFN_TO_PTR(UdpScanner::Task2, this, service);
-	}
-
-	return nullptr;
-}
-
-void UdpScanner::initSocket(Service* service)
+void* UdpScanner::initSocket(Service* service)
 {
 	// parse address
 
@@ -176,13 +83,17 @@ void UdpScanner::initSocket(Service* service)
 	// clean-up
 
 	freeaddrinfo(info);
+
+	// return next task
+	
+	return MFN_TO_PTR(UdpScanner::pollSocket, this, service);
 }
 
-void UdpScanner::pollSocket(Service* service, bool last)
+void* UdpScanner::pollSocket(Service* service)
 {
 	if (service->reason != AR_InProgress || service->data == nullptr)
 	{
-		return;
+		return nullptr;
 	}
 
 	auto data = reinterpret_cast<UdpScanData*>(service->data);
@@ -223,7 +134,9 @@ void UdpScanner::pollSocket(Service* service, bool last)
 #endif
 		else
 		{
-			return;
+			// return the current task to try polling the socket again
+
+			return MFN_TO_PTR(UdpScanner::pollSocket, this, service);
 		}
 	}
 
@@ -234,6 +147,10 @@ void UdpScanner::pollSocket(Service* service, bool last)
 	closesocket(data->socket);
 
 	delete data;
+
+	// return end-of-task
+
+	return nullptr;
 }
 
 unordered_map<unsigned short, Payload*> UdpScanner::GetPayloads()

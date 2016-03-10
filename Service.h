@@ -26,7 +26,7 @@ typedef enum
 	/*!
 	 * Service is alive, but still being scanned.
 	 */
-	AR_InProgress2 = 2,
+	AR_InProgress_Extra = 2,
 
 	/*!
 	 * Service didn't reply within specified timeframe.

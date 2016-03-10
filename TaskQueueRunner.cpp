@@ -72,6 +72,18 @@ void TaskQueueRunner::Run()
 	}
 }
 
+void TaskQueueRunner::QuickScan(ServiceScanner& scanner, Services& services)
+{
+	TaskQueueRunner tqr(services.size(), 65535);
+
+	for (auto service : services)
+	{
+		tqr.Enqueue(scanner.GetTask(service));
+	}
+
+	tqr.Run();
+}
+
 TaskQueueRunner::~TaskQueueRunner()
 {
 }

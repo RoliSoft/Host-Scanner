@@ -2,6 +2,7 @@
 #include <functional>
 #include <boost/lockfree/queue.hpp>
 #include "Service.h"
+#include "ServiceScanner.h"
 
 /*!
  * A macro that defines a pointer to a member function with arguments bound.
@@ -71,6 +72,14 @@ public:
 	 * This call is blocking and will return when the task queue is exhausted.
 	 */
 	void Run();
+
+	/*!
+	 * Helper function to easily scan a list of services with a specified scanner.
+	 *
+	 * \param scanner The scanner instance to invoke on the services.
+	 * \param services The list of services to scan.
+	 */
+	static void QuickScan(ServiceScanner& scanner, Services& services);
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.

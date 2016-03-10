@@ -1,4 +1,5 @@
 #include "TcpScanner.h"
+#include "TaskQueueRunner.h"
 #include <chrono>
 #include <thread>
 #include <functional>
@@ -89,13 +90,13 @@ void TcpScanner::Scan(Services* services)
 
 void* TcpScanner::MakeTask(Service* service)
 {
-	return reinterpret_cast<void*>(new function<void*(void)>(bind(&TcpScanner::Task1, this, service)));
+	return MFN_TO_PTR(TcpScanner::Task1, this, service);
 }
 
 void* TcpScanner::Task1(Service* service)
 {
 	initSocket(service);
-	return reinterpret_cast<void*>(new function<void*(void)>(bind(&TcpScanner::Task2, this, service)));
+	return MFN_TO_PTR(TcpScanner::Task2, this, service);
 }
 
 void* TcpScanner::Task2(Service* service)
@@ -107,12 +108,12 @@ void* TcpScanner::Task2(Service* service)
 
 	if (service->reason == AR_InProgress)
 	{
-		return reinterpret_cast<void*>(new function<void*(void)>(bind(&TcpScanner::Task2, this, service)));
+		return MFN_TO_PTR(TcpScanner::Task2, this, service);
 	}
 
 	if (service->reason == AR_InProgress2)
 	{
-		return reinterpret_cast<void*>(new function<void*(void)>(bind(&TcpScanner::Task3, this, service)));
+		return MFN_TO_PTR(TcpScanner::Task3, this, service);
 	}
 	
 	return nullptr;
@@ -127,7 +128,7 @@ void* TcpScanner::Task3(Service* service)
 
 	if (service->reason == AR_InProgress2)
 	{
-		return reinterpret_cast<void*>(new function<void*(void)>(bind(&TcpScanner::Task3, this, service)));
+		return MFN_TO_PTR(TcpScanner::Task3, this, service);
 	}
 
 	return nullptr;

@@ -4,6 +4,35 @@
 #include "Service.h"
 
 /*!
+ * A macro that defines a pointer to a member function with arguments bound.
+ * 
+ * The function can be called by re-casting to std::function via `PTR_TO_MFN`.
+ * 
+ * Since the function instance is allocated on the heap, you are responsible
+ * for deleting the pointer (re-casted with `PTR_TO_MFN`!) after use in order
+ * to avoid memory leaks.
+ *
+ * \param fn The member function to call.
+ * \param inst The instance on which to invoke the call.
+ * \param ... Variable arguments bound to the function.
+ * 
+ * \return `void*` pointing to callable member function.
+ */
+#define MFN_TO_PTR(fn, inst, ...) reinterpret_cast<void*>(new std::function<void*(void)>(std::bind(&fn, inst, __VA_ARGS__)))
+
+/*!
+ * A macro that defines pointer to the underlying std::function of the `MFN_TO_PTR` call.
+ * 
+ * This pointer should be deleted after use, since the deletion of `void*` pointers
+ * is undefined behaviour and most compilers will complain about it.
+ * 
+ * \param ptr The pointer created with `MFN_TO_PTR`.
+ * 
+ * \return `std::function` pointer.
+ */
+#define PTR_TO_MFN(ptr) reinterpret_cast<std::function<void*(void)>*>(ptr)
+
+/*!
  * Implements a task runner which uses two queues in order to differentiate between
  * running and pending tasks. Since network scan tasks mostly consist of waiting
  * for I/O operation results, it makes much more sense to multiplex the tasks in

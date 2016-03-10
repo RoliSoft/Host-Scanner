@@ -1,6 +1,6 @@
 #pragma once
 #include "Stdafx.h"
-#include "ServiceScanner.h"
+#include "HostScanner.h"
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
@@ -152,33 +152,33 @@ struct ArpScanData
 /*!
  * Implements a scanner which sends ARP pings using raw sockets.
  */
-class ArpPinger : public ServiceScanner
+class ArpPinger : public HostScanner
 {
 public:
 	
 	/*!
 	 * Number of milliseconds to wait for a reply packet.
 	 */
-	unsigned long timeout = 1000;
-
-	/*!
-	 * Scans a service to determine aliveness.
-	 * 
-	 * \param service Service.
-	 */
-	void Scan(Service* service) override;
-
-	/*!
-	 * Scans a list of services to determine aliveness.
-	 * 
-	 * \param services List of services.
-	 */
-	void Scan(Services* services) override;
+	unsigned long timeout = 5000;
 
 	/*!
 	 * Creates a new instance of this type.
 	 */
 	ArpPinger();
+
+	/*!
+	 * Scans a host to determine aliveness.
+	 *
+	 * \param host Host.
+	 */
+	void Scan(Host* host) override;
+
+	/*!
+	 * Scans a list of hosts to determine aliveness.
+	 *
+	 * \param hosts List of hosts.
+	 */
+	void Scan(Hosts* hosts) override;
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
@@ -194,27 +194,27 @@ private:
 
 	/*!
 	 * Makes the required preparations in order to determine whether this
-	 * service is eligible for this type of scanning or not.
+	 * host is eligible for this type of scanning or not.
 	 *
-	 * \param service Service.
+	 * \param host Host.
 	 */
-	void prepService(Service* service);
+	void prepareHost(Host* host);
 
 	/*!
 	 * Sends an ARP Request packet to the specified service.
 	 *
-	 * \param service Service.
+	 * \param host Host.
 	 */
-	void sendRequest(Service* service);
+	void sendRequest(Host* host);
 
 	/*!
 	 * Sniffs the specified interfaces for ARP reply packets.
 	 *
 	 * \param ifaces Interfaces to sniff.
-	 * \param services Services mapped to their IP addresses in decimal formats,
-	 *                 for faster look-ups during packet processing.
+	 * \param hosts Hosts mapped to their IP addresses in decimal formats,
+	 *              for faster look-ups during packet processing.
 	 */
-	void sniffReplies(std::unordered_set<Interface*> ifaces, std::unordered_map<unsigned int, Service*> services);
+	void sniffReplies(std::unordered_set<Interface*> ifaces, std::unordered_map<unsigned int, Host*> hosts);
 
 	/*!
 	 * Populates the list of active interfaces on the current machine.

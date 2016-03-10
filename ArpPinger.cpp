@@ -55,72 +55,72 @@ ArpPinger::~ArpPinger()
 	}
 }
 
-void ArpPinger::Scan(Service* service)
+void ArpPinger::Scan(Host* host)
 {
-	prepService(service);
+	prepareHost(host);
 
-	if (service->reason != AR_InProgress)
+	if (host->reason != AR_InProgress)
 	{
 		return;
 	}
 
-	unordered_map<unsigned int, Service*> servmap = {
-		{ reinterpret_cast<ArpScanData*>(service->data)->ipaddr, service }
+	unordered_map<unsigned int, Host*> hostmap = {
+		{ reinterpret_cast<ArpScanData*>(host->data)->ipaddr, host }
 	};
 
 	unordered_set<Interface*> ifaces = {
-		reinterpret_cast<ArpScanData*>(service->data)->iface
+		reinterpret_cast<ArpScanData*>(host->data)->iface
 	};
 
-	thread thd(&ArpPinger::sniffReplies, this, ifaces, servmap);
+	thread thd(&ArpPinger::sniffReplies, this, ifaces, hostmap);
 
-	sendRequest(service);
+	sendRequest(host);
 
 	thd.join();
 
-	if (service->reason == AR_InProgress)
+	if (host->reason == AR_InProgress)
 	{
-		service->reason = AR_TimedOut;
+		host->reason = AR_TimedOut;
 	}
 }
 
-void ArpPinger::Scan(Services* services)
+void ArpPinger::Scan(Hosts* hosts)
 {
-	unordered_map<unsigned int, Service*> servmap;
+	unordered_map<unsigned int, Host*> hostmap;
 	unordered_set<Interface*> ifaces;
 
-	for (auto& service : *services)
+	for (auto& host : *hosts)
 	{
-		prepService(service);
+		prepareHost(host);
 
-		if (service->reason != AR_InProgress)
+		if (host->reason != AR_InProgress)
 		{
 			continue;
 		}
 
-		servmap[reinterpret_cast<ArpScanData*>(service->data)->ipaddr] = service;
-		ifaces.emplace(reinterpret_cast<ArpScanData*>(service->data)->iface);
+		hostmap[reinterpret_cast<ArpScanData*>(host->data)->ipaddr] = host;
+		ifaces.emplace(reinterpret_cast<ArpScanData*>(host->data)->iface);
 	}
 
-	thread thd(&ArpPinger::sniffReplies, this, ifaces, servmap);
+	thread thd(&ArpPinger::sniffReplies, this, ifaces, hostmap);
 
-	for (auto service : *services)
+	for (auto host : *hosts)
 	{
-		if (service->reason != AR_InProgress)
+		if (host->reason != AR_InProgress)
 		{
 			continue;
 		}
 
-		sendRequest(service);
+		sendRequest(host);
 	}
 
 	thd.join();
 
-	for (auto service : *services)
+	for (auto host : *hosts)
 	{
-		if (service->reason == AR_InProgress)
+		if (host->reason == AR_InProgress)
 		{
-			service->reason = AR_TimedOut;
+			host->reason = AR_TimedOut;
 		}
 	}
 }
@@ -295,7 +295,7 @@ bool ArpPinger::isIpOnIface(unsigned int ip, Interface* inf)
 	return iph >= low && iph <= high;
 }
 
-void ArpPinger::prepService(Service* service)
+void ArpPinger::prepareHost(Host* host)
 {
 	// get interfaces
 
@@ -307,7 +307,7 @@ void ArpPinger::prepService(Service* service)
 	// parse address
 	
 	unsigned int addr;
-	inet_pton(AF_INET, service->address.c_str(), &addr);
+	inet_pton(AF_INET, host->address.c_str(), &addr);
 
 	// check which interfaces' range is this address in
 
@@ -324,27 +324,26 @@ void ArpPinger::prepService(Service* service)
 
 	if (iface == nullptr)
 	{
-		service->reason = AR_ScanFailed;
-		log(ERR, "Host '" + service->address + "' is not local to any of the interfaces.");
+		host->reason = AR_ScanFailed;
+		log(ERR, "Host '" + host->address + "' is not local to any of the interfaces.");
 		return;
 	}
 
-	auto data = new ArpScanData();
-	service->data = data;
+	auto data    = new ArpScanData();
+	host->data   = data;
 	data->ipaddr = addr;
-	data->iface = iface;
-
-	service->reason = AR_InProgress;
+	data->iface  = iface;
+	host->reason = AR_InProgress;
 }
 
-void ArpPinger::sendRequest(Service* service)
+void ArpPinger::sendRequest(Host* host)
 {
-	if (service->reason != AR_InProgress || service->data == nullptr)
+	if (host->reason != AR_InProgress || host->data == nullptr)
 	{
 		return;
 	}
 
-	auto data = reinterpret_cast<ArpScanData*>(service->data);
+	auto data = reinterpret_cast<ArpScanData*>(host->data);
 
 #if Windows
 
@@ -355,7 +354,7 @@ void ArpPinger::sendRequest(Service* service)
 
 	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(data->iface->adapter)).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
 	{
-		service->reason = AR_ScanFailed;
+		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to open PCAP device: " + string(data->iface->adapter));
 		return;
 	}
@@ -381,7 +380,7 @@ void ArpPinger::sendRequest(Service* service)
 	{
 		// root is required for raw sockets
 
-		service->reason = AR_ScanFailed;
+		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to open socket with PF_PACKET/SOCK_RAW.");
 		return;
 	}
@@ -408,7 +407,7 @@ void ArpPinger::sendRequest(Service* service)
 
 	if (bpf < 0)
 	{
-		service->reason = AR_ScanFailed;
+		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to allocate a BPF device.");
 		return;
 	}
@@ -420,7 +419,7 @@ void ArpPinger::sendRequest(Service* service)
 
 	if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 	{
-		service->reason = AR_ScanFailed;
+		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to bind BPF device to interface '" + string(data->iface->adapter) + "': " + string(strerror(errno)));
 		close(bpf);
 		return;
@@ -467,7 +466,7 @@ void ArpPinger::sendRequest(Service* service)
 
 	if (res != 0)
 	{
-		service->reason = AR_ScanFailed;
+		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to send packet through PCAP: " + string(pcap_geterr(pcap)));
 	}
 
@@ -479,7 +478,7 @@ void ArpPinger::sendRequest(Service* service)
 
 	if (res <= 0)
 	{
-		service->reason = AR_ScanFailed;
+		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to send packet through socket: " + string(strerror(errno)));
 	}
 
@@ -491,7 +490,7 @@ void ArpPinger::sendRequest(Service* service)
 
 	if (res <= 0)
 	{
-		service->reason = AR_ScanFailed;
+		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to send packet through BPF: " + string(strerror(errno)));
 	}
 
@@ -504,9 +503,9 @@ void ArpPinger::sendRequest(Service* service)
 	delete data;
 }
 
-void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<unsigned int, Service*> services)
+void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<unsigned int, Host*> hosts)
 {
-	if (ifaces.size() == 0 || services.size() == 0)
+	if (ifaces.size() == 0 || hosts.size() == 0)
 	{
 		return;
 	}
@@ -588,11 +587,11 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 				continue;
 			}
 
-			// when reply packet is found, mark its service object as alive
+			// when reply packet is found, mark its host object as alive
 
-			auto it = services.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
+			auto it = hosts.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
 
-			if (it != services.end())
+			if (it != hosts.end())
 			{
 				auto serv = (*it).second;
 				serv->alive = true;
@@ -651,8 +650,8 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 	// iterate through the received packets on all interfaces until timeout
 
-	auto res = 0;
-	auto data = new unsigned char[60];
+	auto res   = 0;
+	auto data  = new unsigned char[60];
 	auto start = chrono::steady_clock::now();
 
 	while (chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < static_cast<long long>(timeout))
@@ -677,11 +676,11 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 			continue;
 		}
 
-		// when reply packet is found, mark its service object as alive
+		// when reply packet is found, mark its host object as alive
 
-		auto it = services.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
+		auto it = hosts.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
 
-		if (it != services.end())
+		if (it != hosts.end())
 		{
 			auto serv = (*it).second;
 			serv->alive = true;
@@ -837,11 +836,11 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 					continue;
 				}
 
-				// when reply packet is found, mark its service object as alive
+				// when reply packet is found, mark its host object as alive
 
-				auto it = services.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
+				auto it = hosts.find(*reinterpret_cast<unsigned int*>(&arpPkt->srcip));
 
-				if (it != services.end())
+				if (it != hosts.end())
 				{
 					auto serv = (*it).second;
 					serv->alive = true;

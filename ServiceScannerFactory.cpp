@@ -3,16 +3,9 @@
 #include "TcpScanner.h"
 #include "UdpScanner.h"
 #include "IcmpPinger.h"
-#include "ArpPinger.h"
-#include "NmapScanner.h"
 
-ServiceScanner* ServiceScannerFactory::Get(IPPROTO protocol, bool external)
+ServiceScanner* ServiceScannerFactory::Get(IPPROTO protocol)
 {
-	if (external)
-	{
-		return new NmapScanner();
-	}
-
 	switch (protocol)
 	{
 	case IPPROTO_TCP:
@@ -24,9 +17,6 @@ ServiceScanner* ServiceScannerFactory::Get(IPPROTO protocol, bool external)
 	case IPPROTO_ICMP:
 	case IPPROTO_ICMPV6:
 		return new IcmpPinger();
-
-	case IPPROTO_NONE:
-		return new ArpPinger();
 
 	default:
 		return nullptr;

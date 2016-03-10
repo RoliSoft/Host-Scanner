@@ -13,8 +13,7 @@ public:
 	 * Gets a scanner instance which supports the specified criteria.
 	 *
 	 * \param protocol IP protocol.
-	 * \param external Whether to use an external scanner.
 	 */
-	static ServiceScanner* Get(IPPROTO protocol, bool external = false);
+	static ServiceScanner* Get(IPPROTO protocol);
 
 };

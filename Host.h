@@ -32,11 +32,16 @@ public:
 	Services* services;
 
 	/*!
+	 * Object store reserved for the scanner.
+	 */
+	void* data;
+
+	/*!
 	 * Creates a new instance of this type.
 	 * 
 	 * \param address Remote address.
 	 */
-	Host(std::string address);
+	Host(const std::string& address);
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.

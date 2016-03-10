@@ -100,7 +100,7 @@ public:
 	 * \param port Remote port.
 	 * \param protocol Remote protocol, otherwise TCP.
 	 */
-	Service(std::string address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
+	Service(const std::string& address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
 
 	/*!
 	 * Copies the specified instance.

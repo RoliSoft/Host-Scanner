@@ -1,7 +1,7 @@
 #include "Host.h"
 
-Host::Host(std::string address)
-	: address(address), services(new Services())
+Host::Host(const std::string& address)
+	: address(address), services(new Services()), data(nullptr)
 {
 }
 

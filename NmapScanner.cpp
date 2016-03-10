@@ -13,36 +13,35 @@
 using namespace std;
 using namespace boost;
 
-void NmapScanner::Scan(Service* service)
+void NmapScanner::Scan(Host* host)
 {
-	Services services = { service };
-	Scan(&services);
+	Hosts hosts = { host };
+	Scan(&hosts);
 }
 
-void NmapScanner::Scan(Services* services)
+void NmapScanner::Scan(Hosts* hosts)
 {
 	// separate IPv4 and IPv6, since Nmap supports them, but can't dual-stack
 
-	Services serv4, serv6;
+	Hosts hostv4, hostv6;
 
-	for (auto& service : *services)
+	for (auto& host : *hosts)
 	{
 		struct addrinfo hint, *info = nullptr;
 		memset(&hint, 0, sizeof(struct addrinfo));
 		hint.ai_family = AF_UNSPEC; // allow both v4 and v6
 		hint.ai_flags = AI_NUMERICHOST; // disable DNS lookups
 
-		auto port = lexical_cast<string>(service->port);
-		getaddrinfo(service->address.c_str(), port.c_str(), &hint, &info);
+		getaddrinfo(host->address.c_str(), 0, &hint, &info);
 
 		switch (info->ai_family)
 		{
 		case AF_INET:
-			serv4.push_back(service);
+			hostv4.push_back(host);
 			break;
 
 		case AF_INET6:
-			serv6.push_back(service);
+			hostv6.push_back(host);
 			break;
 
 		default:
@@ -54,20 +53,20 @@ void NmapScanner::Scan(Services* services)
 
 	// run the separated tests
 
-	if (serv4.size() != 0)
+	if (hostv4.size() != 0)
 	{
-		auto xml = runNmap(&serv4);
-		parseXml(xml, &serv4);
+		auto xml = runNmap(&hostv4);
+		parseXml(xml, &hostv4);
 	}
 
-	if (serv6.size() != 0)
+	if (hostv6.size() != 0)
 	{
-		auto xml = runNmap(&serv6, true);
-		parseXml(xml, &serv6);
+		auto xml = runNmap(&hostv6, true);
+		parseXml(xml, &hostv6);
 	}
 }
 
-string NmapScanner::runNmap(Services* services, bool v6)
+string NmapScanner::runNmap(Hosts* hosts, bool v6)
 {
 	// -oX -	XML output to standard output
 	// -Pn		Don't probe, assume host is alive
@@ -85,36 +84,39 @@ string NmapScanner::runNmap(Services* services, bool v6)
 	}
 
 	string ports = " -p ";
-	string hosts = "";
+	string adrls = "";
 
 	// collect all ports and hosts to be scanned
 
 	set<unsigned short> tcps, udps;
 	set<string> addrs;
 
-	for (auto& service : *services)
+	for (auto& host : *hosts)
 	{
-		switch (service->protocol)
+		for (auto& service : *host->services)
 		{
-		case IPPROTO_TCP:
-			tcps.emplace(service->port);
-			break;
-		case IPPROTO_UDP:
-			udps.emplace(service->port);
-			break;
-		default:
-			log(ERR, "Unsupported protocol through nmap: " + to_string(service->protocol));
-			break;
-		}
+			switch (service->protocol)
+			{
+			case IPPROTO_TCP:
+				tcps.emplace(service->port);
+				break;
+			case IPPROTO_UDP:
+				udps.emplace(service->port);
+				break;
+			default:
+				log(ERR, "Unsupported protocol through nmap: " + to_string(service->protocol));
+				break;
+			}
 
-		addrs.emplace(service->address);
+			addrs.emplace(service->address);
+		}
 	}
 
 	// write collection to command
 
 	for (auto& addr : addrs)
 	{
-		hosts += addr + " ";
+		adrls += addr + " ";
 	}
 
 	if (tcps.size() != 0)
@@ -141,7 +143,7 @@ string NmapScanner::runNmap(Services* services, bool v6)
 
 	ports.pop_back(); // remove the last comma
 
-	cmd += ports + " " + hosts;
+	cmd += ports + " " + adrls;
 
 	// silence errors as they interrupt the XML output, and
 	// the XML output will contain the error message anyways
@@ -159,7 +161,7 @@ string NmapScanner::runNmap(Services* services, bool v6)
 	return xml;
 }
 
-void NmapScanner::parseXml(string xml, Services* services)
+void NmapScanner::parseXml(string xml, Hosts* hosts)
 {
 	using property_tree::ptree;
 
@@ -252,9 +254,9 @@ void NmapScanner::parseXml(string xml, Services* services)
 
 						// clear fields from previous port
 
-						port = 0;
-						proto = IPPROTO_TCP;
-						open = false;
+						port   = 0;
+						proto  = IPPROTO_TCP;
+						open   = false;
 						banner = "";
 						reason = AR_NotScanned;
 
@@ -310,19 +312,28 @@ void NmapScanner::parseXml(string xml, Services* services)
 
 						// new port info available at this phase, store it if relevant
 
-						for (auto& service : *services)
+						for (auto& host : *hosts)
 						{
-							if (service->address == address && service->port == port && service->protocol == proto)
+							for (auto& service : *host->services)
 							{
-								service->alive = open;
-								service->reason = reason;
-
-								if (banner.length() != 0)
+								if (service->address == address && service->port == port && service->protocol == proto)
 								{
-									service->banner = banner;
-								}
+									service->alive  = open;
+									service->reason = reason;
 
-								break;
+									if (banner.length() != 0)
+									{
+										service->banner = banner;
+									}
+
+									if (!host->alive && service->alive)
+									{
+										host->alive  = open;
+										host->reason = reason;
+									}
+
+									break;
+								}
 							}
 						}
 					}

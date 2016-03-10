@@ -7,7 +7,12 @@ void ServiceScanner::DumpResults(Services* services)
 {
 	for (auto service : *services)
 	{
-		log(MSG, service->address + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + Service::ReasonString(service->reason) + ")");
+		if (!service->alive && service->reason == AR_TimedOut)
+		{
+			continue;
+		}
+
+		log(service->alive ? MSG : VRB, service->address + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + Service::ReasonString(service->reason) + ")");
 
 		if (service->banner.length() > 0)
 		{
@@ -39,7 +44,7 @@ void ServiceScanner::DumpResults(Services* services)
 				}
 			}
 
-			log(DBG, ss.str());
+			log(service->alive ? MSG : VRB, ss.str());
 		}
 	}
 }

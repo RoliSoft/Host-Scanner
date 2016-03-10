@@ -46,6 +46,17 @@ using namespace std;
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
+/*!
+ * Logs the specified message.
+ * 
+ * Messages at warning or error level will be sent to the standard
+ * error, while messages below it will be sent to the standard
+ * output. Verbose and debug levels are only printed if the user
+ * requested such levels to be shown.
+ *
+ * \param level The message's severity level.
+ * \param msg The message's content.
+ */
 void log(int level, const string& msg)
 {
 	ostream* os;
@@ -77,6 +88,15 @@ void log(int level, const string& msg)
 	*os << msg << endl;
 }
 
+/*!
+ * Processes the arguments the user passed to the application when launching
+ * it, spawns the requested `HostScanner` type of instance, and builds the
+ * list of `Host` objects to be scanned based on the specified criteria.
+ *
+ * \param vm The variable map containing the process arguments.
+ *
+ * \return Return value to be used as an exit code.
+ */
 inline int scan(const po::variables_map& vm)
 {
 	int retval = EXIT_SUCCESS;
@@ -87,7 +107,7 @@ inline int scan(const po::variables_map& vm)
 
 	HostScanner* scanner = nullptr;
 	Hosts* hosts = nullptr;
-	set<int> ports;
+	set<unsigned short> ports;
 
 	// get scanner
 
@@ -411,10 +431,7 @@ inline int scan(const po::variables_map& vm)
 	
 	for (auto host : *hosts)
 	{
-		for (auto port : ports)
-		{
-			host->services->push_back(new Service(host->address, port, IPPROTO_NONE));
-		}
+		host->AddServices(ports, IPPROTO_TCP);
 	}
 
 	// start scan
@@ -439,6 +456,14 @@ cleanup:
 	return retval;
 }
 
+/*!
+ * Main entry-point for this application.
+ *
+ * \param argc Number of command-line arguments.
+ * \param argv Array of command-line argument strings.
+ *
+ * \return Exit-code for the process, 0 for success, else an error code.
+ */
 int main(int argc, char *argv[])
 {
 #if Windows

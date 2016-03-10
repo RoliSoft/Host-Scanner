@@ -23,6 +23,7 @@
 #include "Stdafx.h"
 #include "Service.h"
 #include "ServiceScannerFactory.h"
+#include "TaskQueueRunner.h"
 #include "TcpScanner.h"
 #include "UdpScanner.h"
 #include "IcmpPinger.h"
@@ -64,9 +65,14 @@ using namespace boost;
 
 /*!
  * Logs the specified message.
+ * 
+ * For the unit test, messages below the warning level will be ignored,
+ * and messages at that or above level will be sent as a warning through
+ * boost's own `BOOST_TEST_WARN` macro, which will show up as a warning
+ * on the unit test output.
  *
- * \param level The message level.
- * \param msg The message to log.
+ * \param level The message's severity level.
+ * \param msg The message's content.
  */
 void log(int level, const string& msg)
 {
@@ -440,10 +446,6 @@ BOOST_AUTO_TEST_CASE(PortScanFactory)
 	BOOST_TEST_CHECK((typeid(*udp) == typeid(UdpScanner)), "Factory should have spawned UdpScanner for IPPROTO_UDP, but instead spawned `" + string(typeid(*udp).name()) + "`.");
 	delete udp;
 
-	auto arp = ServiceScannerFactory::Get(IPPROTO_NONE);
-	BOOST_TEST_CHECK((typeid(*arp) == typeid(ArpPinger)), "Factory should have spawned ArpPinger for IPPROTO_NONE, but instead spawned `" + string(typeid(*arp).name()) + "`.");
-	delete arp;
-
 	auto icmp = ServiceScannerFactory::Get(IPPROTO_ICMP);
 	BOOST_TEST_CHECK((typeid(*icmp) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMP, but instead spawned `" + string(typeid(*icmp).name()) + "`.");
 	delete icmp;
@@ -451,10 +453,6 @@ BOOST_AUTO_TEST_CASE(PortScanFactory)
 	auto icmp6 = ServiceScannerFactory::Get(IPPROTO_ICMPV6);
 	BOOST_TEST_CHECK((typeid(*icmp6) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMPV6, but instead spawned `" + string(typeid(*icmp6).name()) + "`.");
 	delete icmp6;
-
-	auto nmap = ServiceScannerFactory::Get(IPPROTO_NONE, true);
-	BOOST_TEST_CHECK((typeid(*nmap) == typeid(NmapScanner)), "Factory should have spawned NmapScanner for <IPPROTO_NONE,external>, but instead spawned `" + string(typeid(*nmap).name()) + "`.");
-	delete nmap;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -466,13 +464,14 @@ BOOST_AUTO_TEST_CASE(PortScanFactory)
  */
 BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 {
+	TcpScanner scan;
+
 	Services servs = {
 		new Service("178.62.249.168", 20), // euvps.rolisoft.net
 		new Service("178.62.249.168", 25)  // euvps.rolisoft.net
 	};
 
-	TcpScanner scan;
-	scan.Scan(&servs);
+	TaskQueueRunner::QuickScan(scan, servs);
 
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 20 should not be alive.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 25 should be alive.");
@@ -492,13 +491,14 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
  */
 BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 {
+	TcpScanner scan;
+
 	Services servs = {
 		new Service("2a03:b0c0:2:d0::19:6001", 20), // euvps.rolisoft.net
 		new Service("2a03:b0c0:2:d0::19:6001", 25)  // euvps.rolisoft.net
 	};
 
-	TcpScanner scan;
-	scan.Scan(&servs);
+	TaskQueueRunner::QuickScan(scan, servs);
 
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 20 should not be alive.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 25 should be alive.");
@@ -533,13 +533,14 @@ BOOST_AUTO_TEST_CASE(UdpPayloadLoader)
  */
 BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 {
+	UdpScanner scan;
+
 	Services servs = {
 		new Service("178.62.249.168", 53, IPPROTO_UDP), // euvps.rolisoft.net
 		new Service("208.67.222.222", 53, IPPROTO_UDP)  // OpenDNS
 	};
 
-	UdpScanner scan;
-	scan.Scan(&servs);
+	TaskQueueRunner::QuickScan(scan, servs);
 
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 53 on 178.* should not answer.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 208.* should answer.");
@@ -559,13 +560,14 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
  */
 BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 {
+	UdpScanner scan;
+
 	Services servs = {
 		new Service("2a03:b0c0:2:d0::19:6001", 53, IPPROTO_UDP), // euvps.rolisoft.net
 		new Service("2620:0:ccc::2", 53, IPPROTO_UDP) // OpenDNS
 	};
 
-	UdpScanner scan;
-	scan.Scan(&servs);
+	TaskQueueRunner::QuickScan(scan, servs);
 
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 53 on 2a03.* should not answer.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 53 on 2620.* should answer.");
@@ -583,13 +585,14 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
  */
 BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 {
+	IcmpPinger scan;
+
 	Services servs = {
 		new Service("178.62.249.168", 0, IPPROTO_ICMP), // euvps.rolisoft.net
 		new Service("0.0.1.0", 0, IPPROTO_ICMP) // bogon
 	};
 
-	IcmpPinger scan;
-	scan.Scan(&servs);
+	TaskQueueRunner::QuickScan(scan, servs);
 
 	BOOST_TEST_CHECK( servs[0]->alive, "178.* should answer.");
 	BOOST_TEST_CHECK(!servs[1]->alive, "0.* should not answer.");
@@ -607,13 +610,14 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
  */
 BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 {
+	IcmpPinger scan;
+
 	Services servs = {
 		new Service("2a03:b0c0:2:d0::19:6001", 0, IPPROTO_ICMPV6), // euvps.rolisoft.net
 		new Service("0100::", 0, IPPROTO_ICMPV6) // bogon
 	};
 
-	IcmpPinger scan;
-	scan.Scan(&servs);
+	TaskQueueRunner::QuickScan(scan, servs);
 
 	BOOST_TEST_CHECK( servs[0]->alive, "2a03.* should answer.");
 	BOOST_TEST_CHECK(!servs[1]->alive, "0100.* should not answer.");
@@ -629,24 +633,25 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
  */
 BOOST_AUTO_TEST_CASE(ArpPing)
 {
-	Services servs = {
-		new Service("192.168.1.1", 0, IPPROTO_NONE), // bogon
-		new Service("192.168.1.2", 0, IPPROTO_NONE), // bogon
-		new Service("178.62.249.168", 0, IPPROTO_NONE), // euvps.rolisoft.net
+	ArpPinger scan;
+
+	Hosts hosts = {
+		new Host("192.168.1.1"), // bogon
+		new Host("192.168.1.2"), // bogon
+		new Host("178.62.249.168"), // euvps.rolisoft.net
 	};
 
-	ArpPinger scan;
-	scan.Scan(&servs);
+	scan.Scan(&hosts);
 
-	BOOST_TEST_CHECK( servs[0]->alive, "*.1 should answer.");
-	BOOST_TEST_CHECK(!servs[1]->alive, "*.2 should not answer.");
-	BOOST_TEST_CHECK(!servs[2]->alive, "178.* should not answer.");
+	BOOST_TEST_CHECK( hosts[0]->alive, "*.1 should answer.");
+	BOOST_TEST_CHECK(!hosts[1]->alive, "*.2 should not answer.");
+	BOOST_TEST_CHECK(!hosts[2]->alive, "178.* should not answer.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "*.1 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK(servs[1]->reason == AR_TimedOut,      "*.2 reason should be TimedOut, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
-	BOOST_TEST_CHECK(servs[2]->reason == AR_ScanFailed,    "178.* reason should be ScanFailed, it is instead " + Service::ReasonString(servs[2]->reason) + ".");
+	BOOST_TEST_CHECK(hosts[0]->reason == AR_ReplyReceived, "*.1 reason should be ReplyReceived, it is instead " + Service::ReasonString(hosts[0]->reason) + ".");
+	BOOST_TEST_CHECK(hosts[1]->reason == AR_TimedOut,      "*.2 reason should be TimedOut, it is instead " + Service::ReasonString(hosts[1]->reason) + ".");
+	BOOST_TEST_CHECK(hosts[2]->reason == AR_ScanFailed,    "178.* reason should be ScanFailed, it is instead " + Service::ReasonString(hosts[2]->reason) + ".");
 
-	freeServices(servs);
+	freeHosts(hosts);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -660,20 +665,21 @@ BOOST_AUTO_TEST_CASE(ArpPing)
  */
 BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 {
-	Services servs = {
-		new Service("178.62.249.168", 25) // euvps.rolisoft.net
+	NmapScanner scan;
+
+	Hosts hosts = {
+		new Host("178.62.249.168", { 25 }), // euvps.rolisoft.net
 	};
 
-	NmapScanner scan;
-	scan.Scan(&servs);
+	scan.Scan(&hosts);
 
-	BOOST_TEST_CHECK(servs[0]->alive, "Port 25 should be alive.");
+	BOOST_TEST_CHECK(hosts[0]->alive, "Port 25 should be alive.");
 
-	BOOST_TEST_CHECK(servs[0]->banner.length() > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK((*hosts[0]->services)[0]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK(hosts[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(hosts[0]->reason) + ".");
 
-	freeServices(servs);
+	freeHosts(hosts);
 }
 
 /*!
@@ -684,18 +690,19 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
  */
 BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
 {
-	Services servs = {
-		new Service("2a03:b0c0:2:d0::19:6001", 25) // euvps.rolisoft.net
+	NmapScanner scan;
+	
+	Hosts hosts = {
+		new Host("2a03:b0c0:2:d0::19:6001", { 25 }), // euvps.rolisoft.net
 	};
 
-	NmapScanner scan;
-	scan.Scan(&servs);
+	scan.Scan(&hosts);
 
-	BOOST_TEST_CHECK(servs[0]->alive, "Port 25 should be alive.");
+	BOOST_TEST_CHECK(hosts[0]->alive, "Port 25 should be alive.");
 
-	BOOST_TEST_CHECK(servs[0]->banner.length() > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK((*hosts[0]->services)[0]->banner.length() > 0, "Failed to grab service banner.");
 
-	BOOST_TEST_CHECK(servs[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
+	BOOST_TEST_CHECK(hosts[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(hosts[0]->reason) + ".");
 
-	freeServices(servs);
+	freeHosts(hosts);
 }

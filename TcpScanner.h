@@ -59,6 +59,14 @@ public:
 	 */
 	void Scan(Services* services) override;
 
+	void* MakeTask(Service* service);
+
+	void* Task1(Service* service);
+
+	void* Task2(Service* service);
+
+	void* Task3(Service* service);
+
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */

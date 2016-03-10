@@ -1,5 +1,6 @@
 #include "TaskQueueRunner.h"
 
+using namespace std;
 using namespace boost;
 
 TaskQueueRunner::TaskQueueRunner(int capacity, int batch)
@@ -37,7 +38,11 @@ void TaskQueueRunner::Run()
 			break;
 		}
 
-		auto result = reinterpret_cast<void*(*)(void)>(task)();
+		function<void*(void)>* func;
+
+		func = reinterpret_cast<function<void*(void)>*>(task);
+
+		auto result = (*func)();
 
 		if (result == nullptr)
 		{

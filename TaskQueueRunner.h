@@ -1,5 +1,7 @@
 #pragma once
+#include <functional>
 #include <boost/lockfree/queue.hpp>
+#include "Service.h"
 
 /*!
  * Implements a task runner which uses two queues in order to differentiate between

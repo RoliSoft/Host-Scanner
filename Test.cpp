@@ -21,14 +21,16 @@
 #define BOOST_TEST_MODULE TestScanner
 
 #include "Stdafx.h"
-#include "Service.h"
 #include "ServiceScannerFactory.h"
+#include "HostScannerFactory.h"
 #include "TaskQueueRunner.h"
 #include "TcpScanner.h"
 #include "UdpScanner.h"
 #include "IcmpPinger.h"
 #include "ArpPinger.h"
 #include "NmapScanner.h"
+#include "InternalScanner.h"
+#include "ShodanScanner.h"
 #include "HttpTokenizer.h"
 #include "ThreeDigitTokenizer.h"
 #include "ServiceRegexMatcher.h"
@@ -453,6 +455,24 @@ BOOST_AUTO_TEST_CASE(PortScanFactory)
 	auto icmp6 = ServiceScannerFactory::Get(IPPROTO_ICMPV6);
 	BOOST_TEST_CHECK((typeid(*icmp6) == typeid(IcmpPinger)), "Factory should have spawned IcmpPinger for IPPROTO_ICMPV6, but instead spawned `" + string(typeid(*icmp6).name()) + "`.");
 	delete icmp6;
+}
+
+/*!
+ * Tests the host scanner implementation spawner.
+ */
+BOOST_AUTO_TEST_CASE(HostScanFactory)
+{
+	auto ins = HostScannerFactory::Get(false, false);
+	BOOST_TEST_CHECK((typeid(*ins) == typeid(InternalScanner)), "Factory should have spawned InternalScanner for <!passive,!external>, but instead spawned `" + string(typeid(*ins).name()) + "`.");
+	delete ins;
+
+	auto shd = HostScannerFactory::Get(true);
+	BOOST_TEST_CHECK((typeid(*shd) == typeid(ShodanScanner)), "Factory should have spawned ShodanScanner for <passive,>, but instead spawned `" + string(typeid(*shd).name()) + "`.");
+	delete shd;
+
+	auto nmp = HostScannerFactory::Get(false, true);
+	BOOST_TEST_CHECK((typeid(*nmp) == typeid(NmapScanner)), "Factory should have spawned NmapScanner for <!passive,external>, but instead spawned `" + string(typeid(*nmp).name()) + "`.");
+	delete nmp;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

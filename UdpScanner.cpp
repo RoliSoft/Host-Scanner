@@ -1,6 +1,7 @@
 #include "UdpScanner.h"
 #include "Utils.h"
 #include "DataReader.h"
+#include "TaskQueueRunner.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -90,6 +91,38 @@ void UdpScanner::Scan(Services* services)
 	}
 }
 
+void* UdpScanner::MakeTask(Service* service)
+{
+	if (payloads.size() == 0)
+	{
+		loadPayloads();
+	}
+
+	return MFN_TO_PTR(UdpScanner::Task1, this, service);
+}
+
+void* UdpScanner::Task1(Service* service)
+{
+	initSocket(service);
+
+	return MFN_TO_PTR(UdpScanner::Task2, this, service);
+}
+
+void* UdpScanner::Task2(Service* service)
+{
+	if (service->reason == AR_InProgress)
+	{
+		pollSocket(service, false);
+	}
+
+	if (service->reason == AR_InProgress)
+	{
+		return MFN_TO_PTR(UdpScanner::Task2, this, service);
+	}
+
+	return nullptr;
+}
+
 void UdpScanner::initSocket(Service* service)
 {
 	// parse address
@@ -107,10 +140,12 @@ void UdpScanner::initSocket(Service* service)
 	auto sock = socket(info->ai_family, SOCK_DGRAM, IPPROTO_UDP);
 
 	auto data = new UdpScanData();
+
 	service->data = data;
-	data->socket = sock;
+	data->socket  = sock;
 
 	service->reason = AR_InProgress;
+	data->timeout   = chrono::system_clock::now() + chrono::milliseconds(timeout);
 
 	// set it to non-blocking
 
@@ -176,7 +211,7 @@ void UdpScanner::pollSocket(Service* service, bool last)
 	}
 	else
 	{
-		if (last)
+		if (data->timeout < chrono::system_clock::now())
 		{
 			service->reason = AR_TimedOut;
 		}

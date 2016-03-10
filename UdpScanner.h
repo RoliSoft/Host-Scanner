@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <unordered_map>
 #include "Stdafx.h"
 #include "ServiceScanner.h"
@@ -13,6 +14,11 @@ struct UdpScanData
 	 * Connected socket.
 	 */
 	SOCKET socket;
+
+	/*!
+	 * Expiration time of the current operation.
+	 */
+	std::chrono::time_point<std::chrono::system_clock> timeout;
 
 };
 
@@ -47,7 +53,7 @@ public:
 	/*!
 	 * Number of milliseconds to wait for response.
 	 */
-	unsigned long timeout = 1000;
+	unsigned long timeout = 5000;
 
 	/*!
 	 * Indicates whether to wait for and grab service banners.
@@ -72,6 +78,12 @@ public:
 	 * \param services List of services.
 	 */
 	void Scan(Services* services) override;
+
+	void* MakeTask(Service* service);
+
+	void* Task1(Service* service);
+
+	void* Task2(Service* service);
 
 	/*!
 	 * Gets the port-mapped protocol payloads.

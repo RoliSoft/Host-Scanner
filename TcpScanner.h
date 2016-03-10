@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include "Stdafx.h"
 #include "ServiceScanner.h"
 
@@ -18,6 +19,11 @@ struct TcpScanData
 	 */
 	fd_set* fdset;
 
+	/*!
+	* Expiration time of the current operation.
+	*/
+	std::chrono::time_point<std::chrono::system_clock> timeout;
+
 };
 
 /*!
@@ -33,7 +39,7 @@ public:
 	/*!
 	 * Number of milliseconds to wait for connections to finish.
 	 */
-	unsigned long timeout = 1000;
+	unsigned long timeout = 5000;
 
 	/*!
 	 * Indicates whether to wait for and grab service banners.

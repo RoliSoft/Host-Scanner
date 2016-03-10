@@ -96,6 +96,7 @@ void* TcpScanner::MakeTask(Service* service)
 void* TcpScanner::Task1(Service* service)
 {
 	initSocket(service);
+
 	return MFN_TO_PTR(TcpScanner::Task2, this, service);
 }
 
@@ -151,10 +152,12 @@ void TcpScanner::initSocket(Service* service)
 	auto sock = socket(info->ai_family, SOCK_STREAM, IPPROTO_TCP);
 
 	auto data = new TcpScanData();
+
 	service->data = data;
-	data->socket = sock;
+	data->socket  = sock;
 
 	service->reason = AR_InProgress;
+	data->timeout   = chrono::system_clock::now() + chrono::milliseconds(timeout);
 
 	// set it to non-blocking
 
@@ -230,6 +233,8 @@ void TcpScanner::pollSocket(Service* service, bool last)
 		if (grabBanner)
 		{
 			service->reason = AR_InProgress2;
+			data->timeout   = chrono::system_clock::now() + chrono::milliseconds(timeout);
+
 			readBanner(service, last);
 			return;
 		}
@@ -241,7 +246,7 @@ void TcpScanner::pollSocket(Service* service, bool last)
 	}
 	else
 	{
-		if (last)
+		if (data->timeout < chrono::system_clock::now())
 		{
 			service->reason = AR_TimedOut;
 		}

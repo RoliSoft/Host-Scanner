@@ -1,4 +1,5 @@
 #include "IcmpPinger.h"
+#include "TaskQueueRunner.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -11,68 +12,12 @@ using namespace std;
 
 unsigned short IcmpPinger::sequence = 0;
 
-void IcmpPinger::Scan(Service* service)
+void* IcmpPinger::GetTask(Service* service)
 {
-	initSocket(service);
-
-	int iters = timeout / 10;
-
-	for (int i = 0; i <= iters; i++)
-	{
-		if (i != 0)
-		{
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-
-		pollSocket(service, i == iters - 1);
-
-		if (service->reason != AR_InProgress)
-		{
-			break;
-		}
-	}
+	return MFN_TO_PTR(IcmpPinger::initSocket, this, service);
 }
 
-void IcmpPinger::Scan(Services* services)
-{
-	for (auto service : *services)
-	{
-		initSocket(service);
-	}
-
-	int iters = timeout / 10;
-	int left = services->size();
-
-	for (int i = 0; i <= iters; i++)
-	{
-		if (i != 0)
-		{
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-
-		for (auto service : *services)
-		{
-			if (service->reason != AR_InProgress)
-			{
-				continue;
-			}
-
-			pollSocket(service, i == iters - 1);
-
-			if (service->reason != AR_InProgress)
-			{
-				left--;
-			}
-		}
-
-		if (left <= 0)
-		{
-			break;
-		}
-	}
-}
-
-void IcmpPinger::initSocket(Service* service)
+void* IcmpPinger::initSocket(Service* service)
 {
 	// parse address
 
@@ -95,14 +40,16 @@ void IcmpPinger::initSocket(Service* service)
 
 		service->reason = AR_ScanFailed;
 		log(ERR, "Failed to open socket with AF_INET" + string(info->ai_family == AF_INET6 ? "6" : "") + "/SOCK_RAW.");
-		return;
+		return nullptr;
 	}
 
 	auto data = new IcmpScanData();
+
 	service->data = data;
-	data->socket = sock;
+	data->socket  = sock;
 
 	service->reason = AR_InProgress;
+	data->timeout   = chrono::system_clock::now() + chrono::milliseconds(timeout);
 
 	// max out TTL
 
@@ -140,13 +87,17 @@ void IcmpPinger::initSocket(Service* service)
 	// clean-up
 
 	freeaddrinfo(info);
+
+	// return next task
+
+	return MFN_TO_PTR(IcmpPinger::pollSocket, this, service);
 }
 
-void IcmpPinger::pollSocket(Service* service, bool last)
+void* IcmpPinger::pollSocket(Service* service)
 {
 	if (service->reason != AR_InProgress || service->data == nullptr)
 	{
-		return;
+		return nullptr;
 	}
 
 	auto data = reinterpret_cast<IcmpScanData*>(service->data);
@@ -175,13 +126,15 @@ void IcmpPinger::pollSocket(Service* service, bool last)
 		{
 			// not our packet, discard it for now
 
-			if (last)
+			if (data->timeout < chrono::system_clock::now())
 			{
 				service->reason = AR_TimedOut;
 			}
 			else
 			{
-				return;
+				// return the current task to try polling the socket again
+
+				return MFN_TO_PTR(IcmpPinger::pollSocket, this, service);
 			}
 		}
 		else
@@ -202,13 +155,15 @@ void IcmpPinger::pollSocket(Service* service, bool last)
 	}
 	else
 	{
-		if (last)
+		if (data->timeout < chrono::system_clock::now())
 		{
 			service->reason = AR_TimedOut;
 		}
 		else
 		{
-			return;
+			// return the current task to try polling the socket again
+
+			return MFN_TO_PTR(IcmpPinger::pollSocket, this, service);
 		}
 	}
 
@@ -219,6 +174,10 @@ void IcmpPinger::pollSocket(Service* service, bool last)
 	closesocket(data->socket);
 
 	delete data;
+
+	// return end-of-task
+
+	return nullptr;
 }
 
 unsigned short IcmpPinger::checksum(unsigned short* buf, int len)

@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include "Stdafx.h"
 #include "ServiceScanner.h"
 
@@ -67,6 +68,11 @@ struct IcmpScanData
 	 */
 	SOCKET socket;
 
+	/*!
+	 * Expiration time of the current operation.
+	 */
+	std::chrono::time_point<std::chrono::system_clock> timeout;
+
 };
 
 /*!
@@ -79,21 +85,16 @@ public:
 	/*!
 	 * Number of milliseconds to wait for a reply packet.
 	 */
-	unsigned long timeout = 1000;
-
+	unsigned long timeout = 5000;
+	
 	/*!
-	 * Scans a service to determine aliveness.
+	 * Get a task which scans a service to determine its aliveness.
+	 *
+	 * \param service Service to scan.
 	 * 
-	 * \param service Service.
+	 * \return Task to scan the specified service.
 	 */
-	void Scan(Service* service) override;
-
-	/*!
-	 * Scans a list of services to determine aliveness.
-	 * 
-	 * \param services List of services.
-	 */
-	void Scan(Services* services) override;
+	void* GetTask(Service* service) override;
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
@@ -111,16 +112,20 @@ private:
 	 * Sends an ICMP Echo Request to the specified service.
 	 *
 	 * \param service Service.
+	 *
+	 * \return Next task, or `nullptr` if failed to initialize socket.
 	 */
-	void initSocket(Service* service);
+	void* initSocket(Service* service);
 
 	/*!
-	 * Receives the responses.
+	 * Receives the response.
 	 *
 	 * \param service Service.
-	 * \param last Whether this is the last iteration.
+	 *
+	 * \return Same task if no data received yet, or `nullptr` if succeeded in
+	 * 		   reading the response or socket disconnected while trying to do so.
 	 */
-	void pollSocket(Service* service, bool last = false);
+	void* pollSocket(Service* service);
 	
 	/*!
 	 * Calculates the checksum for the specified packet, which is the 16-bit one's complement

@@ -59,11 +59,6 @@ public:
 	 * Indicates whether to wait for and grab service banners.
 	 */
 	bool grabBanner = true;
-
-	/*!
-	 * Indicates whether to run protocol-tailored scripts.
-	 */
-	bool runScripts = true;
 	
 	/*!
 	 * Get a task which scans a service to determine its aliveness.

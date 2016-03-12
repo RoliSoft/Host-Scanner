@@ -20,21 +20,6 @@ public:
 	unsigned long timeout = 5000;
 
 	/*!
-	 * Indicates whether to use ICMP Echo Request packets.
-	 */
-	bool useIcmp = true;
-
-	/*!
-	 * Indicates whether to test common TCP ports with SYN scanner.
-	 */
-	bool useTcp = true;
-
-	/*!
-	 * Indicates whether to test common UDP ports with specifically crafted payloads.
-	 */
-	bool useUdp = true;
-
-	/*!
 	 * Scans a host to determine service availability.
 	 * 
 	 * \param host Host.

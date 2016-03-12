@@ -1,6 +1,8 @@
 #include "InternalScanner.h"
 #include "TaskQueueRunner.h"
 #include "TcpScanner.h"
+#include "UdpScanner.h"
+#include "IcmpPinger.h"
 
 using namespace std;
 
@@ -17,6 +19,12 @@ void InternalScanner::Scan(Hosts* hosts)
 	TcpScanner tcp;
 	tcp.timeout = timeout;
 
+	UdpScanner udp;
+	udp.timeout = timeout;
+
+	IcmpPinger icmp;
+	icmp.timeout = timeout;
+	
 	Services servs;
 
 	for (auto host : *hosts)
@@ -31,7 +39,21 @@ void InternalScanner::Scan(Hosts* hosts)
 
 	for (auto service : servs)
 	{
-		tqr.Enqueue(tcp.GetTask(service));
+		switch (service->protocol)
+		{
+		case IPPROTO_TCP:
+			tqr.Enqueue(tcp.GetTask(service));
+			break;
+
+		case IPPROTO_UDP:
+			tqr.Enqueue(udp.GetTask(service));
+			break;
+
+		case IPPROTO_ICMP:
+		case IPPROTO_ICMPV6:
+			tqr.Enqueue(icmp.GetTask(service));
+			break;
+		}
 	}
 
 	servs.clear();

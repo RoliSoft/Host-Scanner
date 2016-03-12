@@ -37,6 +37,7 @@
 #include "NmapScanner.h"
 #include "ShodanScanner.h"
 #include "CensysScanner.h"
+#include "UdpScanner.h"
 
 #if HAVE_CURL
 	#include <curl/curl.h>
@@ -89,6 +90,291 @@ void log(int level, const string& msg)
 }
 
 /*!
+ * Parses the specified argument value to the port arguments, and
+ * generates the corresponding list of ports to be used for scanning.
+ *
+ * \param portstr Specified value of the argument.
+ * \param isudp Value indicating whether the processed argument string
+ * 				was specified for the UDP port list.
+ * \param retval Reference to the return value. On error, the function will
+ * 				 returns an empty set and sets this argument to `EXIT_FAILURE`.
+ *
+ * \return List of port numbers.
+ */
+set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp = false)
+{
+	auto ports = new set<unsigned short>();
+
+	if (portstr == "-")
+	{
+		log(VRB, "Scanning all 65535 ports.");
+
+		for (auto i = 0; i < 65535; i++)
+		{
+			ports->emplace(i);
+		}
+
+		return ports;
+	}
+	
+	if (portstr.length() == 0 || boost::iequals(portstr, "t") || boost::iequals(portstr, "top"))
+	{
+		if (isudp)
+		{
+			auto entries = UdpScanner::GetPayloads();
+
+			for (auto entry : entries)
+			{
+				if (entry.first == 0)
+				{
+					// skip generic payload
+					
+					continue;
+				}
+
+				ports->emplace(entry.first);
+			}
+
+			if (ports->size() == 0)
+			{
+				log(ERR, "Unable to generate port list based on known payloads.");
+				retval = EXIT_FAILURE;
+			}
+			else
+			{
+				log(VRB, "Scanning " + to_string(ports->size()) + " ports with known payloads.");
+			}
+		}
+		else
+		{
+			log(VRB, "Scanning top 100 ports.");
+
+			ports->insert({
+				7 , 9 , 13 , 21 , 22, 23, 25, 26, 37, 53, 79, 80, 81, 88, 106, 110, 111, 113, 119, 135, 139, 143, 144, 179,
+				199 , 389, 427, 443, 445, 465, 513, 515, 543, 544, 548, 554, 587, 631, 646, 873, 990, 993, 995, 1025, 1026,
+				1027, 1028, 1029, 1110, 1433, 1720, 1723, 1755, 1900, 2000, 2001, 2049, 2121, 2717, 3000, 3128, 3306, 3389,
+				3986, 4899, 5000, 5009, 5051, 5060, 5101, 5190, 5357, 5432, 5631, 5666, 5800, 5900, 6000, 6001, 6646, 7070,
+				8000, 8008, 8009, 8080, 8081, 8443, 8888, 9100, 9999, 10000, 32768, 49152, 49153, 49154, 49155, 49156, 49157
+			});
+		}
+
+		return ports;
+	}
+
+	// read all listed ports
+
+	vector<string> portarr;
+	split(portarr, portstr, boost::is_any_of(","), boost::token_compress_on);
+
+	for (auto& s_port : portarr)
+	{
+		// check if range
+
+		if (s_port.find("-") != string::npos)
+		{
+			// check if unbounded
+
+			int a, b;
+
+			if (boost::starts_with(s_port, "-"))
+			{
+				// from 1 to n	
+
+				a = 1;
+				b = atoi(s_port.substr(1).c_str());
+			}
+			else if (boost::ends_with(s_port, "-"))
+			{
+				// from n to 65535
+
+				a = atoi(s_port.c_str());
+				b = 65535;
+			}
+			else
+			{
+				// range specified
+
+				vector<string> s_range;
+				split(s_range, s_port, boost::is_any_of("-"), boost::token_compress_on);
+
+				if (s_range.size() < 2)
+				{
+					log(ERR, "Unable to parse '" + s_port + "' in port list.");
+					retval = EXIT_FAILURE;
+					return ports;
+				}
+
+				a = atoi(s_range[0].c_str());
+				b = atoi(s_range[1].c_str());
+
+				if (a > b)
+				{
+					swap(a, b);
+				}
+			}
+
+			if (a < 1 || a > 65535 || b < 1 || b > 65535)
+			{
+				log(ERR, "Port range '" + s_port + "' is invalid.");
+				retval = EXIT_FAILURE;
+				return ports;
+			}
+
+			for (int i = a; i <= b; i++)
+			{
+				ports->emplace(i);
+			}
+		}
+		else
+		{
+			int port = atoi(s_port.c_str());
+
+			if (port < 0 || port > 65535)
+			{
+				log(ERR, "Port '" + s_port + "' out of range.");
+				retval = EXIT_FAILURE;
+				return ports;
+			}
+
+			ports->emplace(port);
+		}
+	}
+
+	if (ports->size() == 0)
+	{
+		log(ERR, "Failed to parse ports from '" + portstr + "'.");
+		retval = EXIT_FAILURE;
+	}
+	else
+	{
+		log(VRB, "Scanning " + to_string(ports->size()) + " " + (isudp ? "UDP" : "TCP") + " ports.");
+	}
+
+	return ports;
+}
+
+/*!
+ * Parses the specified argument values to the host argument, and
+ * generates the corresponding list of hosts to be used for scanning.
+ *
+ * \param hoststrs Specified values of the argument.
+ * \param scanner Scanner object instance.
+ * \param retval Reference to the return value. On error, the function will
+ * 				 returns an empty array and sets this argument to `EXIT_FAILURE`.
+ *
+ * \return List of hosts.
+ */
+Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& retval)
+{
+	unordered_set<string> hostarr;
+
+	// merge targets specified via positional parameters and targets separated by comma
+
+	for (auto& hoststr : hoststrs)
+	{
+		if (hoststr.find(",") != string::npos)
+		{
+			vector<string> host;
+			split(host, hoststr, boost::is_any_of(","));
+			hostarr.insert(host.begin(), host.end());
+		}
+		else
+		{
+			hostarr.emplace(hoststr);
+		}
+	}
+
+	auto hosts = new Hosts();
+
+	// iterate final target list
+
+	for (auto& s_target : hostarr)
+	{
+		if (s_target.find("/") != string::npos)
+		{
+			// CIDR
+
+			vector<string> s_cidr;
+			split(s_cidr, s_target, boost::is_any_of("/"), boost::token_compress_on);
+
+			if (s_cidr.size() != 2)
+			{
+				log(ERR, "CIDR notation '" + s_target + "' is invalid.");
+				retval = EXIT_FAILURE;
+				return hosts;
+			}
+
+			string addr = s_cidr[0];
+			int cidr = atoi(s_cidr[1].c_str());
+
+			if (cidr < 0 || cidr > 32)
+			{
+				log(ERR, "CIDR notation '" + s_target + "' is out of range.");
+				retval = EXIT_FAILURE;
+				return hosts;
+			}
+
+			log(VRB, "Scanning hosts in " + addr + "/" + to_string(cidr) + ".");
+
+			scanner->GenerateCidr(addr.c_str(), cidr, hosts);
+		}
+		else if (s_target.find("-") != string::npos)
+		{
+			// range
+
+			vector<string> s_range;
+			split(s_range, s_target, boost::is_any_of("-"), boost::token_compress_on);
+
+			if (s_range.size() != 2)
+			{
+				log(ERR, "Range notation '" + s_target + "' is invalid.");
+				retval = EXIT_FAILURE;
+				return hosts;
+			}
+
+			if (s_range[1].find("-") != string::npos)
+			{
+				log(ERR, "Only last octet can be a range in '" + s_target + "'.");
+				retval = EXIT_FAILURE;
+				return hosts;
+			}
+
+			auto lastsep = s_range[0].find_last_of(".");
+
+			if (lastsep == string::npos)
+			{
+				log(ERR, "Failed to find last octet in '" + s_target + "'.");
+				retval = EXIT_FAILURE;
+				return hosts;
+			}
+
+			string from = s_range[0];
+			string to   = s_range[0].substr(0, lastsep) + "." + s_range[1];
+
+			log(VRB, "Scanning hosts " + from + " to " + to + ".");
+
+			scanner->GenerateRange(from.c_str(), to.c_str(), hosts);
+		}
+		else
+		{
+			// IP or host
+
+			log(VRB, "Scanning host " + s_target + ".");
+
+			hosts->push_back(new Host(s_target.c_str()));
+		}
+	}
+
+	if (hosts->size() == 0)
+	{
+		log(ERR, "No targets to scan.");
+		retval = EXIT_FAILURE;
+	}
+
+	return hosts;
+}
+
+/*!
  * Processes the arguments the user passed to the application when launching
  * it, spawns the requested `HostScanner` type of instance, and builds the
  * list of `Host` objects to be scanned based on the specified criteria.
@@ -97,41 +383,40 @@ void log(int level, const string& msg)
  *
  * \return Return value to be used as an exit code.
  */
-inline int scan(const po::variables_map& vm)
+int scan(const po::variables_map& vm)
 {
 	int retval = EXIT_SUCCESS;
 
-	string p_scanner;
-	string p_port;
-	vector<string> p_target;
+	string scannerstr, portstr, udportstr;
+	vector<string> hoststrs;
 
-	HostScanner* scanner = nullptr;
-	Hosts* hosts = nullptr;
-	set<unsigned short> ports;
+	HostScanner *scanner = nullptr;
+	Hosts *hosts = nullptr;
+	set<unsigned short> *ports = nullptr, *udports = nullptr;
 
 	// get scanner
 
 	if (vm.count("scanner") != 0)
 	{
-		p_scanner = vm["scanner"].as<string>();
-		boost::trim(p_scanner);
-		boost::to_lower(p_scanner);
+		scannerstr = vm["scanner"].as<string>();
+		boost::trim(scannerstr);
+		boost::to_lower(scannerstr);
 	}
 	else
 	{
-		p_scanner = "internal";
+		scannerstr = "internal";
 	}
 
-	if (p_scanner == "internal" || p_scanner.length() == 0)
+	if (scannerstr == "internal" || scannerstr.length() == 0)
 	{
 		scanner = new InternalScanner();
 	}
-	else if (p_scanner == "nmap")
+	else if (scannerstr == "nmap")
 	{
 		scanner = new NmapScanner();
 	}
 #if HAVE_CURL
-	else if (p_scanner == "shodan")
+	else if (scannerstr == "shodan")
 	{
 		string key;
 
@@ -150,7 +435,7 @@ inline int scan(const po::variables_map& vm)
 		scanner = new ShodanScanner();
 		(reinterpret_cast<ShodanScanner*>(scanner))->key = key;
 	}
-	else if (p_scanner == "censys")
+	else if (scannerstr == "censys")
 	{
 		string key;
 
@@ -179,16 +464,16 @@ inline int scan(const po::variables_map& vm)
 #endif
 	else
 	{
-		log(ERR, "Scanner '" + p_scanner + "' is not supported.");
+		log(ERR, "Scanner '" + scannerstr + "' is not supported.");
 		retval = EXIT_FAILURE;
 		goto cleanup;
 	}
 
 	// check passive
 
-	if (vm.count("passive") != 0 && !(p_scanner == "shodan" || p_scanner == "censys"))
+	if (vm.count("passive") != 0 && !(scannerstr == "shodan" || scannerstr == "censys"))
 	{
-		log(ERR, "Scanner '" + p_scanner + "' is not passive.");
+		log(ERR, "Scanner '" + scannerstr + "' is not passive.");
 		retval = EXIT_FAILURE;
 		goto cleanup;
 	}
@@ -197,241 +482,61 @@ inline int scan(const po::variables_map& vm)
 
 	if (vm.count("port") != 0)
 	{
-		p_port = vm["port"].as<string>();
+		portstr = boost::trim_copy(vm["port"].as<string>());
 	}
 
-	if (p_port == "-")
+	if (vm.count("udp-port") != 0)
 	{
-		log(VRB, "Scanning all 65535 ports.");
-
-		for (auto i = 0; i < 65535; i++)
-		{
-			ports.emplace(i);
-		}
+		udportstr = boost::trim_copy(vm["udp-port"].as<string>());
 	}
-	else if (p_port.length() == 0)
+
+	if (portstr.length() != 0 || (portstr.length() == 0 && udportstr.length() == 0))
 	{
-		log(VRB, "Scanning top 100 ports.");
+		ports = parse_ports(portstr, retval, false);
 
-		ports = {
-			7 , 9 , 13 , 21 , 22, 23, 25, 26, 37, 53, 79, 80, 81, 88, 106, 110, 111, 113, 119, 135, 139, 143, 144, 179,
-			199 , 389, 427, 443, 445, 465, 513, 515, 543, 544, 548, 554, 587, 631, 646, 873, 990, 993, 995, 1025, 1026,
-			1027, 1028, 1029, 1110, 1433, 1720, 1723, 1755, 1900, 2000, 2001, 2049, 2121, 2717, 3000, 3128, 3306, 3389,
-			3986, 4899, 5000, 5009, 5051, 5060, 5101, 5190, 5357, 5432, 5631, 5666, 5800, 5900, 6000, 6001, 6646, 7070,
-			8000, 8008, 8009, 8080, 8081, 8443, 8888, 9100, 9999, 10000, 32768, 49152, 49153, 49154, 49155, 49156, 49157
-		};
-	}
-	else
-	{
-		// read all listed ports
-
-		vector<string> s_ports;
-		split(s_ports, p_port, boost::is_any_of(","), boost::token_compress_on);
-
-		for (auto& s_port : s_ports)
+		if (retval == EXIT_FAILURE)
 		{
-			// check if range
-
-			if (s_port.find("-") != string::npos)
-			{
-				// check if unbounded
-
-				int a, b;
-
-				if (boost::starts_with(s_port, "-"))
-				{
-					// from 1 to n	
-
-					a = 1;
-					b = atoi(s_port.substr(1).c_str());
-				}
-				else if (boost::ends_with(s_port, "-"))
-				{
-					// from n to 65535
-
-					a = atoi(s_port.c_str());
-					b = 65535;
-				}
-				else
-				{
-					// range specified
-
-					vector<string> s_range;
-					split(s_range, s_port, boost::is_any_of("-"), boost::token_compress_on);
-
-					if (s_range.size() < 2)
-					{
-						log(ERR, "Unable to parse '" + s_port + "' in port list.");
-						retval = EXIT_FAILURE;
-						goto cleanup;
-					}
-
-					a = atoi(s_range[0].c_str());
-					b = atoi(s_range[1].c_str());
-
-					if (a > b)
-					{
-						swap(a, b);
-					}
-				}
-
-				if (a < 1 || a > 65535 || b < 1 || b > 65535)
-				{
-					log(ERR, "Port range '" + s_port + "' is invalid.");
-					retval = EXIT_FAILURE;
-					goto cleanup;
-				}
-
-				for (int i = a; i <= b; i++)
-				{
-					ports.emplace(i);
-				}
-			}
-			else
-			{
-				int port = atoi(s_port.c_str());
-
-				if (port < 0 || port > 65535)
-				{
-					log(ERR, "Port '" + s_port + "' out of range.");
-					retval = EXIT_FAILURE;
-					goto cleanup;
-				}
-
-				ports.emplace(port);
-			}
-		}
-
-		if (ports.size() < 1)
-		{
-			log(ERR, "Failed to parse ports from '" + p_port + "'.");
-			retval = EXIT_FAILURE;
 			goto cleanup;
 		}
+	}
 
-		log(VRB, "Scanning " + to_string(ports.size()) + " ports.");
+	if (udportstr.length() != 0)
+	{
+		udports = parse_ports(udportstr, retval, true);
+
+		if (retval == EXIT_FAILURE)
+		{
+			goto cleanup;
+		}
 	}
 
 	// read targets
 
 	if (vm.count("target") != 0)
 	{
-		p_target = vm["target"].as<vector<string>>();
+		hoststrs = vm["target"].as<vector<string>>();
 	}
 
-	if (p_target.size() == 0)
+	hosts = parse_hosts(hoststrs, scanner, retval);
+
+	if (retval == EXIT_FAILURE)
 	{
-		log(ERR, "No targets to scan.");
-		retval = EXIT_FAILURE;
 		goto cleanup;
-	}
-	else
-	{
-		unordered_set<string> f_target;
-
-		// merge targets specified via positional parameters and targets separated by comma
-
-		for (auto& s_target : p_target)
-		{
-			if (s_target.find(",") != string::npos)
-			{
-				vector<string> t_target;
-				split(t_target, s_target, boost::is_any_of(","));
-				f_target.insert(t_target.begin(), t_target.end());
-			}
-			else
-			{
-				f_target.emplace(s_target);
-			}
-		}
-
-		hosts = new Hosts();
-
-		// iterate final target list
-
-		for (auto& s_target : f_target)
-		{
-			if (s_target.find("/") != string::npos)
-			{
-				// CIDR
-
-				vector<string> s_cidr;
-				split(s_cidr, s_target, boost::is_any_of("/"), boost::token_compress_on);
-
-				if (s_cidr.size() != 2)
-				{
-					log(ERR, "CIDR notation '" + s_target + "' is invalid.");
-					retval = EXIT_FAILURE;
-					goto cleanup;
-				}
-
-				string addr = s_cidr[0];
-				int cidr = atoi(s_cidr[1].c_str());
-
-				if (cidr < 0 || cidr > 32)
-				{
-					log(ERR, "CIDR notation '" + s_target + "' is out of range.");
-					retval = EXIT_FAILURE;
-					goto cleanup;
-				}
-
-				log(VRB, "Scanning hosts in " + addr + "/" + to_string(cidr) + ".");
-
-				scanner->GenerateCidr(addr.c_str(), cidr, hosts);
-			}
-			else if (s_target.find("-") != string::npos)
-			{
-				// range
-
-				vector<string> s_range;
-				split(s_range, s_target, boost::is_any_of("-"), boost::token_compress_on);
-
-				if (s_range.size() != 2)
-				{
-					log(ERR, "Range notation '" + s_target + "' is invalid.");
-					retval = EXIT_FAILURE;
-					goto cleanup;
-				}
-
-				if (s_range[1].find("-") != string::npos)
-				{
-					log(ERR, "Only last octet can be a range in '" + s_target + "'.");
-					retval = EXIT_FAILURE;
-					goto cleanup;
-				}
-
-				auto lastsep = s_range[0].find_last_of(".");
-
-				if (lastsep == string::npos)
-				{
-					log(ERR, "Failed to find last octet in '" + s_target + "'.");
-					retval = EXIT_FAILURE;
-					goto cleanup;
-				}
-
-				string from = s_range[0];
-				string to   = s_range[0].substr(0, lastsep) + "." + s_range[1];
-
-				log(VRB, "Scanning hosts " + from + " to " + to + ".");
-
-				scanner->GenerateRange(from.c_str(), to.c_str(), hosts);
-			}
-			else
-			{
-				// IP or host
-
-				log(VRB, "Scanning host " + s_target + ".");
-
-				hosts->push_back(new Host(s_target.c_str()));
-			}
-		}
 	}
 
 	// create the services for the host objects
 	
 	for (auto host : *hosts)
 	{
-		host->AddServices(ports, IPPROTO_TCP);
+		if (ports != nullptr)
+		{
+			host->AddServices(*ports, IPPROTO_TCP);
+		}
+
+		if (udports != nullptr)
+		{
+			host->AddServices(*udports, IPPROTO_UDP);
+		}
 	}
 
 	// start scan
@@ -453,6 +558,16 @@ cleanup:
 		delete hosts;
 	}
 
+	if (ports != nullptr)
+	{
+		delete ports;
+	}
+
+	if (udports != nullptr)
+	{
+		delete udports;
+	}
+	
 	return retval;
 }
 
@@ -488,10 +603,15 @@ int main(int argc, char *argv[])
 			"  Each can be a hostname, IP address, IP range or CIDR.\n"
 			"  E.g. `192.168.1.1/24` is equivalent to `192.168.1.0-192.168.1.255`.")
 		("port,p", po::value<string>(),
-			"Ports to scan:\n"
+			"TCP ports to scan:\n"
 			"  Can be a single port (80), a list (22,80) or a range (1-1024).\n"
 			"  Range can be unbounded from either sides, simultaneously.\n"
-			"  E.g. `1024-` will scan ports 1024-65535. `-` will scan all ports.")
+			"  E.g. `1024-` will scan ports 1024-65535. `-` will scan all ports.\n"
+			"  Specifying `top` or `t` will scan the top 100 most popular ports.")
+		("udp-port,u", po::value<string>(),
+			"UDP ports to scan:\n"
+			"  Supports the same values as --port, with the difference that\n"
+			"  specifying `top` will scan all of the ports with known payloads.")
 		("scanner,s", po::value<string>(),
 			"Scanner instance to use:\n"
 			"  internal - Uses the built-in scanner. (active)\n"

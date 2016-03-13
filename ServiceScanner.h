@@ -4,7 +4,7 @@
 
 /*!
  * Timeout option for the individual scans in milliseconds.
- * Default value is 5000ms for most scanners.
+ * Default value is 3000ms for most scanners.
  */
 #define OPT_TIMEOUT 1
 

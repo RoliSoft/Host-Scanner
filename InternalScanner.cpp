@@ -1,8 +1,8 @@
+#include "Stdafx.h"
 #include "InternalScanner.h"
 #include "TaskQueueRunner.h"
-#include "TcpScanner.h"
-#include "UdpScanner.h"
-#include "IcmpPinger.h"
+#include <unordered_map>
+#include "ServiceScannerFactory.h"
 
 using namespace std;
 
@@ -14,17 +14,10 @@ void InternalScanner::Scan(Host* host)
 
 void InternalScanner::Scan(Hosts* hosts)
 {
+	unordered_map<IPPROTO, ServiceScanner*> scanners;
+
 	TaskQueueRunner tqr(hosts->size() * hosts->front()->services->size(), 65535);
 
-	TcpScanner tcp;
-	tcp.timeout = timeout;
-
-	UdpScanner udp;
-	udp.timeout = timeout;
-
-	IcmpPinger icmp;
-	icmp.timeout = timeout;
-	
 	Services servs;
 
 	for (auto host : *hosts)
@@ -35,30 +28,40 @@ void InternalScanner::Scan(Hosts* hosts)
 		}
 	}
 
-	stable_sort(servs.begin(), servs.end(), [](Service* a, Service* b) { return a->port < b->port; });
+	stable_sort(servs.begin(), servs.end(), [](Service* a, Service* b)
+	{
+		return a->port < b->port;
+	});
 
 	for (auto service : servs)
 	{
-		switch (service->protocol)
+		auto scanner = scanners[service->protocol];
+
+		if (scanner == nullptr)
 		{
-		case IPPROTO_TCP:
-			tqr.Enqueue(tcp.GetTask(service));
-			break;
+			scanner = ServiceScannerFactory::Get(service->protocol);
 
-		case IPPROTO_UDP:
-			tqr.Enqueue(udp.GetTask(service));
-			break;
+			if (scanner == nullptr)
+			{
+				continue;
+			}
 
-		case IPPROTO_ICMP:
-		case IPPROTO_ICMPV6:
-			tqr.Enqueue(icmp.GetTask(service));
-			break;
+			scanner->SetOption(OPT_TIMEOUT, &timeout);
+
+			scanners[service->protocol] = scanner;
 		}
+
+		tqr.Enqueue(scanner->GetTask(service));
 	}
 
 	servs.clear();
 
 	tqr.Run();
+
+	for (auto scanner : scanners)
+	{
+		delete scanner.second;
+	}
 }
 
 InternalScanner::~InternalScanner()

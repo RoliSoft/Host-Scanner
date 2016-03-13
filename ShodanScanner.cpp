@@ -114,6 +114,32 @@ void ShodanScanner::getHostInfo(Host* host)
 				service->banner = jdata;
 			}
 
+			// get HTML body, if any
+
+			auto jhtml = ptrun.second.get<string>("html", "");
+
+			if (jhtml.length() != 0)
+			{
+				service->banner += jhtml;
+			}
+
+			// get CPEs, if any
+
+			auto jcpes = ptrun.second.get_child_optional("cpe");
+
+			if (jcpes.is_initialized() && jcpes->size() != 0)
+			{
+				for (auto& jcpe : *jcpes)
+				{
+					auto cpe = jcpe.second.get_value<string>();
+
+					if (cpe.length() != 0)
+					{
+						service->cpe.push_back(cpe);
+					}
+				}
+			}
+
 			// save extended port data
 
 			stringstream ss;

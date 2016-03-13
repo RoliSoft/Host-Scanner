@@ -107,7 +107,7 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 
 	if (portstr == "-")
 	{
-		log(VRB, "Scanning all 65535 ports.");
+		log(VRB, "Scanning all 65535 " + string(isudp ? "UDP" : "TCP") + " ports.");
 
 		for (auto i = 0; i < 65535; i++)
 		{
@@ -142,12 +142,12 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 			}
 			else
 			{
-				log(VRB, "Scanning " + to_string(ports->size()) + " ports with known payloads.");
+				log(VRB, "Scanning " + to_string(ports->size()) + " UDP ports with known payloads.");
 			}
 		}
 		else
 		{
-			log(VRB, "Scanning top 100 ports.");
+			log(VRB, "Scanning the top 100 " + string(isudp ? "UDP" : "TCP") + " ports.");
 
 			ports->insert({
 				7 , 9 , 13 , 21 , 22, 23, 25, 26, 37, 53, 79, 80, 81, 88, 106, 110, 111, 113, 119, 135, 139, 143, 144, 179,

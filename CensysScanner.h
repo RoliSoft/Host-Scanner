@@ -22,6 +22,18 @@ public:
 	std::string endpoint = "censys.io/api/v1";
 
 	/*!
+	 * Initializes a new instance of this class.
+	 */
+	CensysScanner() = default;
+
+	/*!
+	 * Initializes a new instance of this class.
+	 *
+	 * \param auth API username and password to use for the requests.
+	 */
+	CensysScanner(const std::string& auth);
+
+	/*!
 	 * Scans a host to determine service availability.
 	 * 
 	 * \param host Host.

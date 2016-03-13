@@ -13,6 +13,11 @@
 using namespace std;
 using namespace boost;
 
+CensysScanner::CensysScanner(const string& auth)
+	: auth(auth)
+{
+}
+
 void CensysScanner::Scan(Host* host)
 {
 	getHostInfo(host);
@@ -30,6 +35,12 @@ void CensysScanner::getHostInfo(Host* host)
 {
 	using property_tree::write_json;
 	using property_tree::ptree;
+
+	if (auth.length() == 0)
+	{
+		log(ERR, "No Censys API key was specified.");
+		return;
+	}
 
 	auto json = getURL("https://" + endpoint + "/view/ipv4/" + host->address
 #if HAVE_CURL

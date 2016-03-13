@@ -9,6 +9,11 @@
 using namespace std;
 using namespace boost;
 
+ShodanScanner::ShodanScanner(const string& key)
+	: key(key)
+{
+}
+
 void ShodanScanner::Scan(Host* host)
 {
 	getHostInfo(host);
@@ -26,6 +31,12 @@ void ShodanScanner::getHostInfo(Host* host)
 {
 	using property_tree::write_json;
 	using property_tree::ptree;
+
+	if (key.length() == 0)
+	{
+		log(ERR, "No Shodan API key was specified.");
+		return;
+	}
 
 	auto json = getURL("https://" + endpoint + "/host/" + host->address + "?key=" + key);
 

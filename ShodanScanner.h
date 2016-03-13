@@ -21,6 +21,18 @@ public:
 	std::string endpoint = "api.shodan.io/shodan";
 
 	/*!
+	 * Initializes a new instance of this class.
+	 */
+	ShodanScanner() = default;
+
+	/*!
+	 * Initializes a new instance of this class.
+	 *
+	 * \param key API key to use for the requests.
+	 */
+	ShodanScanner(const std::string& key);
+
+	/*!
 	 * Scans a host to determine service availability.
 	 * 
 	 * \param host Host.

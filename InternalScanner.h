@@ -17,7 +17,7 @@ public:
 	 * Since this scanner uses multiple sub-scanners, this will be the
 	 * applied timeout to each individual scanner, multiplying the final timeout.
 	 */
-	unsigned long timeout = 5000;
+	unsigned long timeout = 3000;
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.

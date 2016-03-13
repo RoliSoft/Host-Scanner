@@ -39,7 +39,7 @@ public:
 	/*!
 	 * Number of milliseconds to wait for connections to finish.
 	 */
-	unsigned long timeout = 5000;
+	unsigned long timeout = 3000;
 
 	/*!
 	 * Indicates whether to wait for and grab service banners.

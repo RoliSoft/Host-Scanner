@@ -159,7 +159,7 @@ public:
 	/*!
 	 * Number of milliseconds to wait for a reply packet.
 	 */
-	unsigned long timeout = 5000;
+	unsigned long timeout = 3000;
 
 	/*!
 	 * Creates a new instance of this type.

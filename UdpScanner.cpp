@@ -20,6 +20,40 @@ namespace fs = boost::filesystem;
 
 unordered_map<unsigned short, struct Payload*> UdpScanner::payloads = unordered_map<unsigned short, struct Payload*>();
 
+bool UdpScanner::GetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		timeout = *reinterpret_cast<int*>(value);
+		return true;
+
+	case OPT_BANNER:
+		grabBanner = *reinterpret_cast<bool*>(value);
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool UdpScanner::SetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		value = &timeout;
+		return true;
+
+	case OPT_BANNER:
+		value = &grabBanner;
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 void* UdpScanner::GetTask(Service* service)
 {
 	if (payloads.size() == 0)

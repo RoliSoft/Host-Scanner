@@ -12,6 +12,32 @@ using namespace std;
 
 unsigned short IcmpPinger::sequence = 0;
 
+bool IcmpPinger::GetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		timeout = *reinterpret_cast<int*>(value);
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool IcmpPinger::SetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		value = &timeout;
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 void* IcmpPinger::GetTask(Service* service)
 {
 	return MFN_TO_PTR(IcmpPinger::initSocket, this, service);

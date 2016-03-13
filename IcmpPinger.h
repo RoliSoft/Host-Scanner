@@ -88,6 +88,26 @@ public:
 	unsigned long timeout = 5000;
 	
 	/*!
+	 * Gets the currently set value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	bool GetOption(int option, void* value) override;
+
+	/*!
+	 * Sets a specified value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	bool SetOption(int option, void* value) override;
+	
+	/*!
 	 * Get a task which scans a service to determine its aliveness.
 	 *
 	 * \param service Service to scan.

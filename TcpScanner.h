@@ -45,6 +45,26 @@ public:
 	 * Indicates whether to wait for and grab service banners.
 	 */
 	bool grabBanner = true;
+
+	/*!
+	 * Gets the currently set value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	bool GetOption(int option, void* value) override;
+
+	/*!
+	 * Sets a specified value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	bool SetOption(int option, void* value) override;
 	
 	/*!
 	 * Get a task which scans a service to determine its aliveness.

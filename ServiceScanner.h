@@ -3,6 +3,18 @@
 #include "Service.h"
 
 /*!
+ * Timeout option for the individual scans in milliseconds.
+ * Default value is 5000ms for most scanners.
+ */
+#define OPT_TIMEOUT 1
+
+/*!
+ * Boolean value indicating whether to wait for and grab the service banner.
+ * Default value is true for scanners that support it.
+ */
+#define OPT_BANNER 2
+
+/*!
  * Represents a port scanner.
  */
 class ServiceScanner
@@ -17,6 +29,26 @@ public:
 	 * \return Task to scan the specified service.
 	 */
 	virtual void* GetTask(Service* service) = 0;
+
+	/*!
+	 * Gets the currently set value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	virtual bool GetOption(int option, void* value) = 0;
+
+	/*!
+	 * Sets a specified value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	virtual bool SetOption(int option, void* value) = 0;
 
 	/*!
 	 * Dumps the scan results into the standard output.

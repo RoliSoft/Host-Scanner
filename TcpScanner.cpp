@@ -8,6 +8,40 @@
 using namespace std;
 using namespace boost;
 
+bool TcpScanner::GetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		timeout = *reinterpret_cast<int*>(value);
+		return true;
+
+	case OPT_BANNER:
+		grabBanner = *reinterpret_cast<bool*>(value);
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool TcpScanner::SetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		value = &timeout;
+		return true;
+
+	case OPT_BANNER:
+		value = &grabBanner;
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 void* TcpScanner::GetTask(Service* service)
 {
 	return MFN_TO_PTR(TcpScanner::initSocket, this, service);

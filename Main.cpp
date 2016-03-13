@@ -35,9 +35,10 @@
 #include "HostScanner.h"
 #include "InternalScanner.h"
 #include "NmapScanner.h"
+#include "UdpScanner.h"
+#include "PassiveScanner.h"
 #include "ShodanScanner.h"
 #include "CensysScanner.h"
-#include "UdpScanner.h"
 
 #if HAVE_CURL
 	#include <curl/curl.h>
@@ -404,7 +405,7 @@ int scan(const po::variables_map& vm)
 	}
 	else
 	{
-		scannerstr = "internal";
+		scannerstr = vm.count("passive") != 0 ? "shosys" : "internal";
 	}
 
 	if (scannerstr == "internal" || scannerstr.length() == 0)
@@ -432,30 +433,63 @@ int scan(const po::variables_map& vm)
 			goto cleanup;
 		}
 
-		scanner = new ShodanScanner();
-		(reinterpret_cast<ShodanScanner*>(scanner))->key = key;
+		scanner = new ShodanScanner(key);
 	}
 	else if (scannerstr == "censys")
 	{
-		string key;
+		string auth;
 
 		if (vm.count("censys-key") != 0)
 		{
-			key = vm["censys-key"].as<string>();
+			auth = vm["censys-key"].as<string>();
 		}
 
-		if (key.length() < 2 || key.find(":") == string::npos)
+		if (auth.length() < 2 || auth.find(":") == string::npos)
 		{
 			log(ERR, "Censys requires token in `uid:secret` format via --censys-key from https://censys.io/account");
 			retval = EXIT_FAILURE;
 			goto cleanup;
 		}
 
-		scanner = new CensysScanner();
-		(reinterpret_cast<CensysScanner*>(scanner))->auth = key;
+		scanner = new CensysScanner(auth);
+	}
+	else if (scannerstr == "shosys" || scannerstr == "cendan")
+	{
+		string shodan_key, censys_auth;
+
+		if (vm.count("shodan-key") != 0)
+		{
+			shodan_key = vm["shodan-key"].as<string>();
+		}
+
+		if (shodan_key.length() < 2)
+		{
+			log(WRN, "Shodan requires an API key via --shodan-key from https://account.shodan.io/");
+			shodan_key = "";
+		}
+
+		if (vm.count("censys-key") != 0)
+		{
+			censys_auth = vm["censys-key"].as<string>();
+		}
+
+		if (censys_auth.length() < 2 || censys_auth.find(":") == string::npos)
+		{
+			log(WRN, "Censys requires token in `uid:secret` format via --censys-key from https://censys.io/account");
+			censys_auth = "";
+		}
+
+		if (shodan_key.length() < 2 && censys_auth.length() < 2)
+		{
+			log(ERR, "You need to specify at least one API key for this scanner.");
+			retval = EXIT_FAILURE;
+			goto cleanup;
+		}
+
+		scanner = new PassiveScanner(shodan_key, censys_auth);
 	}
 #else
-	else if (p_scanner == "shodan" || p_scanner == "censys")
+	else if (p_scanner == "shodan" || p_scanner == "censys" || p_scanner == "shosys" || p_scanner == "cendan")
 	{
 		log(ERR, "Scanner '" + p_scanner + "' is not available as this version of the binary was compiled without libcurl.");
 		retval = EXIT_FAILURE;
@@ -471,7 +505,7 @@ int scan(const po::variables_map& vm)
 
 	// check passive
 
-	if (vm.count("passive") != 0 && !(scannerstr == "shodan" || scannerstr == "censys"))
+	if (vm.count("passive") != 0 && !scanner->IsPassive())
 	{
 		log(ERR, "Scanner '" + scannerstr + "' is not passive.");
 		retval = EXIT_FAILURE;
@@ -617,7 +651,8 @@ int main(int argc, char *argv[])
 			"  internal - Uses the built-in scanner. (active)\n"
 			"  nmap     - Uses 3rd-party application Nmap. (active)\n"
 			"  shodan   - Uses data from Shodan. (passive; requires API key)\n"
-			"  censys   - Uses data from Censys. (passive; requires API key)")
+			"  censys   - Uses data from Censys. (passive; requires API key)\n"
+			"  shosys   - Uses data from both Shodan and Censys. (passive)")
 		("shodan-key", po::value<string>(), "Specifies an API key for Shodan.")
 		("censys-key", po::value<string>(), "Sepcifies an API key for Censys in the `uid:secret` format.")
 		("passive,x", "Globally disables active reconnaissance. Functionality using active scanning will break, but ensures no accidental active scans will be initiated, which might get construed as hostile.")

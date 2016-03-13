@@ -1,11 +1,23 @@
 #include "Host.h"
 
-Host::Host(const std::string& address)
+using namespace std;
+
+Host::Host(const Host& host)
+	: address(host.address), alive(host.alive), reason(host.reason),
+	  services(new Services()), data(host.data)
+{
+	for (auto service : *host.services)
+	{
+		services->push_back(new Service(*service));
+	}
+}
+
+Host::Host(const string& address)
 	: address(address), services(new Services()), data(nullptr)
 {
 }
 
-Host::Host(const std::string& address, const std::set<unsigned short>& tcps, const std::set<unsigned short>& udps)
+Host::Host(const string& address, const set<unsigned short>& tcps, const set<unsigned short>& udps)
 	: address(address), services(new Services()), data(nullptr)
 {
 	if (tcps.size() > 0)
@@ -63,7 +75,7 @@ int Host::AddServices(const Services& servlist)
 	return count;
 }
 
-int Host::AddServices(const std::set<unsigned short>& ports, IPPROTO protocol)
+int Host::AddServices(const set<unsigned short>& ports, IPPROTO protocol)
 {
 	auto count = 0;
 

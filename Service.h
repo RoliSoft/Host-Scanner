@@ -94,6 +94,13 @@ public:
 	void* data;
 
 	/*!
+	 * Copies the specified instance.
+	 *
+	 * \param service Instance to copy.
+	 */
+	Service(const Service& service);
+
+	/*!
 	 * Creates a new instance of this type.
 	 * 
 	 * \param address Remote address.
@@ -101,13 +108,6 @@ public:
 	 * \param protocol Remote protocol, otherwise TCP.
 	 */
 	Service(const std::string& address, unsigned short port, IPPROTO protocol = IPPROTO_TCP);
-
-	/*!
-	 * Copies the specified instance.
-	 *
-	 * \param service Instance to copy.
-	 */
-	Service(const Service& service) = default;
 
 	/*!
 	 * Resolves the value of the enum `AliveReason` to its textual representation.

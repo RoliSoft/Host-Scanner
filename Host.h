@@ -38,6 +38,13 @@ public:
 	void* data;
 
 	/*!
+	 * Copies the specified instance.
+	 *
+	 * \param host Instance to copy.
+	 */
+	Host(const Host& host);
+
+	/*!
 	 * Creates a new instance of this type.
 	 * 
 	 * \param address Remote address.

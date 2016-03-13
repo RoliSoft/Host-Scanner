@@ -162,7 +162,24 @@ string CensysScanner::findServiceBanner(property_tree::ptree pt)
 				string headers;
 				for (auto& pthead : ptrun.second.get_child("get.headers"))
 				{
-					headers += pthead.first.data() + string(": ") + pthead.second.data() + "\r\n";
+					auto field = pthead.first;
+					auto dash  = false;
+
+					for (auto i = 0u; i < field.size(); i++)
+					{
+						if ((i == 0 || dash) && isalpha(field[i]))
+						{
+							field[i] = char(toupper(field[i]));
+							dash     = false;
+						}
+						else if (field[i] == '_')
+						{
+							field[i] = '-';
+							dash     = true;
+						}
+					}
+
+					headers += field + ": " + pthead.second.data() + "\r\n";
 				}
 
 				if (status.length() != 0 || body.length() != 0)
@@ -171,9 +188,50 @@ string CensysScanner::findServiceBanner(property_tree::ptree pt)
 				}
 			}
 
+			// for SMTP, do the same with different fields
+
+			if (key == string("smtp"))
+			{
+				auto banner   = ptrun.second.get<string>("starttls.banner");
+				auto ehlo     = ptrun.second.get<string>("starttls.ehlo");
+				auto starttls = ptrun.second.get<string>("starttls.starttls");
+
+				string res;
+
+				if (banner.length() != 0)
+				{
+					res += banner;
+				}
+
+				if (ehlo.length() != 0)
+				{
+					if (res.length() != 0)
+					{
+						res += "\r\n";
+					}
+
+					res += ehlo;
+				}
+
+				if (starttls.length() != 0)
+				{
+					if (res.length() != 0)
+					{
+						res += "\r\n";
+					}
+
+					res += starttls;
+				}
+
+				if (res.length() != 0)
+				{
+					return res;
+				}
+			}
+
 			// otherwise, recursively try to find any fields containing service banners
 
-			if (key == string("banner") || key == string("raw_banner") || key == string("ehlo") || key == string("body"))
+			if (key == string("banner") || key == string("raw_banner") || key == string("body"))
 			{
 				auto res = ptrun.second.get_value<string>();
 

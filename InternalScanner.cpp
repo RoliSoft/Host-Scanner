@@ -6,6 +6,11 @@
 
 using namespace std;
 
+bool InternalScanner::IsPassive()
+{
+	return false;
+}
+
 void InternalScanner::Scan(Host* host)
 {
 	Hosts hosts = { host };

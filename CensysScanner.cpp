@@ -18,6 +18,11 @@ CensysScanner::CensysScanner(const string& auth)
 {
 }
 
+bool CensysScanner::IsPassive()
+{
+	return true;
+}
+
 void CensysScanner::Scan(Host* host)
 {
 	getHostInfo(host);
@@ -38,7 +43,6 @@ void CensysScanner::getHostInfo(Host* host)
 
 	if (auth.length() == 0)
 	{
-		log(ERR, "No Censys API key was specified.");
 		return;
 	}
 

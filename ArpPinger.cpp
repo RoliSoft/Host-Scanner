@@ -44,6 +44,11 @@ ArpPinger::ArpPinger()
 {
 }
 
+bool ArpPinger::IsPassive()
+{
+	return false;
+}
+
 ArpPinger::~ArpPinger()
 {
 	if (interfaces.size() != 0)

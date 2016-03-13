@@ -14,6 +14,11 @@ ShodanScanner::ShodanScanner(const string& key)
 {
 }
 
+bool ShodanScanner::IsPassive()
+{
+	return true;
+}
+
 void ShodanScanner::Scan(Host* host)
 {
 	getHostInfo(host);
@@ -34,7 +39,6 @@ void ShodanScanner::getHostInfo(Host* host)
 
 	if (key.length() == 0)
 	{
-		log(ERR, "No Shodan API key was specified.");
 		return;
 	}
 

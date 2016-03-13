@@ -7,7 +7,7 @@ void ServiceScanner::DumpResults(Services* services)
 {
 	for (auto service : *services)
 	{
-		if (!service->alive && service->reason == AR_TimedOut)
+		if (!service->alive && (service->reason == AR_TimedOut || service->reason == AR_NotScanned))
 		{
 			continue;
 		}

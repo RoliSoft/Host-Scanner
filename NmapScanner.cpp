@@ -13,6 +13,11 @@
 using namespace std;
 using namespace boost;
 
+bool NmapScanner::IsPassive()
+{
+	return false;
+}
+
 void NmapScanner::Scan(Host* host)
 {
 	Hosts hosts = { host };

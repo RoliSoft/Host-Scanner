@@ -10,6 +10,11 @@ PassiveScanner::PassiveScanner(const string& shodan_key, const string& censys_au
 {
 }
 
+bool PassiveScanner::IsPassive()
+{
+	return true;
+}
+
 void PassiveScanner::Scan(Host* host)
 {
 	static ShodanScanner ss(shodan_key);

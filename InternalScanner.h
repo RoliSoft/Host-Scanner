@@ -20,6 +20,17 @@ public:
 	unsigned long timeout = 5000;
 
 	/*!
+	 * Value indicating whether this instance is a passive scanner.
+	 * 
+	 * A passive scanner does not actively send packets towards the
+	 * scanned target, it instead uses miscellaneous data sources to
+	 * gather information regarding the target.
+	 * 
+	 * \return true if passive, false if not.
+	 */
+	bool IsPassive() override;
+
+	/*!
 	 * Scans a host to determine service availability.
 	 * 
 	 * \param host Host.

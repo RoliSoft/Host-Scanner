@@ -17,7 +17,7 @@ bool IcmpPinger::GetOption(int option, void* value)
 	switch (option)
 	{
 	case OPT_TIMEOUT:
-		timeout = *reinterpret_cast<int*>(value);
+		*reinterpret_cast<unsigned long*>(value) = timeout;
 		return true;
 
 	default:
@@ -30,7 +30,7 @@ bool IcmpPinger::SetOption(int option, void* value)
 	switch (option)
 	{
 	case OPT_TIMEOUT:
-		value = &timeout;
+		timeout = *reinterpret_cast<unsigned long*>(value);
 		return true;
 
 	default:

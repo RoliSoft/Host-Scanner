@@ -25,11 +25,11 @@ bool UdpScanner::GetOption(int option, void* value)
 	switch (option)
 	{
 	case OPT_TIMEOUT:
-		timeout = *reinterpret_cast<int*>(value);
+		*reinterpret_cast<unsigned long*>(value) = timeout;
 		return true;
 
 	case OPT_BANNER:
-		grabBanner = *reinterpret_cast<bool*>(value);
+		*reinterpret_cast<bool*>(value) = grabBanner;
 		return true;
 
 	default:
@@ -42,11 +42,11 @@ bool UdpScanner::SetOption(int option, void* value)
 	switch (option)
 	{
 	case OPT_TIMEOUT:
-		value = &timeout;
+		timeout = *reinterpret_cast<unsigned long*>(value);
 		return true;
 
 	case OPT_BANNER:
-		value = &grabBanner;
+		grabBanner = *reinterpret_cast<bool*>(value);
 		return true;
 
 	default:

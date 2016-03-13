@@ -39,6 +39,8 @@
 #include "PassiveScanner.h"
 #include "ShodanScanner.h"
 #include "CensysScanner.h"
+#include "BannerProcessor.h"
+#include "VulnerabilityLookup.h"
 
 #if HAVE_CURL
 	#include <curl/curl.h>
@@ -395,6 +397,8 @@ int scan(const po::variables_map& vm)
 	Hosts *hosts = nullptr;
 	set<unsigned short> *ports = nullptr, *udports = nullptr;
 
+	Services services;
+
 	// get scanner
 
 	if (vm.count("scanner") != 0)
@@ -580,6 +584,59 @@ int scan(const po::variables_map& vm)
 	scanner->Scan(hosts);
 
 	scanner->DumpResults(hosts);
+
+	// start version detection
+
+	for (auto host : *hosts)
+	{
+		for (auto service : *host->services)
+		{
+			if (service->banner.length() != 0)
+			{
+				services.push_back(service);
+			}
+		}
+	}
+
+	log("Initiating identification of " + pluralize(services.size(), "service banner") + "...");
+
+	for (auto service : services)
+	{
+		auto cpes = BannerProcessor::AutoProcess(service->banner);
+
+		if (cpes.size() != 0)
+		{
+			auto it = cpes.begin();
+			auto cpestr = "cpe:/" + *it;
+
+			for (auto end = cpes.end(); it != end; ++it)
+			{
+				cpestr += ", cpe:/" + *it;
+			}
+
+			log(MSG, service->address + ":" + to_string(service->port) + " is running " + cpestr);
+
+			VulnerabilityLookup vl;
+
+			auto vulns = vl.Scan(cpes);
+
+			if (vulns.size() > 0)
+			{
+				for (auto vuln : vulns)
+				{
+					auto it2 = vuln.second.begin();
+					auto vulnstr = "CVE-" + (*it2)->cve + " (" + boost::trim_right_copy_if(to_string((*it2)->severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+
+					for (auto end = vuln.second.end(); it2 != end; ++it2)
+					{
+						vulnstr += ", CVE-" + (*it2)->cve + " (" + boost::trim_right_copy_if(to_string((*it2)->severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+					}
+
+					log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr);
+				}
+			}
+		}
+	}
 
 cleanup:
 	if (scanner != nullptr)

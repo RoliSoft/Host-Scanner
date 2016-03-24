@@ -93,7 +93,7 @@ struct Interface
 	/*!
 	 * Identifier of the interface.
 	 */
-	char adapter[260];
+	std::string adapter;
 
 #if Unix
 
@@ -107,7 +107,7 @@ struct Interface
 	/*!
 	 * Human-friendly description of the interface.
 	 */
-	char description[132];
+	std::string description;
 	
 	/*!
 	 * MAC address of the adapter.

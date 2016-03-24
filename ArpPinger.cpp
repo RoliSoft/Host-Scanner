@@ -172,9 +172,10 @@ void ArpPinger::loadInterfaces()
 
 		auto inf = new Interface();
 
-		memcpy(inf->adapter,     ad->AdapterName, sizeof(inf->adapter));
-		memcpy(inf->description, ad->Description, sizeof(inf->description));
-		memcpy(inf->macaddr,     ad->Address,     sizeof(inf->macaddr));
+		inf->adapter     = string(ad->AdapterName, MAX_ADAPTER_NAME_LENGTH + 4);
+		inf->description = string(ad->Description, MAX_ADAPTER_DESCRIPTION_LENGTH + 4);
+
+		memcpy(inf->macaddr, ad->Address, sizeof(inf->macaddr));
 
 		inet_pton(AF_INET, ad->IpAddressList.IpAddress.String, &inf->ipaddr);
 		inet_pton(AF_INET, ad->IpAddressList.IpMask.String,    &inf->ipmask);
@@ -238,8 +239,8 @@ void ArpPinger::loadInterfaces()
 
 		auto inf = new Interface();
 
-		strncpy(inf->adapter,     ad->ifa_name, sizeof(inf->adapter));
-		strncpy(inf->description, ad->ifa_name, sizeof(inf->description));
+		inf->adapter     = string(ad->ifa_name);
+		inf->description = string(ad->ifa_name);
 
 		inf->ipaddr = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_addr))->sin_addr.s_addr;
 		inf->ipmask = (reinterpret_cast<struct sockaddr_in*>(ad->ifa_netmask))->sin_addr.s_addr;
@@ -357,10 +358,10 @@ void ArpPinger::sendRequest(Host* host)
 	pcap_t *pcap;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
-	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(data->iface->adapter)).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
+	if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + data->iface->adapter).c_str(), 100, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
 	{
 		host->reason = AR_ScanFailed;
-		log(ERR, "Failed to open PCAP device: " + string(data->iface->adapter));
+		log(ERR, "Failed to open PCAP device: " + data->iface->adapter);
 		return;
 	}
 
@@ -420,12 +421,12 @@ void ArpPinger::sendRequest(Host* host)
 	// bind device to the desired interface
 
 	struct ifreq bif;
-	strcpy(bif.ifr_name, data->iface->adapter);
+	strcpy(bif.ifr_name, data->iface->adapter.c_str());
 
 	if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 	{
 		host->reason = AR_ScanFailed;
-		log(ERR, "Failed to bind BPF device to interface '" + string(data->iface->adapter) + "': " + string(strerror(errno)));
+		log(ERR, "Failed to bind BPF device to interface '" + data->iface->adapter + "': " + string(strerror(errno)));
 		close(bpf);
 		return;
 	}
@@ -528,9 +529,9 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 		pcap_t *pcap;
 		char errbuf[PCAP_ERRBUF_SIZE];
 
-		if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + string(iface->adapter)).c_str(), 60, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
+		if ((pcap = pcap_open(string("rpcap://\\Device\\NPF_" + iface->adapter).c_str(), 60, PCAP_OPENFLAG_PROMISCUOUS, 10, NULL, errbuf)) == NULL)
 		{
-			log(ERR, "Failed to open PCAP for interface '" + string(iface->adapter) + "': " + string(pcap_geterr(pcap)));
+			log(ERR, "Failed to open PCAP for interface '" + iface->adapter + "': " + string(pcap_geterr(pcap)));
 			continue;
 		}
 
@@ -539,7 +540,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 		struct bpf_program bfcode;
 		if (pcap_compile(pcap, &bfcode, "arp", 1, iface->ipmask) < 0)
 		{
-			log(ERR, "Failed to compile filter for PCAP for interface '" + string(iface->adapter) + "': " + string(pcap_geterr(pcap)));
+			log(ERR, "Failed to compile filter for PCAP for interface '" + iface->adapter + "': " + string(pcap_geterr(pcap)));
 			continue;
 		}
 
@@ -547,7 +548,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 		if (pcap_setfilter(pcap, &bfcode) < 0)
 		{
-			log(ERR, "Failed to attach filter to PCAP for interface '" + string(iface->adapter) + "': " + string(pcap_geterr(pcap)));
+			log(ERR, "Failed to attach filter to PCAP for interface '" + iface->adapter + "': " + string(pcap_geterr(pcap)));
 			continue;
 		}
 
@@ -732,19 +733,19 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 		if (bpf < 0)
 		{
-			log(ERR, "Failed to allocate a BPF device for interface '" + string(iface->adapter) + "'.");
+			log(ERR, "Failed to allocate a BPF device for interface '" + iface->adapter + "'.");
 			continue;
 		}
 
 		// bind device to the desired interface
 
 		struct ifreq bif;
-		strcpy(bif.ifr_name, iface->adapter);
+		strcpy(bif.ifr_name, iface->adapter.c_str());
 
 		if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 		{
 			close(bpf);
-			log(ERR, "Failed to bind BPF device to interface '" + string(iface->adapter) + "': " + string(strerror(errno)));
+			log(ERR, "Failed to bind BPF device to interface '" + iface->adapter + "': " + string(strerror(errno)));
 			continue;
 		}
 
@@ -767,7 +768,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 		if (ioctl(bpf, BIOCSETF, &bfprog) < 0)
 		{
 			close(bpf);
-			log(ERR, "Failed to compile and attach filter to BPF device for interface '" + string(iface->adapter) + "': " + string(strerror(errno)));
+			log(ERR, "Failed to compile and attach filter to BPF device for interface '" + iface->adapter + "': " + string(strerror(errno)));
 			continue;
 		}
 

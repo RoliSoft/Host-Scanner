@@ -6,7 +6,7 @@
 using namespace std;
 using namespace boost;
 
-vector<struct ServiceRegex*> ServiceRegexMatcher::regexes = vector<struct ServiceRegex*>();
+vector<ServiceRegex> ServiceRegexMatcher::regexes = vector<ServiceRegex>();
 
 vector<string> ServiceRegexMatcher::Scan(const string& banner)
 {
@@ -25,22 +25,22 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 	static regex bsrgx("\\$(\\d+)", regex::perl);
 	static regex vtrgx("^v(?:er(?:sion)?)? *(?=\\d)", regex::perl | regex::icase);
 
-	for (auto rgx : regexes)
+	for (auto& rgx : regexes)
 	{
 		match_results<string::const_iterator> match;
 
-		if (regex_search(banner, match, rgx->regex, match_single_line))
+		if (regex_search(banner, match, rgx.regex, match_single_line))
 		{
-			auto cpe = rgx->cpe;
+			auto cpe = rgx.cpe;
 
 			auto cpeHasRgx = cpe.find('$') != string::npos;
-			auto verHasRgx = rgx->version.length() > 0 && rgx->version.find('$') != string::npos;
+			auto verHasRgx = rgx.version.length() > 0 && rgx.version.find('$') != string::npos;
 
 			if (verHasRgx && !cpeHasRgx)
 			{
 				// TODO check whether CPE already has a version field or not
 
-				cpe += ":" + rgx->version;
+				cpe += ":" + rgx.version;
 				cpeHasRgx = true;
 			}
 
@@ -66,7 +66,7 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 	return matches;
 }
 
-vector<ServiceRegex*> ServiceRegexMatcher::GetRegexes()
+vector<ServiceRegex> ServiceRegexMatcher::GetRegexes()
 {
 	if (regexes.size() == 0)
 	{
@@ -125,28 +125,28 @@ void ServiceRegexMatcher::loadRegexes()
 
 	for (auto i = 0u; i < pnum; i++)
 	{
-		auto rgx = new ServiceRegex();
+		ServiceRegex rgx;
 
-		string rgex  = dr.ReadString();
-		rgx->cpe     = dr.ReadString();
-		rgx->product = dr.ReadString();
-		rgx->version = dr.ReadString();
+		auto rgex   = dr.ReadString();
+		rgx.cpe     = dr.ReadString();
+		rgx.product = dr.ReadString();
+		rgx.version = dr.ReadString();
 
-		if (rgx->cpe.length() == 0)
+		if (rgx.cpe.length() == 0)
 		{
-			delete rgx;
 			continue;
 		}
 
 		try
 		{
-			rgx->regex = regex(rgex, regex::perl);
-			regexes.push_back(rgx);
+			rgx.regex = regex(rgex, regex::perl);
 		}
 		catch (runtime_error&)
 		{
-			delete rgx;
+			continue;
 		}
+
+		regexes.push_back(rgx);
 	}
 
 	// clean up

@@ -53,7 +53,7 @@ public:
 	 *
 	 * \return List of regular expressions.
 	 */
-	static std::vector<struct ServiceRegex*> GetRegexes();
+	static std::vector<ServiceRegex> GetRegexes();
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
@@ -65,7 +65,7 @@ private:
 	/*!
 	 * List of regular expressions with their associated product info.
 	 */
-	static std::vector<struct ServiceRegex*> regexes;
+	static std::vector<ServiceRegex> regexes;
 
 	/*!
 	 * Loads the regex database from external file.

@@ -5,7 +5,7 @@
 using namespace std;
 using namespace boost;
 
-vector<struct CpeEntry> CpeDictionaryMatcher::entries = vector<struct CpeEntry>();
+vector<CpeEntry> CpeDictionaryMatcher::entries = vector<CpeEntry>();
 unordered_map<string, vector<string>> CpeDictionaryMatcher::aliases = unordered_map<string, vector<string>>();
 
 vector<string> CpeDictionaryMatcher::Scan(const string& banner)
@@ -22,7 +22,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 		return matches;
 	}
 
-	for (auto ent : entries)
+	for (auto& ent : entries)
 	{
 		vector<int> namepos;
 
@@ -30,7 +30,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 		auto nametok = true;
 
-		for (auto token : ent.tokens)
+		for (auto& token : ent.tokens)
 		{
 			smatch what;
 
@@ -54,7 +54,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 		// if so, check if any associated versions are also in the input
 
-		for (auto version : ent.versions)
+		for (auto& version : ent.versions)
 		{
 			auto verpos = banner.find(version.version);
 
@@ -69,7 +69,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 			auto dist = 0u;
 			auto vertok = true;
 
-			for (auto token : version.tokens)
+			for (auto& token : version.tokens)
 			{
 				smatch what;
 

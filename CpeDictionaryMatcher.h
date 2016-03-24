@@ -47,7 +47,7 @@ struct CpeEntry
 	/*!
 	 * Known versions of the entry.
 	 */
-	std::vector<struct CpeVersionEntry> versions;
+	std::vector<CpeVersionEntry> versions;
 
 };
 
@@ -72,7 +72,7 @@ public:
 	 *
 	 * \return List of CPE entries.
 	 */
-	static std::vector<struct CpeEntry> GetEntries();
+	static std::vector<CpeEntry> GetEntries();
 	
 	/*!
 	 * Gets the CPE aliases.
@@ -91,7 +91,7 @@ private:
 	/*!
 	 * List of CPE dictionary entries with their associated product info.
 	 */
-	static std::vector<struct CpeEntry> entries;
+	static std::vector<CpeEntry> entries;
 
 	/*!
 	 * List of CPE name aliases.

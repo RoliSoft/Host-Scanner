@@ -124,7 +124,11 @@ tuple<int, const char*> DataReader::ReadData()
 string DataReader::ReadString()
 {
 	auto data = ReadData();
-	return string(get<1>(data), get<0>(data));
+	auto text = string(get<1>(data), get<0>(data));
+
+	delete get<1>(data);
+
+	return text;
 }
 
 DataReader::~DataReader()

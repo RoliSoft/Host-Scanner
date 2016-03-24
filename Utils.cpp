@@ -70,7 +70,9 @@ string getEnvVar(const string& env)
 #if Windows
 	char *result;
 	size_t size;
-	return _dupenv_s(&result, &size, env.c_str()) == 0 ? result : "";
+	auto retval = _dupenv_s(&result, &size, env.c_str()) == 0 ? string(result, size) : "";
+	delete result;
+	return retval;
 #elif Unix
 	return getenv(env.c_str());
 #endif

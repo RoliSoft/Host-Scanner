@@ -23,24 +23,6 @@ struct UdpScanData
 };
 
 /*!
- * Represents a payload.
- */
-struct Payload
-{
-
-	/*!
-	 * Data in the payload.
-	 */
-	char* data = nullptr;
-
-	/*!
-	 * Length of the data.
-	 */
-	int datlen = 0;
-
-};
-
-/*!
  * Implements an UDP port scanner.
  * 
  * This will try to initiate the three-way handshake with all the requested services.
@@ -94,7 +76,7 @@ public:
 	 *
 	 * \return List of payloads.
 	 */
-	static std::unordered_map<unsigned short, struct Payload*> GetPayloads();
+	static std::unordered_map<unsigned short, std::string> GetPayloads();
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
@@ -106,7 +88,7 @@ private:
 	/*!
 	 * Map of well-known ports and their example payload.
 	 */
-	static std::unordered_map<unsigned short, struct Payload*> payloads;
+	static std::unordered_map<unsigned short, std::string> payloads;
 
 	/*!
 	 * Sends a datagram to the requested service, with crafted packet, when available.

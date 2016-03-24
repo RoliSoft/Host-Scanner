@@ -18,7 +18,7 @@ using namespace std;
 using namespace boost;
 namespace fs = boost::filesystem;
 
-unordered_map<unsigned short, struct Payload*> UdpScanner::payloads = unordered_map<unsigned short, struct Payload*>();
+unordered_map<unsigned short, string> UdpScanner::payloads = unordered_map<unsigned short, string>();
 
 bool UdpScanner::GetOption(int option, void* value)
 {
@@ -95,7 +95,7 @@ void* UdpScanner::initSocket(Service* service)
 	
 	// select payload based on port
 
-	struct Payload* pld;
+	string pld;
 
 	auto iter = payloads.find(service->port);
 	if (iter != payloads.end())
@@ -112,7 +112,7 @@ void* UdpScanner::initSocket(Service* service)
 	// so send()/recv() will work without them, no need to store the addrinfo
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
-	send(sock, pld->data, pld->datlen, 0);
+	send(sock, pld.c_str(), pld.length(), 0);
 
 	// clean-up
 
@@ -187,7 +187,7 @@ void* UdpScanner::pollSocket(Service* service)
 	return nullptr;
 }
 
-unordered_map<unsigned short, Payload*> UdpScanner::GetPayloads()
+unordered_map<unsigned short, string> UdpScanner::GetPayloads()
 {
 	if (payloads.size() == 0)
 	{
@@ -210,13 +210,7 @@ void UdpScanner::loadPayloads()
 
 	// insert generic payload
 
-	auto pld = new struct Payload();
-	unsigned short port = 0;
-
-	pld->data = new char[16] { 0 };
-	pld->datlen = 16;
-
-	payloads.emplace(port, pld);
+	payloads.emplace(0, string(16, char(0)));
 
 	// open payloads file
 
@@ -258,15 +252,7 @@ void UdpScanner::loadPayloads()
 	{
 		// read payload
 
-		auto data = dr.ReadData();
-
-		// copy read data
-
-		pld = new struct Payload();
-		pld->datlen = get<0>(data);
-		pld->data = new char[pld->datlen];
-
-		memcpy(pld->data, get<1>(data), pld->datlen);
+		auto data = dr.ReadString();
 
 		// enumerate over the mapped ports
 
@@ -275,8 +261,11 @@ void UdpScanner::loadPayloads()
 
 		for (auto j = 0u; j < pports; j++)
 		{
+			unsigned short port;
+
 			dr.Read(port);
-			payloads.emplace(port, pld);
+
+			payloads.emplace(port, data);
 		}
 	}
 

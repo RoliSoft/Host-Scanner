@@ -362,6 +362,7 @@ void ArpPinger::sendRequest(Host* host)
 	{
 		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to open PCAP device: " + data->iface->adapter);
+		delete data;
 		return;
 	}
 
@@ -388,6 +389,7 @@ void ArpPinger::sendRequest(Host* host)
 
 		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to open socket with PF_PACKET/SOCK_RAW.");
+		delete data;
 		return;
 	}
 
@@ -415,6 +417,7 @@ void ArpPinger::sendRequest(Host* host)
 	{
 		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to allocate a BPF device.");
+		delete data;
 		return;
 	}
 
@@ -428,6 +431,7 @@ void ArpPinger::sendRequest(Host* host)
 		host->reason = AR_ScanFailed;
 		log(ERR, "Failed to bind BPF device to interface '" + data->iface->adapter + "': " + string(strerror(errno)));
 		close(bpf);
+		delete data;
 		return;
 	}
 

@@ -115,6 +115,11 @@ tuple<int, const char*> DataReader::ReadData()
 	unsigned short len;
 	Read(len);
 
+	if (len == 0)
+	{
+		return make_tuple(len, nullptr);
+	}
+
 	auto data = new char[len];
 	bs->sgetn(data, len);
 
@@ -124,9 +129,15 @@ tuple<int, const char*> DataReader::ReadData()
 string DataReader::ReadString()
 {
 	auto data = ReadData();
+
+	if (get<0>(data) == 0)
+	{
+		return "";
+	}
+
 	auto text = string(get<1>(data), get<0>(data));
 
-	delete get<1>(data);
+	delete[] get<1>(data);
 
 	return text;
 }

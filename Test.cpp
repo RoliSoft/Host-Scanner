@@ -657,18 +657,18 @@ BOOST_AUTO_TEST_CASE(ArpPing)
 
 	Hosts hosts = {
 		new Host("192.168.1.1"), // bogon
-		new Host("192.168.1.2"), // bogon
+		new Host("192.168.1.254"), // bogon
 		new Host("178.62.249.168"), // euvps.rolisoft.net
 	};
 
 	scan.Scan(&hosts);
 
 	BOOST_TEST_CHECK( hosts[0]->alive, "*.1 should answer.");
-	BOOST_TEST_CHECK(!hosts[1]->alive, "*.2 should not answer.");
+	BOOST_TEST_CHECK(!hosts[1]->alive, "*.254 should not answer.");
 	BOOST_TEST_CHECK(!hosts[2]->alive, "178.* should not answer.");
 
 	BOOST_TEST_CHECK(hosts[0]->reason == AR_ReplyReceived, "*.1 reason should be ReplyReceived, it is instead " + Service::ReasonString(hosts[0]->reason) + ".");
-	BOOST_TEST_CHECK(hosts[1]->reason == AR_TimedOut,      "*.2 reason should be TimedOut, it is instead " + Service::ReasonString(hosts[1]->reason) + ".");
+	BOOST_TEST_CHECK(hosts[1]->reason == AR_TimedOut,      "*.254 reason should be TimedOut, it is instead " + Service::ReasonString(hosts[1]->reason) + ".");
 	BOOST_TEST_CHECK(hosts[2]->reason == AR_ScanFailed,    "178.* reason should be ScanFailed, it is instead " + Service::ReasonString(hosts[2]->reason) + ".");
 
 	freeHosts(hosts);

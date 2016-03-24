@@ -47,7 +47,7 @@ struct CpeEntry
 	/*!
 	 * Known versions of the entry.
 	 */
-	std::vector<struct CpeVersionEntry*> versions;
+	std::vector<struct CpeVersionEntry> versions;
 
 };
 
@@ -72,14 +72,14 @@ public:
 	 *
 	 * \return List of CPE entries.
 	 */
-	static std::vector<struct CpeEntry*> GetEntries();
+	static std::vector<struct CpeEntry> GetEntries();
 	
 	/*!
 	 * Gets the CPE aliases.
 	 *
 	 * \return List of CPE aliases.
 	 */
-	static std::unordered_map<std::string, std::vector<std::string>*> GetAliases();
+	static std::unordered_map<std::string, std::vector<std::string>> GetAliases();
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
@@ -91,12 +91,12 @@ private:
 	/*!
 	 * List of CPE dictionary entries with their associated product info.
 	 */
-	static std::vector<struct CpeEntry*> entries;
+	static std::vector<struct CpeEntry> entries;
 
 	/*!
 	 * List of CPE name aliases.
 	 */
-	static std::unordered_map<std::string, std::vector<std::string>*> aliases;
+	static std::unordered_map<std::string, std::vector<std::string>> aliases;
 
 	/*!
 	 * Loads the entries and aliases database from external file.

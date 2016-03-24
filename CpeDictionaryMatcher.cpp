@@ -5,8 +5,8 @@
 using namespace std;
 using namespace boost;
 
-vector<struct CpeEntry*> CpeDictionaryMatcher::entries = vector<struct CpeEntry*>();
-unordered_map<string, vector<string>*> CpeDictionaryMatcher::aliases = unordered_map<string, vector<string>*>();
+vector<struct CpeEntry> CpeDictionaryMatcher::entries = vector<struct CpeEntry>();
+unordered_map<string, vector<string>> CpeDictionaryMatcher::aliases = unordered_map<string, vector<string>>();
 
 vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 {
@@ -30,7 +30,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 		auto nametok = true;
 
-		for (auto token : ent->tokens)
+		for (auto token : ent.tokens)
 		{
 			smatch what;
 
@@ -54,9 +54,9 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 		// if so, check if any associated versions are also in the input
 
-		for (auto version : ent->versions)
+		for (auto version : ent.versions)
 		{
-			auto verpos = banner.find(version->version);
+			auto verpos = banner.find(version.version);
 
 			if (verpos == string::npos)
 			{
@@ -69,7 +69,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 			auto dist = 0u;
 			auto vertok = true;
 
-			for (auto token : version->tokens)
+			for (auto token : version.tokens)
 			{
 				smatch what;
 
@@ -96,11 +96,11 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 			// check against current best
 
-			if (version->tokens.size() > besttokens || (version->tokens.size() == besttokens && dist <= bestdist))
+			if (version.tokens.size() > besttokens || (version.tokens.size() == besttokens && dist <= bestdist))
 			{
 				bestdist   = dist;
-				besttokens = version->tokens.size();
-				bestcpe    = ent->cpe + ":" + version->cpe;
+				besttokens = version.tokens.size();
+				bestcpe    = ent.cpe + ":" + version.cpe;
 			}
 		}
 
@@ -113,7 +113,7 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 	return matches;
 }
 
-vector<CpeEntry*> CpeDictionaryMatcher::GetEntries()
+vector<CpeEntry> CpeDictionaryMatcher::GetEntries()
 {
 	if (entries.size() == 0)
 	{
@@ -123,7 +123,7 @@ vector<CpeEntry*> CpeDictionaryMatcher::GetEntries()
 	return entries;
 }
 
-unordered_map<string, vector<string>*> CpeDictionaryMatcher::GetAliases()
+unordered_map<string, vector<string>> CpeDictionaryMatcher::GetAliases()
 {
 	if (aliases.size() == 0)
 	{
@@ -185,45 +185,45 @@ void CpeDictionaryMatcher::loadEntries()
 
 	for (auto i = 0u; i < pnum; i++)
 	{
-		auto ent = new CpeEntry();
+		CpeEntry ent;
 
-		ent->cpe = dr.ReadString();
+		ent.cpe = dr.ReadString();
 		
 		unsigned char tnum;
 		dr.Read(tnum);
 
-		ent->tokens = vector<regex>();
+		ent.tokens = vector<regex>();
 
 		for (auto j = 0u; j < tnum; j++)
 		{
 			auto asd = regex_replace(dr.ReadString(), esc, rep, match_default | format_sed);
-			ent->tokens.push_back(regex("\\b(" + asd + ")\\b", regex::icase));
+			ent.tokens.push_back(regex("\\b(" + asd + ")\\b", regex::icase));
 		}
 
 		unsigned int vnum;
 		dr.Read(vnum);
 
-		ent->versions = vector<CpeVersionEntry*>();
+		ent.versions = vector<CpeVersionEntry>();
 
 		for (auto j = 0u; j < vnum; j++)
 		{
-			auto ver = new CpeVersionEntry();
+			CpeVersionEntry ver;
 
-			ver->cpe     = dr.ReadString();
-			ver->version = dr.ReadString();
+			ver.cpe     = dr.ReadString();
+			ver.version = dr.ReadString();
 
 			unsigned char vtnum;
 			dr.Read(vtnum);
 
-			ver->tokens = vector<regex>();
+			ver.tokens = vector<regex>();
 
 			for (auto k = 0u; k < vtnum; k++)
 			{
 				auto asd = regex_replace(dr.ReadString(), esc, rep, match_default | format_sed);
-				ver->tokens.push_back(regex("\\b(" + asd + ")\\b", regex::icase));
+				ver.tokens.push_back(regex("\\b(" + asd + ")\\b", regex::icase));
 			}
 
-			ent->versions.push_back(ver);
+			ent.versions.push_back(ver);
 		}
 
 		entries.push_back(ent);
@@ -265,13 +265,13 @@ void CpeDictionaryMatcher::loadEntries()
 		unsigned short anum;
 		dr.Read(anum);
 
-		auto list = new vector<string>();
+		vector<string> list;
 
 		for (auto j = 0u; j < anum; j++)
 		{
 			auto alias = dr.ReadString();
 			
-			list->push_back(alias);
+			list.push_back(alias);
 
 			aliases.emplace(alias, list);
 		}

@@ -625,11 +625,11 @@ int scan(const po::variables_map& vm)
 				for (auto vuln : vulns)
 				{
 					auto it2 = vuln.second.begin();
-					auto vulnstr = "CVE-" + (*it2)->cve + " (" + boost::trim_right_copy_if(to_string((*it2)->severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+					auto vulnstr = "CVE-" + (*it2).cve + " (" + boost::trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
 
 					for (auto end = vuln.second.end(); it2 != end; ++it2)
 					{
-						vulnstr += ", CVE-" + (*it2)->cve + " (" + boost::trim_right_copy_if(to_string((*it2)->severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+						vulnstr += ", CVE-" + (*it2).cve + " (" + boost::trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
 					}
 
 					log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr);

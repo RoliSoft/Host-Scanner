@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 
 			for (auto& dcve : ccves)
 			{
-				if (cve == dcve->cve)
+				if (cve == dcve.cve)
 				{
 					found = true;
 					break;

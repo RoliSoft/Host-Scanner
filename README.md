@@ -41,7 +41,7 @@ The purpose of this project is to discover hosts on a network and gather informa
 To compile and run the project, you must first install the dependencies, which can be done with:
 
  * Debian/Ubuntu/Kali:
- 
+
         apt install build-essential cmake libcurl4-openssl-dev libsqlite3-dev libboost-all-dev libz-dev
 
  * RHEL/CentOS/Fedora:
@@ -55,6 +55,12 @@ To compile and run the project, you must first install the dependencies, which c
  * Mac OS X: (with [Homebrew](http://brew.sh/))
 
         xcode-select --install && brew install cmake curl sqlite boost
+
+ * Windows _or_ any of the above platforms if problems arise with the vendor packages: (with [Conan](https://conan.io/))
+
+        conan install
+
+   When executed in the project root, downloads and/or builds all required dependencies for the project and generates a `conanbuildinfo.cmake` file, which when exists, will be used by `CMakeLists.txt` to configure include directories and link targets.
 
 After the dependencies have been installed, you can check out the repository and compile it with the following commands:
 

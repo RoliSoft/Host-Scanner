@@ -42,19 +42,19 @@ To compile and run the project, you must first install the dependencies, which c
 
  * Debian/Ubuntu/Kali:
  
-        apt install build-essential cmake libcurl4-openssl-dev libboost-all-dev libz-dev
+        apt install build-essential cmake libcurl4-openssl-dev libsqlite3-dev libboost-all-dev libz-dev
 
  * RHEL/CentOS/Fedora:
 
-        yum install gcc-c++ make cmake libcurl-devel boost-devel-static zlib-devel
+        yum install gcc-c++ make cmake libcurl-devel sqlite-devel boost-devel-static zlib-devel
 
  * FreeBSD:
 
-        pkg install cmake curl boost-libs
+        pkg install cmake curl sqlite3 boost-libs
 
  * Mac OS X: (with [Homebrew](http://brew.sh/))
 
-        xcode-select --install && brew install cmake curl boost
+        xcode-select --install && brew install cmake curl sqlite boost
 
 After the dependencies have been installed, you can check out the repository and compile it with the following commands:
 

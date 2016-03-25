@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(HostScanner)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 set(APP_MAJOR_VERSION 0)
 set(APP_MINOR_VERSION 1)
 set(APP_PATCH_VERSION 0)
@@ -68,6 +70,9 @@ if (NOT DEFINED WITHOUT_CURL OR NOT ${WITHOUT_CURL} EQUAL 1)
 	endif()
 endif()
 
+find_package(SQLite 3 REQUIRED)
+include_directories(SYSTEM ${SQLITE_INCLUDE_DIR})
+
 file(GLOB HEADERS "*.h")
 file(GLOB SOURCES "*.cpp")
 
@@ -95,8 +100,8 @@ if (${BUILD_STATIC})
 	set_target_properties(TestScanner PROPERTIES LINK_SEARCH_END_STATIC 1)
 endif()
 
-target_link_libraries(HostScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_LIBRARIES})
-target_link_libraries(TestScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${Boost_LIBRARIES})
+target_link_libraries(HostScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${SQLITE_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(TestScanner ${WINPCAP_LIBRARY} ${CURL_LIBRARY} ${SQLITE_LIBRARIES} ${Boost_LIBRARIES})
 
 install(TARGETS ${HostScanner} DESTINATION bin)
 

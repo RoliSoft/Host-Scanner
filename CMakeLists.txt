@@ -43,6 +43,11 @@ if (${BUILD_STATIC})
 	endif()
 endif()
 
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/conanbuildinfo.cmake")
+	include(conanbuildinfo.cmake)
+	conan_basic_setup()
+endif()
+
 if (NOT DEFINED WITHOUT_ZLIB OR NOT ${WITHOUT_ZLIB} EQUAL 1)
 	if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 		set(ADDITIONAL_BOOST_COMPONENTS "zlib")

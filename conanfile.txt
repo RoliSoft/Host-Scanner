@@ -1,0 +1,8 @@
+[requires]
+zlib/1.2.8@lasote/stable
+libcurl/7.47.1@lasote/stable
+sqlite3/3.10.2@TyRoXx/stable
+Boost/1.60.0@lasote/stable
+
+[generators]
+cmake

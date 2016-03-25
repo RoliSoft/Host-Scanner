@@ -1,5 +1,7 @@
 /data/*.dat
 /data/*.dat.gz
+/data/*.db3
+/data/*.db3.bz2
 
 ### VisualStudio ###
 ## Ignore Visual Studio temporary files, build results, and

@@ -139,7 +139,7 @@ void ServiceRegexMatcher::loadRegexes()
 
 		try
 		{
-			rgx.regex = regex(rgex, regex::perl);
+			rgx.regex = move(regex(rgex, regex::perl));
 		}
 		catch (runtime_error&)
 		{

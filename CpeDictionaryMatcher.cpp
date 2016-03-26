@@ -177,9 +177,6 @@ void CpeDictionaryMatcher::loadEntries()
 		return;
 	}
 
-	regex esc("[.^$|()\\[\\]{}*+?\\\\]");
-	string rep("\\\\&");
-
 	unsigned int pnum;
 	dr.Read(pnum);
 
@@ -196,8 +193,7 @@ void CpeDictionaryMatcher::loadEntries()
 
 		for (auto j = 0u; j < tnum; j++)
 		{
-			auto asd = regex_replace(dr.ReadString(), esc, rep, match_default | format_sed);
-			ent.tokens.push_back(regex("\\b(" + asd + ")\\b", regex::icase));
+			ent.tokens.push_back(move(regex("\\b(" + dr.ReadString() + ")\\b", regex::icase)));
 		}
 
 		unsigned int vnum;
@@ -219,8 +215,7 @@ void CpeDictionaryMatcher::loadEntries()
 
 			for (auto k = 0u; k < vtnum; k++)
 			{
-				auto asd = regex_replace(dr.ReadString(), esc, rep, match_default | format_sed);
-				ver.tokens.push_back(regex("\\b(" + asd + ")\\b", regex::icase));
+				ver.tokens.push_back(move(regex("\\b(" + dr.ReadString() + ")\\b", regex::icase)));
 			}
 
 			ent.versions.push_back(ver);

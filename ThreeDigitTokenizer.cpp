@@ -27,7 +27,7 @@ vector<string> ThreeDigitTokenizer::Tokenize(const string& banner)
 
 	static regex s1rgx("^2[02]0[- ][A-Za-z0-9\\.\\-_:]+([^\\r\\n]*?E?SMTP[^\\r\\n]*?)(?: *\\(|\\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|ready)\\b|$)", regex::perl | regex::icase);
 
-	sregex_token_iterator s1it(banner.begin(), banner.end(), s1rgx, { 1 });
+	sregex_token_iterator s1it(banner.begin(), banner.end(), s1rgx, 1);
 	sregex_token_iterator end;
 
 	for (; s1it != end; ++s1it)
@@ -44,7 +44,7 @@ vector<string> ThreeDigitTokenizer::Tokenize(const string& banner)
 
 	static regex s2rgx("^2[02]0[- ][^\\r\\n]*?((?:Microsoft *)?E?SMTP[^\\r\\n]*?)(?: *\\(|\\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|ready)\\b|$)", regex::perl | regex::icase);
 
-	sregex_token_iterator s2it(banner.begin(), banner.end(), s2rgx, { 1 });
+	sregex_token_iterator s2it(banner.begin(), banner.end(), s2rgx, 1);
 
 	for (; s2it != end; ++s2it)
 	{
@@ -60,7 +60,7 @@ vector<string> ThreeDigitTokenizer::Tokenize(const string& banner)
 
 	static regex s3rgx("^2[02]0[- ]([^\\r\\n]*(?:E?SMTP|SNPP|NNTP|FTP)[^\\r\\n]*)$", regex::perl | regex::icase);
 
-	sregex_token_iterator s3it(banner.begin(), banner.end(), s3rgx, { 1 });
+	sregex_token_iterator s3it(banner.begin(), banner.end(), s3rgx, 1);
 
 	for (; s3it != end; ++s3it)
 	{
@@ -76,7 +76,7 @@ vector<string> ThreeDigitTokenizer::Tokenize(const string& banner)
 
 	static regex s4rgx("^2[02]0[- ]([^\\r\\n]*)$", regex::perl);
 
-	sregex_token_iterator s4it(banner.begin(), banner.end(), s4rgx, { 1 });
+	sregex_token_iterator s4it(banner.begin(), banner.end(), s4rgx, 1);
 
 	for (; s4it != end; ++s4it)
 	{

@@ -36,18 +36,17 @@
 #include "ServiceRegexMatcher.h"
 #include "CpeDictionaryMatcher.h"
 #include "VulnerabilityLookup.h"
-#include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
-#include <iostream>
+#include <boost/test/unit_test.hpp>
 
 #ifndef BOOST_TEST_WARN
-#define BOOST_TEST_WARN(a,m) BOOST_CHECK(a)
+	#define BOOST_TEST_WARN(a,m) BOOST_CHECK(a)
 #endif
 #ifndef BOOST_TEST_CHECK
-#define BOOST_TEST_CHECK(a,m) BOOST_CHECK(a)
+	#define BOOST_TEST_CHECK(a,m) BOOST_CHECK(a)
 #endif
 #ifndef BOOST_TEST_REQUIRE
-#define BOOST_TEST_REQUIRE(a,m) BOOST_CHECK(a)
+	#define BOOST_TEST_REQUIRE(a,m) BOOST_CHECK(a)
 #endif
 
 using namespace std;

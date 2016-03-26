@@ -18,17 +18,6 @@
 
 */
 
-#include <iostream>
-#include <string>
-#include <tuple>
-#include <vector>
-#include <set>
-#include <unordered_set>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <boost/program_options/parsers.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include "Stdafx.h"
 #include "Utils.h"
 #include "Format.h"
@@ -41,6 +30,18 @@
 #include "CensysScanner.h"
 #include "BannerProcessor.h"
 #include "VulnerabilityLookup.h"
+#include <iostream>
+#include <string>
+#include <tuple>
+#include <vector>
+#include <set>
+#include <unordered_set>
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #if HAVE_CURL
 	#include <curl/curl.h>
@@ -269,6 +270,11 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
  */
 Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& retval)
 {
+#if _MSC_VER
+	// even though it's used later on, MSVC is issuing an 'unreferenced formal parameter' warning for `scanner`
+	boost::ignore_unused(scanner);
+#endif
+
 	unordered_set<string> hostarr;
 
 	// merge targets specified via positional parameters and targets separated by comma

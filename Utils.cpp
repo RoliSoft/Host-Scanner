@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include <stdlib.h>
 #include <string>
+#include <boost/core/ignore_unused.hpp>
 
 #if Unix
 	#include <limits.h>
@@ -95,8 +96,6 @@ string pluralize(int quantity, const string& unit)
 	return to_string(quantity) + " " + unit + (quantity != 1 ? "s" : "");
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>& opts)
 {
 #if HAVE_CURL
@@ -146,8 +145,12 @@ tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>
 
 #else
 
+#if __GNUC__ || __clang__
+	boost::ignore_unused(url);
+	boost::ignore_unused(opts);
+#endif
+
 	return make_tuple("", "not compiled with curl support", -1);
 
 #endif
 }
-#pragma GCC diagnostic pop

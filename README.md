@@ -58,7 +58,7 @@ To compile and run the project, you must first install the dependencies, which c
 
  * Windows _or_ any of the above platforms if problems arise with the vendor packages: (with [Conan](https://conan.io/))
 
-        conan install
+        conan install --build=missing
 
    When executed in the project root, downloads and/or builds all required dependencies for the project and generates a `conanbuildinfo.cmake` file, which when exists, will be used by `CMakeLists.txt` to configure include directories and link targets.
 

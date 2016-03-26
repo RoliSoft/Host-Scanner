@@ -487,18 +487,22 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 
 	Services servs = {
 		new Service("178.62.249.168", 20), // euvps.rolisoft.net
-		new Service("178.62.249.168", 25)  // euvps.rolisoft.net
+		new Service("178.62.249.168", 25), // euvps.rolisoft.net
+		new Service("178.62.249.168", 80)  // euvps.rolisoft.net
 	};
 
 	TaskQueueRunner::QuickScan(scan, servs);
 
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 20 should not be alive.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 25 should be alive.");
+	BOOST_TEST_CHECK( servs[2]->alive, "Port 80 should be alive.");
 
-	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner on port 25.");
+	BOOST_TEST_CHECK(servs[2]->banner.length() > 0, "Failed to grab service banner on port 80.");
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK( servs[2]->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }
@@ -514,18 +518,22 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 
 	Services servs = {
 		new Service("2a03:b0c0:2:d0::19:6001", 20), // euvps.rolisoft.net
-		new Service("2a03:b0c0:2:d0::19:6001", 25)  // euvps.rolisoft.net
+		new Service("2a03:b0c0:2:d0::19:6001", 25), // euvps.rolisoft.net
+		new Service("2a03:b0c0:2:d0::19:6001", 80)  // euvps.rolisoft.net
 	};
 
 	TaskQueueRunner::QuickScan(scan, servs);
 
 	BOOST_TEST_CHECK(!servs[0]->alive, "Port 20 should not be alive.");
 	BOOST_TEST_CHECK( servs[1]->alive, "Port 25 should be alive.");
+	BOOST_TEST_CHECK( servs[2]->alive, "Port 80 should be alive.");
 
-	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner.");
+	BOOST_TEST_CHECK(servs[1]->banner.length() > 0, "Failed to grab service banner on port 25.");
+	BOOST_TEST_CHECK(servs[2]->banner.length() > 0, "Failed to grab service banner on port 80.");
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK( servs[2]->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 
 	freeServices(servs);
 }

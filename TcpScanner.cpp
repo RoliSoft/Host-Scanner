@@ -70,6 +70,7 @@ void* TcpScanner::initSocket(Service* service)
 
 	service->reason = AR_InProgress;
 	data->timeout   = chrono::system_clock::now() + chrono::milliseconds(timeout);
+	data->probes    = grabBanner ? 0 : INT_MAX;
 
 	// set it to non-blocking
 
@@ -215,6 +216,12 @@ void* TcpScanner::readBanner(Service* service)
 
 		return MFN_TO_PTR(TcpScanner::readBanner, this, service);
 	}
+	else if (data->probes < 1)
+	{
+		// on timeout, send probe if it haven't been sent yet
+		
+		return sendProbe(service);
+	}
 
 	service->reason = AR_ReplyReceived;
 
@@ -231,6 +238,45 @@ void* TcpScanner::readBanner(Service* service)
 	// return end-of-task
 
 	return nullptr;
+}
+
+void* TcpScanner::sendProbe(Service* service)
+{
+	if (service->reason != AR_InProgress_Extra || service->data == nullptr)
+	{
+		return nullptr;
+	}
+
+	auto data = reinterpret_cast<TcpScanData*>(service->data);
+
+	// craft and send a probe
+
+	data->probes++;
+
+	string probe = "GET / HTTP/1.0\r\n\r\n";
+	auto res = send(data->socket, probe.c_str(), probe.length(), 0);
+
+	if (res < 1)
+	{
+		// clean-up on failure
+
+		service->data = nullptr;
+
+		shutdown(data->socket, SD_BOTH);
+		closesocket(data->socket);
+
+		delete data->fdset;
+		delete data;
+
+		return nullptr;
+	}
+
+	// reset wait for readBanner task
+
+	service->reason = AR_InProgress_Extra;
+	data->timeout   = chrono::system_clock::now() + chrono::milliseconds(timeout);
+
+	return MFN_TO_PTR(TcpScanner::readBanner, this, service);
 }
 
 TcpScanner::~TcpScanner()

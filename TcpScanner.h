@@ -20,9 +20,14 @@ struct TcpScanData
 	fd_set* fdset;
 
 	/*!
-	* Expiration time of the current operation.
-	*/
+	 * Expiration time of the current operation.
+	 */
 	std::chrono::time_point<std::chrono::system_clock> timeout;
+
+	/*!
+	 * Number of probes sent to the service.
+	 */
+	int probes;
 
 };
 
@@ -111,5 +116,16 @@ private:
 	 * 		   reading the banner or socket disconnected while trying to do so.
 	 */
 	void* readBanner(Service* service);
+
+	/*!
+	 * Sends a protocol probe to the specified service.
+	 * This requires that the service have a connected socket.
+	 *
+	 * \param service Service.
+	 *
+	 * \return Previous task to re-try reading the service banner, or `nullptr`
+	 * 		   if socket disconnected while trying to send packet.
+	 */
+	void* sendProbe(Service* service);
 
 };

@@ -22,14 +22,9 @@ struct CpeVersionEntry
 	std::string version;
 
 	/*!
-	 * Number of version-specific tokens.
-	 */
-	int size;
-
-	/*!
 	 * Version-specific tokens of the entry.
 	 */
-	boost::regex tokens;
+	std::vector<boost::regex> tokens;
 
 };
 
@@ -43,16 +38,11 @@ struct CpeEntry
 	 * CPE name of the entry.
 	 */
 	std::string cpe;
-	
-	/*!
-	 * Number of common tokens.
-	 */
-	int size;
 
 	/*!
 	 * Common tokens of the entry.
 	 */
-	boost::regex tokens;
+	std::vector<boost::regex> tokens;
 
 	/*!
 	 * Known versions of the entry.

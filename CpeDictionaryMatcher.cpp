@@ -1,7 +1,6 @@
 #include "CpeDictionaryMatcher.h"
 #include "DataReader.h"
 #include <mutex>
-#include <unordered_set>
 
 using namespace std;
 using namespace boost;
@@ -29,24 +28,22 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 		// check if all the tokens from the name are in the input
 
-		sregex_iterator srit(banner.begin(), banner.end(), ent.tokens);
-		sregex_iterator srend;
+		auto nametok = true;
 
-		unordered_set<int> mcs;
-
-		for (; srit != srend; ++srit)
+		for (auto& token : ent.tokens)
 		{
-			for (int i = 1; i <= ent.size; i++)
+			smatch what;
+
+			if (!regex_search(banner, what, token))
 			{
-				if ((*srit)[i].matched)
-				{
-					mcs.emplace(i);
-					namepos.push_back((*srit).position());
-				}
+				nametok = false;
+				break;
 			}
+
+			namepos.push_back(what.position());
 		}
 
-		if (ent.size != mcs.size())
+		if (!nametok)
 		{
 			continue;
 		}
@@ -70,25 +67,22 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 			// to this version are also present
 
 			auto dist = 0u;
+			auto vertok = true;
 
-			sregex_iterator vrit(banner.begin(), banner.end(), ent.tokens);
-			sregex_iterator vrend;
-
-			unordered_set<int> vmcs;
-
-			for (; vrit != vrend; ++vrit)
+			for (auto& token : version.tokens)
 			{
-				for (int i = 1; i <= version.size; i++)
+				smatch what;
+
+				if (!regex_search(banner, what, token))
 				{
-					if ((*vrit)[i].matched)
-					{
-						vmcs.emplace(i);
-						dist += abs(int((*vrit).position()) - int(verpos));
-					}
+					vertok = false;
+					break;
 				}
+
+				dist += abs(int(what.position()) - int(verpos));
 			}
 
-			if (version.size != vmcs.size())
+			if (!vertok)
 			{
 				continue;
 			}
@@ -102,10 +96,10 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 
 			// check against current best
 
-			if (version.size > besttokens || (version.size == besttokens && dist <= bestdist))
+			if (version.tokens.size() > besttokens || (version.tokens.size() == besttokens && dist <= bestdist))
 			{
 				bestdist   = dist;
-				besttokens = version.size;
+				besttokens = version.tokens.size();
 				bestcpe    = ent.cpe + ":" + version.cpe;
 			}
 		}
@@ -195,30 +189,12 @@ void CpeDictionaryMatcher::loadEntries()
 		unsigned char tnum;
 		dr.Read(tnum);
 
-		ent.size = tnum;
-
-		string tokens;
+		ent.tokens = vector<regex>();
 
 		for (auto j = 0u; j < tnum; j++)
 		{
-			if (tokens.empty())
-			{
-				tokens += "\\b(?:(";
-			}
-
-			tokens += dr.ReadString();
-
-			if (j < tnum - 1)
-			{
-				tokens += ")|(";
-			}
-			else
-			{
-				tokens += "))\\b";
-			}
+			ent.tokens.push_back(move(regex("\\b(" + dr.ReadString() + ")\\b", regex::icase)));
 		}
-
-		ent.tokens = move(regex(tokens, regex::icase));
 
 		unsigned int vnum;
 		dr.Read(vnum);
@@ -235,30 +211,12 @@ void CpeDictionaryMatcher::loadEntries()
 			unsigned char vtnum;
 			dr.Read(vtnum);
 
-			ver.size = vtnum;
-
-			string vtokens;
+			ver.tokens = vector<regex>();
 
 			for (auto k = 0u; k < vtnum; k++)
 			{
-				if (vtokens.empty())
-				{
-					vtokens += "\\b(?:(";
-				}
-
-				vtokens += dr.ReadString();
-
-				if (k < vtnum - 1)
-				{
-					vtokens += ")|(";
-				}
-				else
-				{
-					vtokens += "))\\b";
-				}
+				ver.tokens.push_back(move(regex("\\b(" + dr.ReadString() + ")\\b", regex::icase)));
 			}
-
-			ver.tokens = move(regex(vtokens, regex::icase));
 
 			ent.versions.push_back(ver);
 		}

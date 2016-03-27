@@ -499,9 +499,9 @@ int scan(const po::variables_map& vm)
 		scanner = new PassiveScanner(shodan_key, censys_auth);
 	}
 #else
-	else if (p_scanner == "shodan" || p_scanner == "censys" || p_scanner == "shosys" || p_scanner == "cendan")
+	else if (scannerstr == "shodan" || scannerstr == "censys" || scannerstr == "shosys" || scannerstr == "cendan")
 	{
-		log(ERR, "Scanner '" + p_scanner + "' is not available as this version of the binary was compiled without libcurl.");
+		log(ERR, "Scanner '" + scannerstr + "' is not available as this version of the binary was compiled without libcurl.");
 		retval = EXIT_FAILURE;
 		goto cleanup;
 	}
@@ -511,6 +511,37 @@ int scan(const po::variables_map& vm)
 		log(ERR, "Scanner '" + scannerstr + "' is not supported.");
 		retval = EXIT_FAILURE;
 		goto cleanup;
+	}
+
+	// check if input file was provided
+
+	if (vm.count("input-file") != 0)
+	{
+		if (scannerstr != "nmap")
+		{
+			log(ERR, "Only the nmap scanner supports input files at this time.");
+			retval = EXIT_FAILURE;
+			goto cleanup;
+		}
+
+		auto fname = vm["input-file"].as<string>();
+
+		log(VRB, "Processing file '" + fs::path(fname).filename().string() + "'...");
+
+		ifstream fs(fname);
+
+		if (!fs.good())
+		{
+			log(ERR, "Failed to open the specified input file for reading.");
+			retval = EXIT_FAILURE;
+			goto cleanup;
+		}
+		
+		stringstream buf;
+		buf << fs.rdbuf();
+
+		hosts = reinterpret_cast<NmapScanner*>(scanner)->Process(buf.str());
+		goto postScan;
 	}
 
 	// check passive
@@ -589,6 +620,7 @@ int scan(const po::variables_map& vm)
 
 	scanner->Scan(hosts);
 
+postScan:
 	scanner->DumpResults(hosts);
 
 	// start version detection
@@ -718,6 +750,9 @@ int main(int argc, char *argv[])
 			"  shosys   - Uses data from both Shodan and Censys. (passive)")
 		("shodan-key", po::value<string>(), "Specifies an API key for Shodan.")
 		("censys-key", po::value<string>(), "Sepcifies an API key for Censys in the `uid:secret` format.")
+		("input-file,f", po::value<string>(),
+			"Process input file with selected scanner."
+			"E.g. Nmap module can parse XML reports.")
 		("passive,x", "Globally disables active reconnaissance. Functionality using active scanning will break, but ensures no accidental active scans will be initiated, which might get construed as hostile.")
 		("no-logo,q", "Suppresses the ASCII logo.")
 		("version,v", "Display version information.")
@@ -770,7 +805,7 @@ int main(int argc, char *argv[])
 		cout << endl;
 	}
 
-	if (vm.count("target") != 0 && !(vm.count("version") != 0 || vm.count("help") != 0))
+	if ((vm.count("target") != 0 || vm.count("input-file") != 0) && !(vm.count("version") != 0 || vm.count("help") != 0))
 	{
 		handled = true;
 		retval  = scan(vm);

@@ -137,6 +137,8 @@ void ArpPinger::loadInterfaces()
 		return;
 	}
 
+	log(DBG, "Fetching list of interfaces...");
+
 #if Windows
 
 	// allocate 1 structure and call GetAdaptersInfo in order to get the number
@@ -283,6 +285,8 @@ void ArpPinger::loadInterfaces()
 	freeifaddrs(ads);
 
 #endif
+
+	log(DBG, "Found " + to_string(interfaces.size()) + " interfaces.");
 }
 
 bool ArpPinger::isIpOnIface(unsigned int ip, Interface* inf)
@@ -331,9 +335,11 @@ void ArpPinger::prepareHost(Host* host)
 	if (iface == nullptr)
 	{
 		host->reason = AR_ScanFailed;
-		log(ERR, "Host '" + host->address + "' is not local to any of the interfaces.");
+		log(VRB, "Host '" + host->address + "' is not local to any of the interfaces.");
 		return;
 	}
+
+	log(DBG, "Host '" + host->address + "' is local to '" + iface->adapter + "'.");
 
 	auto data    = new ArpScanData();
 	host->data   = data;
@@ -350,6 +356,8 @@ void ArpPinger::sendRequest(Host* host)
 	}
 
 	auto data = reinterpret_cast<ArpScanData*>(host->data);
+
+	log(DBG, "Sending payload to arp://" + host->address + "...");
 
 #if Windows
 
@@ -606,6 +614,8 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 				auto serv = (*it).second;
 				serv->alive = true;
 				serv->reason = AR_ReplyReceived;
+
+				log(DBG, "Got reply from arp://" + serv->address + "...");
 			}
 		}
 	}
@@ -695,6 +705,8 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 			auto serv = (*it).second;
 			serv->alive = true;
 			serv->reason = AR_ReplyReceived;
+
+			log(DBG, "Got reply from arp://" + serv->address + "...");
 		}
 	}
 
@@ -855,6 +867,8 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 					auto serv = (*it).second;
 					serv->alive = true;
 					serv->reason = AR_ReplyReceived;
+
+					log(DBG, "Got reply from arp://" + serv->address + "...");
 				}
 
 				// advance to next packet

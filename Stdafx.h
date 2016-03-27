@@ -86,6 +86,12 @@
 #define DBG 1
 
 /*!
+ * Represents an internal debug message.
+ * This is only visible with the --internal switch.
+ */
+#define INT 0
+
+/*!
  * Logs a message through the implemented provider.
  *
  * \param level Message severity level.

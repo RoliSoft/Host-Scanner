@@ -78,9 +78,13 @@ void log(int level, const string& msg)
 		break;
 	case VRB:
 		os = &cout;
-		cout << Format::Green << "[.] " << Format::Default;
+		cout << Format::Green << "[-] " << Format::Default;
 		break;
 	case DBG:
+		os = &cout;
+		cout << Format::Green << "[.] " << Format::Default;
+		break;
+	case INT:
 		os = &cout;
 		cout << Format::Green << "[ ] " << Format::Default;
 		break;

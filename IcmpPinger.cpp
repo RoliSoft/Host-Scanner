@@ -107,6 +107,8 @@ void* IcmpPinger::initSocket(Service* service)
 	// the connect function in case of ICMP just stores the address,
 	// so send()/recv() will work without them, no need to store the addrinfo
 
+	log(DBG, "Sending payload to icmp://" + service->address + "...");
+
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 	send(sock, reinterpret_cast<char*>(&pkt), sizeof(pkt), 0);
 
@@ -155,6 +157,8 @@ void* IcmpPinger::pollSocket(Service* service)
 			if (data->timeout < chrono::system_clock::now())
 			{
 				service->reason = AR_TimedOut;
+
+				log(INT, "Waiting for icmp://" + service->address + " timed out...");
 			}
 			else
 			{
@@ -170,12 +174,16 @@ void* IcmpPinger::pollSocket(Service* service)
 			{
 				service->alive  = true;
 				service->reason = AR_ReplyReceived;
+
+				log(DBG, "Got reply from icmp://" + service->address + "...");
 			}
 			else
 			{
 				// if not an echo reply, but references the echo request, assume it's an error message
 
 				service->reason = AR_IcmpUnreachable;
+
+				log(INT, "Got ICMP unreachable for icmp://" + service->address + "...");
 			}
 		}
 	}
@@ -184,6 +192,8 @@ void* IcmpPinger::pollSocket(Service* service)
 		if (data->timeout < chrono::system_clock::now())
 		{
 			service->reason = AR_TimedOut;
+
+			log(INT, "Waiting for icmp://" + service->address + " timed out...");
 		}
 		else
 		{

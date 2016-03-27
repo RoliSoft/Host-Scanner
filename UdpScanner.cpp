@@ -111,6 +111,8 @@ void* UdpScanner::initSocket(Service* service)
 	// the connect function in case of UDP just stores the address and port,
 	// so send()/recv() will work without them, no need to store the addrinfo
 
+	log(DBG, "Sending payload to udp://" + service->address + ":" + to_string(service->port) + "...");
+
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 	send(sock, pld.c_str(), pld.length(), 0);
 
@@ -152,6 +154,8 @@ void* UdpScanner::pollSocket(Service* service)
 			// save service banner
 
 			service->banner = string(buf, res);
+
+			log(DBG, "Got reply of " + pluralize(res, "byte") + " from udp://" + service->address + ":" + to_string(service->port) + "...");
 		}
 	}
 	else
@@ -159,11 +163,15 @@ void* UdpScanner::pollSocket(Service* service)
 		if (data->timeout < chrono::system_clock::now())
 		{
 			service->reason = AR_TimedOut;
+
+			log(INT, "Waiting for udp://" + service->address + ":" + to_string(service->port) + " timed out...");
 		}
 #if Unix
 		else if (res == -1 && errno == ECONNREFUSED)
 		{
 			service->reason = AR_IcmpUnreachable;
+
+			log(INT, "Got ICMP unreachable for udp://" + service->address + ":" + to_string(service->port) + "...");
 		}
 #endif
 		else

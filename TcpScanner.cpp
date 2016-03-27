@@ -4,6 +4,7 @@
 #include <thread>
 #include <functional>
 #include <boost/lexical_cast.hpp>
+#include "Utils.h"
 
 using namespace std;
 using namespace boost;
@@ -85,6 +86,8 @@ void* TcpScanner::initSocket(Service* service)
 
 	// start non-blocking connection process
 
+	log(DBG, "Connecting to tcp://" + service->address + ":" + to_string(service->port) + "...");
+
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 
 	// clean-up
@@ -137,6 +140,8 @@ void* TcpScanner::pollSocket(Service* service)
 		if (serr == ECONNREFUSED)
 		{
 			service->reason = AR_IcmpUnreachable;
+
+			log(INT, "Got ICMP unreachable for tcp://" + service->address + ":" + to_string(service->port) + "...");
 		}
 	}
 #endif
@@ -147,6 +152,8 @@ void* TcpScanner::pollSocket(Service* service)
 
 	if (isOpen)
 	{
+		log(DBG, "Connected to tcp://" + service->address + ":" + to_string(service->port) + "...");
+
 		if (grabBanner)
 		{
 			service->reason = AR_InProgress_Extra;
@@ -165,6 +172,8 @@ void* TcpScanner::pollSocket(Service* service)
 		if (data->timeout < chrono::system_clock::now())
 		{
 			service->reason = AR_TimedOut;
+
+			log(INT, "Waiting for tcp://" + service->address + ":" + to_string(service->port) + " timed out...");
 		}
 		else if (service->reason == AR_InProgress)
 		{
@@ -209,6 +218,8 @@ void* TcpScanner::readBanner(Service* service)
 		// received a service banner
 
 		service->banner = string(buf, res);
+
+		log(DBG, "Got reply of " + pluralize(res, "byte") + " from tcp://" + service->address + ":" + to_string(service->port) + "...");
 	}
 	else if (data->timeout >= chrono::system_clock::now())
 	{
@@ -252,6 +263,8 @@ void* TcpScanner::sendProbe(Service* service)
 	// craft and send a probe
 
 	data->probes++;
+
+	log(DBG, "Sending probe to tcp://" + service->address + ":" + to_string(service->port) + "...");
 
 	string probe = "GET / HTTP/1.0\r\n\r\n";
 	auto res = send(data->socket, probe.c_str(), probe.length(), 0);

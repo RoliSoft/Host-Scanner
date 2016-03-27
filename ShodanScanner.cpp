@@ -42,6 +42,8 @@ void ShodanScanner::getHostInfo(Host* host)
 		return;
 	}
 
+	log(VRB, "Downloading https://" + endpoint + "/host/" + host->address + "...");
+
 	auto json = getURL("https://" + endpoint + "/host/" + host->address + "?key=" + key);
 
 	if (get<2>(json) != 200)

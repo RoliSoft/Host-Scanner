@@ -46,6 +46,8 @@ void CensysScanner::getHostInfo(Host* host)
 		return;
 	}
 
+	log(VRB, "Downloading https://" + endpoint + "/view/ipv4/" + host->address + "...");
+
 	auto json = getURL("https://" + endpoint + "/view/ipv4/" + host->address
 #if HAVE_CURL
 		, [this](CURL* curl)

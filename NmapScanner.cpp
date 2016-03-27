@@ -176,6 +176,8 @@ string NmapScanner::runNmap(Hosts* hosts, bool v6)
 
 	cmd += ports + " " + adrls;
 
+	log(VRB, "Executing " + cmd);
+
 	// silence errors as they interrupt the XML output, and
 	// the XML output will contain the error message anyways
 
@@ -188,6 +190,8 @@ string NmapScanner::runNmap(Hosts* hosts, bool v6)
 	// execute the command
 
 	auto xml = execute(cmd.c_str());
+
+	log(VRB, "Execution finished, got XML output of " + pluralize(xml.size(), "byte") + ".");
 
 	return xml;
 }

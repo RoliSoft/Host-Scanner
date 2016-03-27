@@ -436,10 +436,36 @@ int scan(const po::variables_map& vm)
 	if (scannerstr == "internal" || scannerstr.length() == 0)
 	{
 		scanner = new InternalScanner();
+
+		if (vm.count("delay") != 0)
+		{
+			auto delay   = min(max(0, vm["delay"].as<int>()), 6);
+			auto delayms = 100ul;
+
+			switch (delay)
+			{
+			case 0: delayms = 300000; break; // 5m
+			case 1: delayms = 15000; break; // 15s
+			case 2: delayms = 400; break;
+			case 3: delayms = 100; break;
+			case 4: delayms = 10; break;
+			case 5: delayms = 5; break;
+			case 6: delayms = 0; break;
+			}
+
+			reinterpret_cast<InternalScanner*>(scanner)->delay = delayms;
+		}
 	}
 	else if (scannerstr == "nmap")
 	{
 		scanner = new NmapScanner();
+
+		if (vm.count("delay") != 0)
+		{
+			auto delay = min(max(0, vm["delay"].as<int>()), 5);
+
+			reinterpret_cast<NmapScanner*>(scanner)->delay = delay;
+		}
 	}
 #if HAVE_CURL
 	else if (scannerstr == "shodan")
@@ -763,18 +789,27 @@ int main(int argc, char *argv[])
 			"  shodan   - Uses data from Shodan. (passive; requires API key)\n"
 			"  censys   - Uses data from Censys. (passive; requires API key)\n"
 			"  shosys   - Uses data from both Shodan and Censys. (passive)")
-		("shodan-key", po::value<string>(), "Specifies an API key for Shodan.")
-		("censys-key", po::value<string>(), "Sepcifies an API key for Censys in the `uid:secret` format.")
+		("shodan-key", po::value<string>(),
+			"Specifies an API key for Shodan.")
+		("censys-key", po::value<string>(),
+			"Sepcifies an API key for Censys in the `uid:secret` format.")
 		("input-file,f", po::value<string>(),
-			"Process input file with selected scanner."
-			"E.g. Nmap module can parse XML reports.")
-		("passive,x", "Globally disables active reconnaissance. Functionality using active scanning will break, but ensures no accidental active scans will be initiated, which might get construed as hostile.")
+			"Process input file with selected scanner.\n"
+			"E.g. the nmap module can parse XML reports.")
+		("delay,d", po::value<int>(),
+			"Delay between packets sent to the same host. Default is 3 for 100ms. "
+			"Possible values are 0..6, which have the same effect as nmap's -T:\n"
+			"  0 - 5m, 1 - 15s, 2 - 400ms, 3 - 100ms, 4 - 10ms, 5 - 5ms, 6 - no delay")
+		("passive,x",
+			"Globally disables active reconnaissance. Functionality using active "
+			"scanning will break, but ensures no accidental active scans will be "
+			"initiated, which might get construed as hostile.")
 		("logging,l", po::value<string>(),
 			"Logging level to use:\n"
-			"  i, int - All messages."
-			"  d, dbg - All debug messages and up."
-			"  v, vrb - Enable verbosity, but don't overdo it."
-			"  m, msg - Print only regular messages. (default)"
+			"  i, int - All messages.\n"
+			"  d, dbg - All debug messages and up.\n"
+			"  v, vrb - Enable verbosity, but don't overdo it.\n"
+			"  m, msg - Print only regular messages. (default)\n"
 			"  e, err - Print only error messages to stderr.")
 		("no-logo,q", "Suppresses the ASCII logo.")
 		("version,v", "Display version information.")

@@ -9,7 +9,7 @@
 #define OPT_TIMEOUT 1
 
 /*!
- * Number of milliseconds to wait between sending packets to individual hosts.
+ * Number of milliseconds to wait between sending packets to the same host.
  * Default value is 100ms for most scanners.
  */
 #define OPT_DELAY 2

@@ -792,10 +792,10 @@ int main(int argc, char *argv[])
 		("shodan-key", po::value<string>(),
 			"Specifies an API key for Shodan.")
 		("censys-key", po::value<string>(),
-			"Sepcifies an API key for Censys in the `uid:secret` format.")
+			"Specifies an API key for Censys in the `uid:secret` format.")
 		("input-file,f", po::value<string>(),
-			"Process input file with selected scanner.\n"
-			"E.g. the nmap module can parse XML reports.")
+			"Process an input file with the selected scanner.\n"
+			"  E.g. the nmap scanner can parse XML reports.")
 		("delay,d", po::value<int>(),
 			"Delay between packets sent to the same host. Default is 3 for 100ms. "
 			"Possible values are 0..6, which have the same effect as nmap's -T:\n"

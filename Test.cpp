@@ -686,11 +686,52 @@ BOOST_AUTO_TEST_CASE(ArpPing)
 //---------------------------------------------------------------------------------------------------------------------
 
 /*!
- * Tests the IPv4 TCP port scanning ability through nmap.
+ * Tests whether the interaction with nmap is working properly.
  * 
  * This test requires the `nmap` executable to be reachable from %PATH%.
  */
-BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
+BOOST_AUTO_TEST_CASE(NmapGetVersion)
+{
+	NmapScanner scan;
+	
+	string version = scan.GetVersion();
+
+	BOOST_TEST_CHECK(version.length() > 0, "Failed to get nmap version.");
+}
+
+/*!
+ * Tests the IPv4 TCP port scanning ability through nmap.
+ * 
+ * This case just tests the XML parsing ability, an installation of nmap
+ * is not required. Interaction with nmap is tested with `NmapGetVersion`.
+ */
+BOOST_AUTO_TEST_CASE(NmapIpv4Processing)
+{
+	NmapScanner scan;
+
+	auto hosts = scan.Process("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE nmaprun><nmaprun scanner=\"nmap\" args=\"...\" start=\"1459035690\" startstr=\"Sun Mar 27 00:41:30 2016\" version=\"7.00\" xmloutputversion=\"1.04\"><scaninfo type=\"syn\" protocol=\"tcp\" numservices=\"1\" services=\"25\"/><scaninfo type=\"udp\" protocol=\"udp\" numservices=\"0\" services=\"\"/><verbose level=\"0\"/><debugging level=\"0\"/><host starttime=\"1459035698\" endtime=\"1459035698\"><status state=\"up\" reason=\"user-set\" reason_ttl=\"0\"/><address addr=\"178.62.249.168\" addrtype=\"ipv4\"/><hostnames><hostname name=\"euvps.rolisoft.net\" type=\"PTR\"/></hostnames><ports><port protocol=\"tcp\" portid=\"25\"><state state=\"open\" reason=\"syn-ack\" reason_ttl=\"53\"/><service name=\"smtp\" method=\"table\" conf=\"3\"/><script id=\"banner\" output=\"220 euvps.rolisoft.net ESMTP Sat, 26 Mar 2016 23:41:41 +0000\"/></port></ports><times srtt=\"38000\" rttvar=\"38000\" to=\"190000\"/></host><runstats><finished time=\"1459035698\" timestr=\"Sun Mar 27 00:41:38 2016\" elapsed=\"8.10\" summary=\"Nmap done at Sun Mar 27 00:41:38 2016; 1 IP address (1 host up) scanned in 8.10 seconds\" exit=\"success\"/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>");
+
+	BOOST_TEST_FAIL((hosts->size() == 1), "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
+	BOOST_TEST_FAIL(((*hosts)[0]->services->size() == 1), "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
+
+	BOOST_TEST_CHECK((*hosts)[0]->address == "178.62.249.168", "Host should be 178.62.249.168.");
+	BOOST_TEST_CHECK((*hosts)[0]->alive, "Port 25 should be alive.");
+
+	BOOST_TEST_CHECK((*(*hosts)[0]->services)[0]->port == 25,          "Port of first service should be 25.");
+	BOOST_TEST_CHECK((*(*hosts)[0]->services)[0]->banner.length() > 0, "Failed to grab service banner.");
+
+	BOOST_TEST_CHECK((*hosts)[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString((*hosts)[0]->reason) + ".");
+
+	freeHosts(*hosts);
+}
+
+/*!
+ * Tests the IPv4 TCP port scanning ability through nmap.
+ * 
+ * This test requires the `nmap` executable to be reachable from %PATH%,
+ * but is regardless disabled, since nmap execution takes too long.
+ */
+BOOST_AUTO_TEST_CASE(NmapIpv4PortScan, *unit_test::disabled())
 {
 	NmapScanner scan;
 
@@ -699,6 +740,9 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 	};
 
 	scan.Scan(&hosts);
+
+	BOOST_TEST_FAIL((hosts.size() == 1), "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
+	BOOST_TEST_FAIL((hosts[0]->services->size() == 1), "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
 
 	BOOST_TEST_CHECK(hosts[0]->alive, "Port 25 should be alive.");
 
@@ -712,10 +756,37 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan)
 /*!
  * Tests the IPv6 TCP port scanning ability through nmap.
  * 
- * This test requires the `nmap` executable to be reachable from %PATH% and for
- * IPv6 connectivity to be present on the test runner machine.
+ * This case just tests the XML parsing ability, an installation of nmap
+ * is not required. Interaction with nmap is tested with `NmapGetVersion`.
  */
-BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
+BOOST_AUTO_TEST_CASE(NmapIpv6Processing)
+{
+	NmapScanner scan;
+
+	auto hosts = scan.Process("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE nmaprun><nmaprun scanner=\"nmap\" args=\"...\" start=\"1459035966\" startstr=\"Sun Mar 27 00:46:06 2016\" version=\"7.00\" xmloutputversion=\"1.04\"><scaninfo type=\"syn\" protocol=\"tcp\" numservices=\"1\" services=\"25\"/><scaninfo type=\"udp\" protocol=\"udp\" numservices=\"0\" services=\"\"/><verbose level=\"0\"/><debugging level=\"0\"/><host starttime=\"1459035974\" endtime=\"1459035974\"><status state=\"up\" reason=\"user-set\" reason_ttl=\"0\"/><address addr=\"2a03:b0c0:2:d0::19:6001\" addrtype=\"ipv6\"/><hostnames><hostname name=\"euvps.rolisoft.net\" type=\"PTR\"/></hostnames><ports><port protocol=\"tcp\" portid=\"25\"><state state=\"open\" reason=\"syn-ack\" reason_ttl=\"56\"/><service name=\"smtp\" method=\"table\" conf=\"3\"/><script id=\"banner\" output=\"220 euvps.rolisoft.net ESMTP Sat, 26 Mar 2016 23:46:17 +0000\"/></port></ports><times srtt=\"49000\" rttvar=\"49000\" to=\"245000\"/></host><runstats><finished time=\"1459035974\" timestr=\"Sun Mar 27 00:46:14 2016\" elapsed=\"8.06\" summary=\"Nmap done at Sun Mar 27 00:46:14 2016; 1 IP address (1 host up) scanned in 8.06 seconds\" exit=\"success\"/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>");
+
+	BOOST_TEST_FAIL((hosts->size() == 1), "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
+	BOOST_TEST_FAIL(((*hosts)[0]->services->size() == 1), "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
+
+	BOOST_TEST_CHECK((*hosts)[0]->address == "2a03:b0c0:2:d0::19:6001", "Host should be 2a03:b0c0:2:d0::19:6001.");
+	BOOST_TEST_CHECK((*hosts)[0]->alive, "Port 25 should be alive.");
+
+	BOOST_TEST_CHECK((*(*hosts)[0]->services)[0]->port == 25,          "Port of first service should be 25.");
+	BOOST_TEST_CHECK((*(*hosts)[0]->services)[0]->banner.length() > 0, "Failed to grab service banner.");
+
+	BOOST_TEST_CHECK((*hosts)[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString((*hosts)[0]->reason) + ".");
+
+	freeHosts(*hosts);
+}
+
+/*!
+ * Tests the IPv6 TCP port scanning ability through nmap.
+ * 
+ * This test requires the `nmap` executable to be reachable from %PATH% and for
+ * IPv6 connectivity to be present on the test runner machine,
+ * but is regardless disabled, since nmap execution takes too long.
+ */
+BOOST_AUTO_TEST_CASE(NmapIpv6PortScan, *unit_test::disabled())
 {
 	NmapScanner scan;
 	
@@ -724,6 +795,9 @@ BOOST_AUTO_TEST_CASE(NmapIpv6PortScan)
 	};
 
 	scan.Scan(&hosts);
+
+	BOOST_TEST_FAIL((hosts.size() == 1), "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
+	BOOST_TEST_FAIL((hosts[0]->services->size() == 1), "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
 
 	BOOST_TEST_CHECK(hosts[0]->alive, "Port 25 should be alive.");
 

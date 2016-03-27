@@ -9,6 +9,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
 
 using namespace std;
 using namespace boost;
@@ -69,6 +70,30 @@ void NmapScanner::Scan(Hosts* hosts)
 		auto xml = runNmap(&hostv6, true);
 		parseXml(xml, &hostv6);
 	}
+}
+
+Hosts* NmapScanner::Process(string xml)
+{
+	auto hosts = new Hosts();
+
+	parseXml(xml, hosts, true);
+
+	return hosts;
+}
+
+string NmapScanner::GetVersion()
+{
+	auto ret = execute("nmap -V");
+
+	smatch sm;
+	regex rgx("nmap version (\\d.*?) \\(", regex::icase);
+
+	if (regex_search(ret, sm, rgx))
+	{
+		return sm[1].str();
+	}
+
+	return "";
 }
 
 string NmapScanner::runNmap(Hosts* hosts, bool v6)
@@ -166,7 +191,7 @@ string NmapScanner::runNmap(Hosts* hosts, bool v6)
 	return xml;
 }
 
-void NmapScanner::parseXml(string xml, Hosts* hosts)
+void NmapScanner::parseXml(string xml, Hosts* hosts, bool append)
 {
 	using property_tree::ptree;
 
@@ -317,27 +342,71 @@ void NmapScanner::parseXml(string xml, Hosts* hosts)
 
 						// new port info available at this phase, store it if relevant
 
-						for (auto& host : *hosts)
+						if (append)
 						{
-							for (auto& service : *host->services)
+							// a new service will be created for this extracted entry
+							
+							Host* host = nullptr;
+
+							for (auto entry : *hosts)
 							{
-								if (service->address == address && service->port == port && service->protocol == proto)
+								if (entry->address == address)
 								{
-									service->alive  = open;
-									service->reason = reason;
-
-									if (banner.length() != 0)
-									{
-										service->banner = banner;
-									}
-
-									if (!host->alive && service->alive)
-									{
-										host->alive  = open;
-										host->reason = reason;
-									}
-
+									host = entry;
 									break;
+								}
+							}
+
+							if (host == nullptr)
+							{
+								host = new Host(address);
+								hosts->push_back(host);
+							}
+
+							auto service = new Service(address, port, proto);
+							
+							service->alive  = open;
+							service->reason = reason;
+
+							if (banner.length() != 0)
+							{
+								service->banner = banner;
+							}
+
+							if (!host->alive && service->alive)
+							{
+								host->alive  = open;
+								host->reason = reason;
+							}
+
+							host->AddService(service);
+						}
+						else
+						{
+							// the host list will be searched, and if the service is found, its values modified
+
+							for (auto host : *hosts)
+							{
+								for (auto service : *host->services)
+								{
+									if (service->address == address && service->port == port && service->protocol == proto)
+									{
+										service->alive  = open;
+										service->reason = reason;
+
+										if (banner.length() != 0)
+										{
+											service->banner = banner;
+										}
+
+										if (!host->alive && service->alive)
+										{
+											host->alive  = open;
+											host->reason = reason;
+										}
+
+										break;
+									}
 								}
 							}
 						}

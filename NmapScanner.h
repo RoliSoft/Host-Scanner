@@ -36,6 +36,20 @@ public:
 	void Scan(Hosts* hosts) override;
 
 	/*!
+	 * Processes the specified XML output from nmap.
+	 *
+	 * \return Reconstructed list of hosts.
+	 */
+	Hosts* Process(std::string xml);
+
+	/*!
+	 * Gets the version number of the installed nmap executable.
+	 *
+	 * \return Version number of nmap.
+	 */
+	std::string GetVersion();
+
+	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~NmapScanner() override;
@@ -59,7 +73,8 @@ private:
 	 *
 	 * \param xml XML response from Nmap.
 	 * \param hosts List of hosts.
+	 * \param append Whether to manipulate the host list or append to it.
 	 */
-	void parseXml(std::string xml, Hosts* hosts);
+	void parseXml(std::string xml, Hosts* hosts, bool append = false);
 
 };

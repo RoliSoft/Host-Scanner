@@ -1,40 +1,44 @@
 # Host Scanner
 
-The purpose of this project is to discover hosts on a network and gather information about them for later analysis.
+The purpose of this project is to implement a network scanner with both active and passive data acquisition components, which can then autonomously identify services using the latest CPE dictionary from NIST and discover the vulnerabilities of those by querying the CVE database.
 
 ## Features
 
-* TCP scanner
-  * A high-performance TCP scanner which initiates the three-way handshake by multiplexing non-blocking sockets and grabs the service banner.
+* TCP Scanner
+  * High-performance TCP scanner which initiates the three-way handshake (also called "TCP connect scan") by multiplexing non-blocking sockets and grabbing their service banners.
 
-* UDP scanner
-  * Uses a list of known port numbers and sends a specifically crafted payload in order to try and get an answer from the server, if there are any listening.
+* UDP Scanner
+  * Makes use of a database of specifically crafted payloads mapped to port numbers in order to try and get an answer from the UDP services, if there are any listening.
 
-* ICMP pinger
-  * Support for ICMP Echo Request packets (also known as "standard ping") to determine if a host is alive.
+* ICMP Pinger
+  * Support for the use of ICMP Echo Request packets (also known as "standard ping") in order to determine if a host is alive.
 
-* ARP pinger
-  * Support for ARP Request packets to map alive hosts on a local network.
+* ARP Pinger
+  * Support for the use of ARP Who-Has Request packets in order to map online hosts on a local network. Useful when ICMP packets are filtered on a network.
 
-* Host discovery
-  * Discovers hosts behind a given netblock by sending ICMP Echo Request packets, failing that sends TCP SYN packets to most common open ports, failing that as well will result in sending specifically-crafted UDP packets to most common UDP-based services.
+* External Scanners
+  * Ability to use external tools for all the active or passive scanning needs, instead of the built-in scanners:
+    * Launch new scans with or process earlier XML outputs from Nmap.
 
-* External scanners
-  * Ability to use external tools for all the scanning needs, instead of the built-in scanners. Currently Nmap support is implemented, more to follow if needed.
+* Online Sources
+  * Support for passive reconnaissance by fetching data already available from relevant services intended for security researchers:
+    * Shodan
+    * Censys
 
-* Online sources
-  * Support for passive reconnaissance by fetching already available data from relevant services intended for security researchers. Currently Shodan and Censys are supported.
+* Service Identification
+  * Autonomous Identification:
+    * Latest CPE dictionary from NIST is used to map service banners to their CPE names.
+  * Pattern-based Identification:
+    * Database of regular expressions can be used as a redundancy to map service banners to their CPE names.
 
-* Unit tests
+* Vulnerabilitiy Assessment
+  * Based on the CVE database, the resolved CPE names (which also include version numbers) are matched against the affected software list of each CVE entry to discover service vulnerabilities.
+
+* Unit Tests
   * All features are covered by unit tests which are run on three platforms in order to ensure utmost stability and portability.
 
 * Portability
   * Features are implemented (when a standardized API is not available) using raw sockets on Linux, WinPcap on Windows, and Berkeley Packet Filter on BSD / OS X.
-
-### Planned features
-
-* Network mapping
-  * Neighbor Solicitation for IPv6
 
 ## Usage
 
@@ -89,23 +93,23 @@ The purpose of this project is to discover hosts on a network and gather informa
 
 ### Examples
 
-Scan your local network for vulnerabilities on the top 100 TCP ports and UDP ports with known payloads using the internal scanners:
+Scan a network for vulnerabilities on the top 100 TCP ports and known UDP ports using the internal scanners:
 
 	./HostScanner -p t -u t 192.168.1.0/24
 
-Scan an IP address or netblock for vulnerabilities passively with data from both Shodan and Censys:
+Scan an IP address or netblock for vulnerabilities passively, with data from both Shodan and Censys:
 
 	./HostScanner -x 178.62.192.0/18
 
-Perform service identification and vulnerability analysis on an earlier XML output of nmap, `nmap -oX report.xml …`:
+Perform service identification and vulnerability analysis on an earlier XML output of nmap through `nmap -oX report.xml …`:
 
 	./HostScanner -s nmap -f report.xml
 
 ### Persistent Options
 
-The application supports the reading of configuration files which allows for the settings to persist.
+The application supports reading configuration files which allow for settings to persist.
 
-On Linux, the following paths will be probed, and the first found file will be read, in this order:
+On Linux, the following paths will be probed, and the first file found will be read, in this order:
 
 	%AppPath%/HostScanner.ini
 	~/.HostScanner.conf
@@ -125,11 +129,11 @@ Similarly, the `-x` option can be stored, in order to globally disallow any acti
 
 	passive
 
-This option cannot be disabled through the command line. To use an active scanner again, this line needs to be removed from the configuration file.
+This option cannot be disabled through the command line. To use an active scanner again, this line needs to be removed from the configuration file. Otherwise, only analysis of Shodan/Censys data and nmap reports are allowed.
 
 ## Building
 
-To compile and run the project, you must first install the dependencies, which can be done with:
+To compile and run the application, you must first install the dependencies, which can be done with:
 
  * Debian/Ubuntu/Kali:
 
@@ -164,9 +168,9 @@ If the compilation was successful, you can run it with the `./HostScanner` comma
 
 ## Distribution
 
-The `distrib` folder contains `Dockerfile` scripts to pull, compile and package the latest revision. The `.deb` package is generated with the current Debian Stable (`debian:latest` in Docker Hub) while the `.rpm` package is generated with the current Fedora version. (`fedora:latest`)
+The `distrib` folder contains the `Dockerfile` and scripts to pull, compile and package the latest revision. The `.deb` package is generated with the current Debian Stable (`debian:latest` in Docker Hub) while the `.rpm` package is generated with the current Fedora version. (`fedora:latest`)
 
-Since Boost is statically linked during compilation, the only dependency for now is `libcurl` for both distributions.
+Since Boost is statically linked during compilation, the dynamic dependencies for now are `libcurl`, `libsqlite3` and `zlib` for both distributions.
 
 The files will be generated by CMake's packaging component, CPack, whose configuration can be found in `CPackConfig.cmake`.
 

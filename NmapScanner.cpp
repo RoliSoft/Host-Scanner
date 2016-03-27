@@ -102,11 +102,12 @@ string NmapScanner::runNmap(Hosts* hosts, bool v6)
 	// -Pn		Don't probe, assume host is alive
 	// -sU		Scan UDP, when specified in port list
 	// -sS		Scan TCP with SYN method, when requested
-	// -sV		Run service detection function
+	// -sV		Run service detection function [disabled]
 	// -sc..er	Run service banner grabber NSE script
+	// -sc..rs  Run the HTTP header grabber NSE script
 	// -6		Turn on IPv6 support, if v6 parameter is set
 	// -p		Port list to scan
-	string cmd = "nmap -oX - -Pn -sU -sS -sV --script=banner";
+	string cmd = "nmap -oX - -Pn -sU -sS --script=banner --script http-headers";
 
 	if (v6)
 	{
@@ -333,9 +334,28 @@ void NmapScanner::parseXml(string xml, Hosts* hosts, bool append)
 
 							else if (ptport.first.data() == string("script"))
 							{
-								if (ptport.second.get<string>("<xmlattr>.id", "") == string("banner"))
+								auto id = ptport.second.get<string>("<xmlattr>.id", "");
+
+								// check the banner script
+
+								if (id == string("banner"))
 								{
 									banner = ptport.second.get<string>("<xmlattr>.output", "");
+								}
+
+								// reconstruct HTTP response if got http-headers
+
+								else if (id == string("http-headers") && banner.empty())
+								{
+									banner = ptport.second.get<string>("<xmlattr>.output", "");
+									banner = "HTTP/1.1 200 OK\r\n" + regex_replace(banner, regex("(^\\s*|\\(Request type:.*$)"), "") + "\r\n";
+								}
+
+								// reconstruct semi-fake HTTP response if got http-server-header
+
+								else if (id == string("http-server-header") && banner.empty())
+								{
+									banner = "HTTP/1.1 200 OK\r\nServer: " + ptport.second.get<string>("<xmlattr>.output", "") + "\r\n\r\n";
 								}
 							}
 						}

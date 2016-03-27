@@ -12,7 +12,7 @@ void ServiceScanner::DumpResults(Services* services)
 			continue;
 		}
 
-		log(service->alive ? MSG : VRB, service->address + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + Service::ReasonString(service->reason) + ")");
+		log(service->alive ? MSG : DBG, service->address + ":" + to_string(service->port) + " is " + (service->alive ? "open" : "closed") + " (" + Service::ReasonString(service->reason) + ")");
 
 		if (service->banner.length() > 0)
 		{
@@ -44,7 +44,7 @@ void ServiceScanner::DumpResults(Services* services)
 				}
 			}
 
-			log(service->alive ? MSG : VRB, ss.str());
+			log(VRB, ss.str());
 		}
 	}
 }

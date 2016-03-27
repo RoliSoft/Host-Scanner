@@ -52,6 +52,12 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 /*!
+ * The logging severity threshold.
+ * Messages below this level will not be printed.
+ */
+int logging_level = MSG;
+
+/*!
  * Logs the specified message.
  * 
  * Messages at warning or error level will be sent to the standard
@@ -64,6 +70,11 @@ namespace po = boost::program_options;
  */
 void log(int level, const string& msg)
 {
+	if (level < logging_level)
+	{
+		return;
+	}
+
 	ostream* os;
 
 	switch (level)
@@ -758,6 +769,13 @@ int main(int argc, char *argv[])
 			"Process input file with selected scanner."
 			"E.g. Nmap module can parse XML reports.")
 		("passive,x", "Globally disables active reconnaissance. Functionality using active scanning will break, but ensures no accidental active scans will be initiated, which might get construed as hostile.")
+		("logging,l", po::value<string>(),
+			"Logging level to use:\n"
+			"  i, int - All messages."
+			"  d, dbg - All debug messages and up."
+			"  v, vrb - Enable verbosity, but don't overdo it."
+			"  m, msg - Print only regular messages. (default)"
+			"  e, err - Print only error messages to stderr.")
 		("no-logo,q", "Suppresses the ASCII logo.")
 		("version,v", "Display version information.")
 		("help,h", "Displays this message.")
@@ -791,6 +809,34 @@ int main(int argc, char *argv[])
 	}
 
 	po::notify(vm);
+
+	if (vm.count("logging") != 0)
+	{
+		auto logging = vm["logging"].as<string>();
+		boost::trim(logging);
+		boost::to_lower(logging);
+
+		if (logging == "i" || logging == "int")
+		{
+			logging_level = INT;
+		}
+		else if (logging == "d" || logging == "dbg")
+		{
+			logging_level = DBG;
+		}
+		else if (logging == "v" || logging == "vrb")
+		{
+			logging_level = VRB;
+		}
+		else if (logging == "m" || logging == "msg")
+		{
+			logging_level = MSG;
+		}
+		else if (logging == "e" || logging == "err")
+		{
+			logging_level = ERR;
+		}
+	}
 
 	int  retval  = EXIT_SUCCESS;
 	bool handled = false;

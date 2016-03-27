@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <chrono>
 #include "Stdafx.h"
 
 /*!
@@ -87,6 +88,16 @@ public:
 	 * CPE names of the service.
 	 */
 	std::vector<std::string> cpe;
+
+	/*!
+	 * Time of last packet sent to this service.
+	 */
+	std::chrono::time_point<std::chrono::system_clock> date;
+
+	/*!
+	 * Parent host of this service.
+	 */
+	class Host* host;
 
 	/*!
 	 * Object store reserved for the scanner.

@@ -1,6 +1,7 @@
 #pragma once
 #include <set>
 #include <vector>
+#include <chrono>
 #include "Stdafx.h"
 #include "Service.h"
 
@@ -31,6 +32,11 @@ public:
 	 * List of services on this host.
 	 */
 	Services* services;
+
+	/*!
+	 * Time of last packet sent to this host.
+	 */
+	std::chrono::time_point<std::chrono::system_clock> date;
 
 	/*!
 	 * Object store reserved for the scanner.

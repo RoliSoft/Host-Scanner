@@ -41,6 +41,8 @@ Service* Host::AddService(Service* service)
 {
 	if (address == service->address)
 	{
+		service->host = this;
+
 		services->push_back(service);
 
 		return service;
@@ -52,6 +54,8 @@ Service* Host::AddService(Service* service)
 Service* Host::AddService(unsigned short port, IPPROTO protocol)
 {
 	auto service = new Service(address, port, protocol);
+
+	service->host = this;
 
 	services->push_back(service);
 
@@ -66,6 +70,8 @@ int Host::AddServices(const Services& servlist)
 	{
 		if (address == service->address)
 		{
+			service->host = this;
+
 			services->push_back(service);
 
 			count++;
@@ -81,7 +87,11 @@ int Host::AddServices(const set<unsigned short>& ports, IPPROTO protocol)
 
 	for (auto port : ports)
 	{
-		services->push_back(new Service(address, port, protocol));
+		auto service = new Service(address, port, protocol);
+
+		service->host = this;
+
+		services->push_back(service);
 
 		count++;
 	}

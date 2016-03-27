@@ -478,6 +478,8 @@ void ArpPinger::sendRequest(Host* host)
 
 	// send the packet, then clean-up
 
+	host->date = chrono::system_clock::now();
+
 #if Windows
 
 	auto res = pcap_sendpacket(pcap, reinterpret_cast<const unsigned char*>(pkt), pktLen);

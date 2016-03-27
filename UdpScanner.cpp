@@ -1,5 +1,6 @@
 #include "UdpScanner.h"
 #include "Utils.h"
+#include "Host.h"
 #include "DataReader.h"
 #include "TaskQueueRunner.h"
 #include <iostream>
@@ -28,6 +29,10 @@ bool UdpScanner::GetOption(int option, void* value)
 		*reinterpret_cast<unsigned long*>(value) = timeout;
 		return true;
 
+	case OPT_DELAY:
+		*reinterpret_cast<unsigned long*>(value) = delay;
+		return true;
+
 	case OPT_BANNER:
 		*reinterpret_cast<bool*>(value) = grabBanner;
 		return true;
@@ -43,6 +48,10 @@ bool UdpScanner::SetOption(int option, void* value)
 	{
 	case OPT_TIMEOUT:
 		timeout = *reinterpret_cast<unsigned long*>(value);
+		return true;
+
+	case OPT_DELAY:
+		delay = *reinterpret_cast<unsigned long*>(value);
 		return true;
 
 	case OPT_BANNER:
@@ -112,6 +121,12 @@ void* UdpScanner::initSocket(Service* service)
 	// so send()/recv() will work without them, no need to store the addrinfo
 
 	log(DBG, "Sending payload to udp://" + service->address + ":" + to_string(service->port) + "...");
+
+	auto last = chrono::system_clock::now() - service->host->date;
+	if (last < chrono::milliseconds(delay))
+	{
+		this_thread::sleep_for(chrono::milliseconds(delay) - last);
+	}
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 	send(sock, pld.c_str(), pld.length(), 0);

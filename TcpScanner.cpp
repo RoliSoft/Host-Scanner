@@ -5,6 +5,7 @@
 #include <functional>
 #include <boost/lexical_cast.hpp>
 #include "Utils.h"
+#include "Host.h"
 
 using namespace std;
 using namespace boost;
@@ -15,6 +16,10 @@ bool TcpScanner::GetOption(int option, void* value)
 	{
 	case OPT_TIMEOUT:
 		*reinterpret_cast<unsigned long*>(value) = timeout;
+		return true;
+
+	case OPT_DELAY:
+		*reinterpret_cast<unsigned long*>(value) = delay;
 		return true;
 
 	case OPT_BANNER:
@@ -32,6 +37,10 @@ bool TcpScanner::SetOption(int option, void* value)
 	{
 	case OPT_TIMEOUT:
 		timeout = *reinterpret_cast<unsigned long*>(value);
+		return true;
+
+	case OPT_DELAY:
+		delay = *reinterpret_cast<unsigned long*>(value);
 		return true;
 
 	case OPT_BANNER:
@@ -87,6 +96,14 @@ void* TcpScanner::initSocket(Service* service)
 	// start non-blocking connection process
 
 	log(DBG, "Connecting to tcp://" + service->address + ":" + to_string(service->port) + "...");
+
+	auto last = chrono::system_clock::now() - service->host->date;
+	if (last < chrono::milliseconds(delay))
+	{
+		this_thread::sleep_for(chrono::milliseconds(delay) - last);
+	}
+
+	service->date = service->host->date = chrono::system_clock::now();
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 
@@ -265,6 +282,14 @@ void* TcpScanner::sendProbe(Service* service)
 	data->probes++;
 
 	log(DBG, "Sending probe to tcp://" + service->address + ":" + to_string(service->port) + "...");
+
+	auto last = chrono::system_clock::now() - service->host->date;
+	if (last < chrono::milliseconds(delay))
+	{
+		this_thread::sleep_for(chrono::milliseconds(delay) - last);
+	}
+
+	service->date = service->host->date = chrono::system_clock::now();
 
 	string probe = "GET / HTTP/1.0\r\n\r\n";
 	auto res = send(data->socket, probe.c_str(), probe.length(), 0);

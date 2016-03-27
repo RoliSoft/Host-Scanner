@@ -9,10 +9,16 @@
 #define OPT_TIMEOUT 1
 
 /*!
+ * Number of milliseconds to wait between sending packets to individual hosts.
+ * Default value is 100ms for most scanners.
+ */
+#define OPT_DELAY 2
+
+/*!
  * Boolean value indicating whether to wait for and grab the service banner.
  * Default value is true for scanners that support it.
  */
-#define OPT_BANNER 2
+#define OPT_BANNER 5
 
 /*!
  * Represents a port scanner.

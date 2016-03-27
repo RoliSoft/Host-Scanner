@@ -1,5 +1,6 @@
 #include "IcmpPinger.h"
 #include "TaskQueueRunner.h"
+#include "Host.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -108,6 +109,8 @@ void* IcmpPinger::initSocket(Service* service)
 	// so send()/recv() will work without them, no need to store the addrinfo
 
 	log(DBG, "Sending payload to icmp://" + service->address + "...");
+
+	service->date = service->host->date = chrono::system_clock::now();
 
 	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
 	send(sock, reinterpret_cast<char*>(&pkt), sizeof(pkt), 0);

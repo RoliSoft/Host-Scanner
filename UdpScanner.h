@@ -36,6 +36,11 @@ public:
 	 * Number of milliseconds to wait for response.
 	 */
 	unsigned long timeout = 3000;
+	
+	/*!
+	 * Number of milliseconds to wait between packets sent to the same host.
+	 */
+	unsigned long delay = 100;
 
 	/*!
 	 * Indicates whether to wait for and grab service banners.

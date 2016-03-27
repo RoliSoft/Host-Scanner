@@ -114,6 +114,11 @@ string NmapScanner::runNmap(Hosts* hosts, bool v6)
 		cmd += " -6";
 	}
 
+	if (delay != 3)
+	{
+		cmd += " -T" + to_string(min(max(0, delay), 5));
+	}
+
 	string ports = " -p ";
 	string adrls = "";
 

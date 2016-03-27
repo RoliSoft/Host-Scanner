@@ -11,6 +11,13 @@ class NmapScanner : public HostScanner
 public:
 
 	/*!
+	 * The `-T` option of nmap. Value between 0..5, which maps
+	 * to the same timeouts as the other scanners within this
+	 * application. Level 6 will be 5, since 6 is not available.
+	 */
+	int delay = 3;
+
+	/*!
 	 * Value indicating whether this instance is a passive scanner.
 	 * 
 	 * A passive scanner does not actively send packets towards the

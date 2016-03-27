@@ -68,6 +68,7 @@ void InternalScanner::Scan(Hosts* hosts)
 			}
 
 			scanner->SetOption(OPT_TIMEOUT, &timeout);
+			scanner->SetOption(OPT_DELAY,   &delay);
 
 			scanners[service->protocol] = scanner;
 		}

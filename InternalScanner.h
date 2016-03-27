@@ -18,6 +18,11 @@ public:
 	 * applied timeout to each individual scanner, multiplying the final timeout.
 	 */
 	unsigned long timeout = 3000;
+	
+	/*!
+	 * Number of milliseconds to wait between packets sent to the same host.
+	 */
+	unsigned long delay = 100;
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.

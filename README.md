@@ -36,6 +36,97 @@ The purpose of this project is to discover hosts on a network and gather informa
 * Network mapping
   * Neighbor Solicitation for IPv6
 
+## Usage
+
+	usage: HostScanner [args] targets
+	arguments:
+
+	  -t [ --target ] arg     List of targets to scan:
+	                            Each can be a hostname, IP address, IP range or CIDR.
+	                            E.g. `192.168.1.1/24` is equivalent to `192.168.1.0-192.168.1.255`.
+
+	  -p [ --port ] arg       TCP ports to scan:
+	                            Can be a single port (80), a list (22,80) or a range (1-1024).
+	                            Range can be unbounded from either sides, simultaneously.
+	                            E.g. `1024-` will scan ports 1024-65535. `-` will scan all ports.
+	                            Specifying `top` or `t` will scan the top 100 most popular ports.
+
+	  -u [ --udp-port ] arg   UDP ports to scan:
+	                            Supports the same values as --port, with the difference that
+	                            specifying `top` will scan all of the ports with known payloads.
+
+	  -s [ --scanner ] arg    Scanner instance to use:
+	                            internal - Uses the built-in scanner. (active)
+	                            nmap     - Uses 3rd-party application Nmap. (active)
+	                            shodan   - Uses data from Shodan. (passive; requires API key)
+	                            censys   - Uses data from Censys. (passive; requires API key)
+	                            shosys   - Uses data from both Shodan and Censys. (passive)
+
+	  --shodan-key arg        Specifies an API key for Shodan.
+	  --censys-key arg        Specifies an API key for Censys in the `uid:secret` format.
+
+	  -f [ --input-file ] arg Process an input file with the selected scanner.
+	                            E.g. the nmap scanner can parse XML reports.
+
+	  -d [ --delay ] arg      Delay between packets sent to the same host. Default is 3 for 100ms.
+	                          Possible values are 0..6, which have the same effect as nmap's -T:
+	                            0 - 5m, 1 - 15s, 2 - 400ms, 3 - 100ms, 4 - 10ms, 5 - 5ms, 6 - no delay
+
+	  -x [ --passive ]        Globally disables active reconnaissance. Functionality using active
+	                          scanning will break, but ensures no accidental active scans will be
+	                          initiated, which might get construed as hostile.
+
+	  -l [ --logging ] arg    Logging level to use:
+	                            i, int - All messages.
+	                            d, dbg - All debug messages and up.
+	                            v, vrb - Enable verbosity, but don't overdo it.
+	                            m, msg - Print only regular messages. (default)
+	                            e, err - Print only error messages to stderr.
+
+	  -q [ --no-logo ]        Suppresses the ASCII logo.
+	  -v [ --version ]        Display version information.
+	  -h [ --help ]           Displays this message.
+
+### Examples
+
+Scan your local network for vulnerabilities on the top 100 TCP ports and UDP ports with known payloads using the internal scanners:
+
+	./HostScanner -p t -u t 192.168.1.0/24
+
+Scan an IP address or netblock for vulnerabilities passively with data from both Shodan and Censys:
+
+	./HostScanner -x 178.62.192.0/18
+
+Perform service identification and vulnerability analysis on an earlier XML output of nmap, `nmap -oX report.xml …`:
+
+	./HostScanner -s nmap -f report.xml
+
+### Persistent Options
+
+The application supports the reading of configuration files which allows for the settings to persist.
+
+On Linux, the following paths will be probed, and the first found file will be read, in this order:
+
+	%AppPath%/HostScanner.ini
+	~/.HostScanner.conf
+	/etc/HostScanner/HostScanner.conf
+
+On Windows:
+
+	%AppPath%\HostScanner.ini
+	%AppData%\RoliSoft\Host Scanner\HostScanner.ini
+
+As an example, this feature can be used to persist Shodan/Censys API keys:
+
+	shodan-key=abcdefghijklmnopqrstuvwxyz012345
+    censys-key=abcdefgh-ijkl-mnop-qrst-uvwxyz012345:abcdefghijklmnopqrstuvwxyz012345
+
+Similarly, the `-x` option can be stored, in order to globally disallow any active scanner usage as a fail-safe:
+
+	passive
+
+This option cannot be disabled through the command line. To use an active scanner again, this line needs to be removed from the configuration file.
+
 ## Building
 
 To compile and run the project, you must first install the dependencies, which can be done with:

@@ -711,8 +711,8 @@ BOOST_AUTO_TEST_CASE(NmapIpv4Processing)
 
 	auto hosts = scan.Process("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE nmaprun><nmaprun scanner=\"nmap\" args=\"...\" start=\"1459035690\" startstr=\"Sun Mar 27 00:41:30 2016\" version=\"7.00\" xmloutputversion=\"1.04\"><scaninfo type=\"syn\" protocol=\"tcp\" numservices=\"1\" services=\"25\"/><scaninfo type=\"udp\" protocol=\"udp\" numservices=\"0\" services=\"\"/><verbose level=\"0\"/><debugging level=\"0\"/><host starttime=\"1459035698\" endtime=\"1459035698\"><status state=\"up\" reason=\"user-set\" reason_ttl=\"0\"/><address addr=\"178.62.249.168\" addrtype=\"ipv4\"/><hostnames><hostname name=\"euvps.rolisoft.net\" type=\"PTR\"/></hostnames><ports><port protocol=\"tcp\" portid=\"25\"><state state=\"open\" reason=\"syn-ack\" reason_ttl=\"53\"/><service name=\"smtp\" method=\"table\" conf=\"3\"/><script id=\"banner\" output=\"220 euvps.rolisoft.net ESMTP Sat, 26 Mar 2016 23:41:41 +0000\"/></port></ports><times srtt=\"38000\" rttvar=\"38000\" to=\"190000\"/></host><runstats><finished time=\"1459035698\" timestr=\"Sun Mar 27 00:41:38 2016\" elapsed=\"8.10\" summary=\"Nmap done at Sun Mar 27 00:41:38 2016; 1 IP address (1 host up) scanned in 8.10 seconds\" exit=\"success\"/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>");
 
-	BOOST_TEST_FAIL((hosts->size() == 1), "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
-	BOOST_TEST_FAIL(((*hosts)[0]->services->size() == 1), "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
+	BOOST_TEST_REQUIRE(hosts->size() == 1, "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
+	BOOST_TEST_REQUIRE((*hosts)[0]->services->size() == 1, "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
 
 	BOOST_TEST_CHECK((*hosts)[0]->address == "178.62.249.168", "Host should be 178.62.249.168.");
 	BOOST_TEST_CHECK((*hosts)[0]->alive, "Port 25 should be alive.");
@@ -741,8 +741,8 @@ BOOST_AUTO_TEST_CASE(NmapIpv4PortScan, *unit_test::disabled())
 
 	scan.Scan(&hosts);
 
-	BOOST_TEST_FAIL((hosts.size() == 1), "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
-	BOOST_TEST_FAIL((hosts[0]->services->size() == 1), "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
+	BOOST_TEST_REQUIRE(hosts.size() == 1, "Number of scanned hosts should be 1, it is instead " + to_string(hosts.size()) + ".");
+	BOOST_TEST_REQUIRE(hosts[0]->services->size() == 1, "Number of discovered services should be 1, it is instead " + to_string(hosts[0]->services->size()) + ".");
 
 	BOOST_TEST_CHECK(hosts[0]->alive, "Port 25 should be alive.");
 
@@ -765,8 +765,8 @@ BOOST_AUTO_TEST_CASE(NmapIpv6Processing)
 
 	auto hosts = scan.Process("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE nmaprun><nmaprun scanner=\"nmap\" args=\"...\" start=\"1459035966\" startstr=\"Sun Mar 27 00:46:06 2016\" version=\"7.00\" xmloutputversion=\"1.04\"><scaninfo type=\"syn\" protocol=\"tcp\" numservices=\"1\" services=\"25\"/><scaninfo type=\"udp\" protocol=\"udp\" numservices=\"0\" services=\"\"/><verbose level=\"0\"/><debugging level=\"0\"/><host starttime=\"1459035974\" endtime=\"1459035974\"><status state=\"up\" reason=\"user-set\" reason_ttl=\"0\"/><address addr=\"2a03:b0c0:2:d0::19:6001\" addrtype=\"ipv6\"/><hostnames><hostname name=\"euvps.rolisoft.net\" type=\"PTR\"/></hostnames><ports><port protocol=\"tcp\" portid=\"25\"><state state=\"open\" reason=\"syn-ack\" reason_ttl=\"56\"/><service name=\"smtp\" method=\"table\" conf=\"3\"/><script id=\"banner\" output=\"220 euvps.rolisoft.net ESMTP Sat, 26 Mar 2016 23:46:17 +0000\"/></port></ports><times srtt=\"49000\" rttvar=\"49000\" to=\"245000\"/></host><runstats><finished time=\"1459035974\" timestr=\"Sun Mar 27 00:46:14 2016\" elapsed=\"8.06\" summary=\"Nmap done at Sun Mar 27 00:46:14 2016; 1 IP address (1 host up) scanned in 8.06 seconds\" exit=\"success\"/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>");
 
-	BOOST_TEST_FAIL((hosts->size() == 1), "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
-	BOOST_TEST_FAIL(((*hosts)[0]->services->size() == 1), "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
+	BOOST_TEST_REQUIRE(hosts->size() == 1, "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
+	BOOST_TEST_REQUIRE((*hosts)[0]->services->size() == 1, "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
 
 	BOOST_TEST_CHECK((*hosts)[0]->address == "2a03:b0c0:2:d0::19:6001", "Host should be 2a03:b0c0:2:d0::19:6001.");
 	BOOST_TEST_CHECK((*hosts)[0]->alive, "Port 25 should be alive.");
@@ -796,8 +796,8 @@ BOOST_AUTO_TEST_CASE(NmapIpv6PortScan, *unit_test::disabled())
 
 	scan.Scan(&hosts);
 
-	BOOST_TEST_FAIL((hosts.size() == 1), "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
-	BOOST_TEST_FAIL((hosts[0]->services->size() == 1), "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
+	BOOST_TEST_REQUIRE(hosts.size() == 1, "Number of scanned hosts should be 1, it is instead " + to_string(hosts.size()) + ".");
+	BOOST_TEST_REQUIRE(hosts[0]->services->size() == 1, "Number of discovered services should be 1, it is instead " + to_string(hosts[0]->services->size()) + ".");
 
 	BOOST_TEST_CHECK(hosts[0]->alive, "Port 25 should be alive.");
 

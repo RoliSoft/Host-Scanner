@@ -107,7 +107,7 @@ string NmapScanner::runNmap(Hosts* hosts, bool v6)
 	// -sc..rs  Run the HTTP header grabber NSE script
 	// -6		Turn on IPv6 support, if v6 parameter is set
 	// -p		Port list to scan
-	string cmd = "nmap -oX - -Pn -sU -sS --script=banner --script http-headers";
+	string cmd = "nmap -oX - -Pn -sU -sS --script=banner --script=http-headers";
 
 	if (v6)
 	{
@@ -383,7 +383,7 @@ void NmapScanner::parseXml(string xml, Hosts* hosts, bool append)
 								hosts->push_back(host);
 							}
 
-							auto service = new Service(address, port, proto);
+							auto service = new Service(address, static_cast<unsigned short>(port), proto);
 							
 							service->alive  = open;
 							service->reason = reason;

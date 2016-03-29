@@ -349,7 +349,7 @@ void NmapScanner::parseXml(string xml, Hosts* hosts, bool append)
 
 								if (id == string("banner"))
 								{
-									banner = ptport.second.get<string>("<xmlattr>.output", "");
+									banner = ptport.second.get<string>("<xmlattr>.output", "") + "\r\n\r\n";
 								}
 
 								// reconstruct HTTP response if got http-headers

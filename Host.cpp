@@ -24,7 +24,11 @@ Host::Host(const string& address, const set<unsigned short>& tcps, const set<uns
 	{
 		for (auto tcp : tcps)
 		{
-			services->push_back(new Service(address, tcp, IPPROTO_TCP));
+			auto service = new Service(address, tcp, IPPROTO_TCP);
+
+			service->host = this;
+
+			services->push_back(service);
 		}
 	}
 
@@ -32,7 +36,11 @@ Host::Host(const string& address, const set<unsigned short>& tcps, const set<uns
 	{
 		for (auto udp : udps)
 		{
-			services->push_back(new Service(address, udp, IPPROTO_UDP));
+			auto service = new Service(address, udp, IPPROTO_UDP);
+
+			service->host = this;
+
+			services->push_back(service);
 		}
 	}
 }

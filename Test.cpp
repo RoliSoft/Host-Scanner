@@ -619,11 +619,9 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 {
 	TcpScanner scan;
 
-	Services servs = {
-		new Service("178.62.249.168", 20), // euvps.rolisoft.net
-		new Service("178.62.249.168", 25), // euvps.rolisoft.net
-		new Service("178.62.249.168", 80)  // euvps.rolisoft.net
-	};
+	Host host("178.62.249.168", { 20, 25, 80 }); // euvps.rolisoft.net
+
+	auto& servs = *host.services;
 
 	TaskQueueRunner::QuickScan(scan, servs);
 
@@ -637,8 +635,6 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 	BOOST_TEST_CHECK( servs[2]->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
-
-	freeServices(servs);
 }
 
 /*!
@@ -650,11 +646,9 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 {
 	TcpScanner scan;
 
-	Services servs = {
-		new Service("2a03:b0c0:2:d0::19:6001", 20), // euvps.rolisoft.net
-		new Service("2a03:b0c0:2:d0::19:6001", 25), // euvps.rolisoft.net
-		new Service("2a03:b0c0:2:d0::19:6001", 80)  // euvps.rolisoft.net
-	};
+	Host host("2a03:b0c0:2:d0::19:6001", { 20, 25, 80 }); // euvps.rolisoft.net
+
+	auto& servs = *host.services;
 
 	TaskQueueRunner::QuickScan(scan, servs);
 
@@ -668,8 +662,6 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 	BOOST_TEST_CHECK( servs[2]->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
-
-	freeServices(servs);
 }
 
 /*!
@@ -696,10 +688,10 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 {
 	UdpScanner scan;
 
-	Services servs = {
-		new Service("178.62.249.168", 53, IPPROTO_UDP), // euvps.rolisoft.net
-		new Service("208.67.222.222", 53, IPPROTO_UDP)  // OpenDNS
-	};
+	Host host1("178.62.249.168", { }, { 53 }); // euvps.rolisoft.net
+	Host host2("208.67.222.222", { }, { 53 }); // OpenDNS
+
+	Services servs = { host1.services->front(), host2.services->front() };
 
 	TaskQueueRunner::QuickScan(scan, servs);
 
@@ -710,8 +702,6 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 178.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 208.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
-
-	freeServices(servs);
 }
 
 /*!
@@ -723,10 +713,10 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 {
 	UdpScanner scan;
 
-	Services servs = {
-		new Service("2a03:b0c0:2:d0::19:6001", 53, IPPROTO_UDP), // euvps.rolisoft.net
-		new Service("2620:0:ccc::2", 53, IPPROTO_UDP) // OpenDNS
-	};
+	Host host1("2a03:b0c0:2:d0::19:6001", { }, { 53 }); // euvps.rolisoft.net
+	Host host2("2620:0:ccc::2", { }, { 53 }); // OpenDNS
+
+	Services servs = { host1.services->front(), host2.services->front() };
 
 	TaskQueueRunner::QuickScan(scan, servs);
 
@@ -737,8 +727,6 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 
 	BOOST_TEST_CHECK((servs[0]->reason == AR_TimedOut || servs[0]->reason == AR_IcmpUnreachable), "Port 53 on 2a03.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 	BOOST_TEST_CHECK( servs[1]->reason == AR_ReplyReceived, "Port 53 on 2620.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
-
-	freeServices(servs);
 }
 
 /*!
@@ -748,10 +736,10 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 {
 	IcmpPinger scan;
 
-	Services servs = {
-		new Service("178.62.249.168", 0, IPPROTO_ICMP), // euvps.rolisoft.net
-		new Service("0.0.1.0", 0, IPPROTO_ICMP) // bogon
-	};
+	Host host1("178.62.249.168", { 0 }); // euvps.rolisoft.net
+	Host host2("0.0.1.0", { 0 }); // bogon
+
+	Services servs = { host1.services->front(), host2.services->front() };
 
 	TaskQueueRunner::QuickScan(scan, servs);
 
@@ -760,8 +748,6 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 	
 	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "178.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
-
-	freeServices(servs);
 }
 
 /*!
@@ -773,10 +759,10 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 {
 	IcmpPinger scan;
 
-	Services servs = {
-		new Service("2a03:b0c0:2:d0::19:6001", 0, IPPROTO_ICMPV6), // euvps.rolisoft.net
-		new Service("0100::", 0, IPPROTO_ICMPV6) // bogon
-	};
+	Host host1("2a03:b0c0:2:d0::19:6001", { 0 }); // euvps.rolisoft.net
+	Host host2("0100::", { 0 }); // bogon
+
+	Services servs = { host1.services->front(), host2.services->front() };
 
 	TaskQueueRunner::QuickScan(scan, servs);
 
@@ -785,8 +771,6 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 	
 	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "2a03.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
 	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0100.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
-
-	freeServices(servs);
 }
 
 /*!

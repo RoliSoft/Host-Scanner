@@ -21,7 +21,7 @@ public:
 	 *
 	 * \param host Scanned host.
 	 */
-	static void AutoProcess(Host* host);
+	static bool AutoProcess(Host* host);
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.

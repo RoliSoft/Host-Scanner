@@ -36,6 +36,11 @@
 #include "ServiceRegexMatcher.h"
 #include "CpeDictionaryMatcher.h"
 #include "VulnerabilityLookup.h"
+#include "OpSysIdentifier.h"
+#include "UbuntuIdentifier.h"
+#include "DebianIdentifier.h"
+#include "EnterpriseLinuxIdentifier.h"
+#include "FedoraIdentifier.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -428,6 +433,135 @@ BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 			BOOST_TEST_CHECK(found, "Failed to find vulnerability `" + cve + "` for the CPE `" + entry.first + "`.");
 		}
 	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Operating System Identifier Tests
+//---------------------------------------------------------------------------------------------------------------------
+
+/*!
+ * Tests automatic operating system and distribution identification.
+ *
+ * The automatic identifier calls each supported operating system's identifier in order of popularity.
+ * These implementations have a `Scan()` function and are expected to gracefully reject unsupported distributions.
+ */
+BOOST_AUTO_TEST_CASE(IdentifyAuto)
+{
+	// test release name-based detection
+
+	Host hostrn("whatever", { 22 });
+	hostrn.services->at(0)->banner = "SSH-2.0-OpenSSH_5.5p1 Debian-6+squeeze\r\n";
+
+	// test tag-based detection
+
+	Host hosttg("whatever", { 22 });
+	hosttg.services->at(0)->banner = "SSH-2.0-OpenSSH_6.7p1 Debian-5+deb8u1\r\n";
+
+	// test version-based detection
+
+	Host hostvr("whatever", { 22, 80 });
+	hostvr.services->at(0)->banner = "SSH-2.0-OpenSSH_5.3\r\n";
+	hostvr.services->at(1)->banner = "HTTP/1.1 200 OK\r\nServer: Apache (CentOS)\r\n\r\n";
+
+	BOOST_TEST_CHECK(OpSysIdentifier::AutoProcess(&hostrn), "Failed to identify release name-based Debian Squeeze.");
+	BOOST_TEST_CHECK(OpSysIdentifier::AutoProcess(&hosttg), "Failed to identify tag-based Ubuntu Trusty Tahr.");
+	BOOST_TEST_CHECK(OpSysIdentifier::AutoProcess(&hostvr), "Failed to identify version-based CentOS 6.");
+}
+
+/*!
+ * Tests the Debian operating system and distribution identifier.
+ *
+ * The test first targets the SSH banners, falling back otherwise to data collected across all services.
+ */
+BOOST_AUTO_TEST_CASE(IdentifyDebian)
+{
+	// test release name-based detection
+
+	Host hostrn("whatever", { 22 });
+	hostrn.services->at(0)->banner = "SSH-2.0-OpenSSH_5.5p1 Debian-6+squeeze\r\n";
+
+	// test tag-based detection
+
+	Host hosttg("whatever", { 22 });
+	hosttg.services->at(0)->banner = "SSH-2.0-OpenSSH_6.6.1p1 Debian-2ubuntu2.4\r\n";
+
+	// test version-based detection
+
+	Host hostvr("whatever", { 22, 80 });
+	hostvr.services->at(0)->banner = "SSH-2.0-OpenSSH_6.0p1\r\n";
+	hostvr.services->at(1)->banner = "HTTP/1.1 200 OK\r\nServer: Apache (Debian)\r\n\r\n";
+
+	DebianIdentifier os;
+
+	BOOST_TEST_CHECK(os.Scan(&hostrn), "Failed to identify release name-based Debian Squeeze.");
+	BOOST_TEST_CHECK(os.Scan(&hosttg), "Failed to identify tag-based Debian Jessie.");
+	BOOST_TEST_CHECK(os.Scan(&hostvr), "Failed to identify version-based Debian Wheezy.");
+}
+
+/*!
+ * Tests the Ubuntu operating system and distribution identifier.
+ *
+ * The test first targets the SSH banners, falling back otherwise to data collected across all services.
+ */
+BOOST_AUTO_TEST_CASE(IdentifyUbuntu)
+{
+	// test tag-based detection
+
+	Host hosttg("whatever", { 22 });
+	hosttg.services->at(0)->banner = "SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.4\r\n";
+
+	// test version-based detection
+
+	Host hostvr("whatever", { 22, 80 });
+	hostvr.services->at(0)->banner = "SSH-2.0-OpenSSH_7.2p2\r\n";
+	hostvr.services->at(1)->banner = "HTTP/1.1 200 OK\r\nServer: Apache (Ubuntu)\r\n\r\n";
+
+	UbuntuIdentifier os;
+
+	BOOST_TEST_CHECK(os.Scan(&hosttg), "Failed to identify tag-based Ubuntu Trusty Tahr.");
+	BOOST_TEST_CHECK(os.Scan(&hostvr), "Failed to identify version-based Ubuntu Xenial Xerus.");
+}
+
+/*!
+ * Tests the Red Hat/CentOS operating system and distribution identifier.
+ *
+ * The test first targets the SSH banners, falling back otherwise to data collected across all services.
+ */
+BOOST_AUTO_TEST_CASE(IdentifyEnterpriseLinux)
+{
+	// test tag-based detection
+
+	Host hosttg("whatever", { 22 });
+	hosttg.services->at(0)->banner = "SSH-2.0-OpenSSH_6.6.1p1-RHEL7-6.6.1p1-22\r\n";
+
+	// test version-based detection
+
+	Host hostvr("whatever", { 22, 80 });
+	hostvr.services->at(0)->banner = "SSH-2.0-OpenSSH_5.3\r\n";
+	hostvr.services->at(1)->banner = "HTTP/1.1 200 OK\r\nServer: Apache (CentOS)\r\n\r\n";
+
+	EnterpriseLinuxIdentifier os;
+
+	BOOST_TEST_CHECK(os.Scan(&hosttg), "Failed to identify tag-based RHEL 7.");
+	BOOST_TEST_CHECK(os.Scan(&hostvr), "Failed to identify version-based CentOS 6.");
+}
+
+/*!
+ * Tests the Fedora operating system and distribution identifier.
+ *
+ * The test first targets the SSH banners, falling back otherwise to data collected across all services.
+ */
+BOOST_AUTO_TEST_CASE(IdentifyFedora)
+{
+	// test version-based detection
+
+	Host hostvr("whatever", { 22, 80 });
+	hostvr.services->at(0)->banner = "SSH-2.0-OpenSSH_7.1p1\r\n";
+	hostvr.services->at(1)->banner = "HTTP/1.1 200 OK\r\nServer: Apache (Fedora)\r\n\r\n";
+
+	FedoraIdentifier os;
+
+	BOOST_TEST_CHECK(os.Scan(&hostvr), "Failed to identify version-based Fedora 24.");
 }
 
 //---------------------------------------------------------------------------------------------------------------------

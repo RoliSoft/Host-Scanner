@@ -48,6 +48,8 @@
 #endif
 
 using namespace std;
+using namespace boost;
+
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
@@ -136,7 +138,7 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 		return ports;
 	}
 	
-	if (portstr.length() == 0 || boost::iequals(portstr, "t") || boost::iequals(portstr, "top"))
+	if (portstr.length() == 0 || iequals(portstr, "t") || iequals(portstr, "top"))
 	{
 		if (isudp)
 		{
@@ -183,7 +185,7 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 	// read all listed ports
 
 	vector<string> portarr;
-	split(portarr, portstr, boost::is_any_of(","), boost::token_compress_on);
+	split(portarr, portstr, is_any_of(","), token_compress_on);
 
 	for (auto& s_port : portarr)
 	{
@@ -195,14 +197,14 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 
 			int a, b;
 
-			if (boost::starts_with(s_port, "-"))
+			if (starts_with(s_port, "-"))
 			{
 				// from 1 to n	
 
 				a = 1;
 				b = atoi(s_port.substr(1).c_str());
 			}
-			else if (boost::ends_with(s_port, "-"))
+			else if (ends_with(s_port, "-"))
 			{
 				// from n to 65535
 
@@ -214,7 +216,7 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 				// range specified
 
 				vector<string> s_range;
-				split(s_range, s_port, boost::is_any_of("-"), boost::token_compress_on);
+				split(s_range, s_port, is_any_of("-"), token_compress_on);
 
 				if (s_range.size() < 2)
 				{
@@ -287,7 +289,7 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 {
 #if _MSC_VER
 	// even though it's used later on, MSVC is issuing an 'unreferenced formal parameter' warning for `scanner`
-	boost::ignore_unused(scanner);
+	ignore_unused(scanner);
 #endif
 
 	unordered_set<string> hostarr;
@@ -299,7 +301,7 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 		if (hoststr.find(",") != string::npos)
 		{
 			vector<string> host;
-			split(host, hoststr, boost::is_any_of(","));
+			split(host, hoststr, is_any_of(","));
 			hostarr.insert(host.begin(), host.end());
 		}
 		else
@@ -319,7 +321,7 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 			// CIDR
 
 			vector<string> s_cidr;
-			split(s_cidr, s_target, boost::is_any_of("/"), boost::token_compress_on);
+			split(s_cidr, s_target, is_any_of("/"), token_compress_on);
 
 			if (s_cidr.size() != 2)
 			{
@@ -347,7 +349,7 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 			// range
 
 			vector<string> s_range;
-			split(s_range, s_target, boost::is_any_of("-"), boost::token_compress_on);
+			split(s_range, s_target, is_any_of("-"), token_compress_on);
 
 			if (s_range.size() != 2)
 			{
@@ -425,8 +427,8 @@ int scan(const po::variables_map& vm)
 	if (vm.count("scanner") != 0)
 	{
 		scannerstr = vm["scanner"].as<string>();
-		boost::trim(scannerstr);
-		boost::to_lower(scannerstr);
+		trim(scannerstr);
+		to_lower(scannerstr);
 	}
 	else
 	{
@@ -598,12 +600,12 @@ int scan(const po::variables_map& vm)
 
 	if (vm.count("port") != 0)
 	{
-		portstr = boost::trim_copy(vm["port"].as<string>());
+		portstr = trim_copy(vm["port"].as<string>());
 	}
 
 	if (vm.count("udp-port") != 0)
 	{
-		udportstr = boost::trim_copy(vm["udp-port"].as<string>());
+		udportstr = trim_copy(vm["udp-port"].as<string>());
 	}
 
 	if (portstr.length() != 0 || (portstr.length() == 0 && udportstr.length() == 0))
@@ -704,11 +706,11 @@ postScan:
 				for (auto vuln : vulns)
 				{
 					auto it2 = vuln.second.begin();
-					auto vulnstr = "CVE-" + (*it2).cve + " (" + boost::trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+					auto vulnstr = "CVE-" + (*it2).cve + " (" + trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
 
 					for (auto end = vuln.second.end(); it2 != end; ++it2)
 					{
-						vulnstr += ", CVE-" + (*it2).cve + " (" + boost::trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+						vulnstr += ", CVE-" + (*it2).cve + " (" + trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
 					}
 
 					log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr);
@@ -848,8 +850,8 @@ int main(int argc, char *argv[])
 	if (vm.count("logging") != 0)
 	{
 		auto logging = vm["logging"].as<string>();
-		boost::trim(logging);
-		boost::to_lower(logging);
+		trim(logging);
+		to_lower(logging);
 
 		if (logging == "i" || logging == "int")
 		{

@@ -98,7 +98,7 @@ void* UdpScanner::initSocket(Service* service)
 		)
 	{
 		service->reason = AR_ScanFailed;
-		log(ERR, "Failed to open socket for udp://" + service->address + ":" + port + ".");
+		log(ERR, "Failed to open socket for udp://" + service->address + ":" + port + ": " + getNetErrStr());
 		freeaddrinfo(info);
 		return nullptr;
 	}
@@ -147,7 +147,7 @@ void* UdpScanner::initSocket(Service* service)
 	if (res < 0)
 	{
 		service->reason = AR_ScanFailed;
-		log(ERR, "Failed to connect to udp://" + service->address + ":" + port + ".");
+		log(ERR, "Failed to connect to udp://" + service->address + ":" + port + ": " + getNetErrStr());
 
 		freeaddrinfo(info);
 		service->data = nullptr;
@@ -161,7 +161,7 @@ void* UdpScanner::initSocket(Service* service)
 	if (res < 0)
 	{
 		service->reason = AR_ScanFailed;
-		log(ERR, "Failed to send packet to udp://" + service->address + ":" + port + ".");
+		log(ERR, "Failed to send packet to udp://" + service->address + ":" + port + ": " + getNetErrStr());
 
 		freeaddrinfo(info);
 		service->data = nullptr;

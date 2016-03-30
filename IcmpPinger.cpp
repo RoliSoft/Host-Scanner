@@ -1,6 +1,7 @@
 #include "IcmpPinger.h"
 #include "TaskQueueRunner.h"
 #include "Host.h"
+#include "Utils.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -72,7 +73,7 @@ void* IcmpPinger::initSocket(Service* service)
 		// admin rights are required for raw sockets
 
 		service->reason = AR_ScanFailed;
-		log(ERR, "Failed to open socket with AF_INET" + string(info->ai_family == AF_INET6 ? "6" : "") + "/SOCK_RAW.");
+		log(ERR, "Failed to open socket with AF_INET" + string(info->ai_family == AF_INET6 ? "6" : "") + "/SOCK_RAW: " + getNetErrStr());
 		freeaddrinfo(info);
 		return nullptr;
 	}
@@ -129,7 +130,7 @@ void* IcmpPinger::initSocket(Service* service)
 		)
 	{
 		service->reason = AR_ScanFailed;
-		log(ERR, "Failed to connect to icmp://" + service->address + ".");
+		log(ERR, "Failed to connect to icmp://" + service->address + ": " + getNetErrStr());
 
 		freeaddrinfo(info);
 		service->data = nullptr;
@@ -143,7 +144,7 @@ void* IcmpPinger::initSocket(Service* service)
 	if (res < 0)
 	{
 		service->reason = AR_ScanFailed;
-		log(ERR, "Failed to send packet to icmp://" + service->address + ".");
+		log(ERR, "Failed to send packet to icmp://" + service->address + ": " + getNetErrStr());
 
 		freeaddrinfo(info);
 		service->data = nullptr;

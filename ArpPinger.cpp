@@ -1,4 +1,5 @@
 #include "ArpPinger.h"
+#include "Utils.h"
 #include <iostream>
 #include <vector>
 #include <unordered_map>
@@ -396,7 +397,7 @@ void ArpPinger::sendRequest(Host* host)
 		// root is required for raw sockets
 
 		host->reason = AR_ScanFailed;
-		log(ERR, "Failed to open socket with PF_PACKET/SOCK_RAW.");
+		log(ERR, "Failed to open socket with PF_PACKET/SOCK_RAW: " + getNetErrStr());
 		delete data;
 		return;
 	}
@@ -437,7 +438,7 @@ void ArpPinger::sendRequest(Host* host)
 	if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 	{
 		host->reason = AR_ScanFailed;
-		log(ERR, "Failed to bind BPF device to interface '" + data->iface->adapter + "': " + string(strerror(errno)));
+		log(ERR, "Failed to bind BPF device to interface '" + data->iface->adapter + "': " + getNetErrStr());
 		close(bpf);
 		delete data;
 		return;
@@ -499,7 +500,7 @@ void ArpPinger::sendRequest(Host* host)
 	if (res <= 0)
 	{
 		host->reason = AR_ScanFailed;
-		log(ERR, "Failed to send packet through socket: " + string(strerror(errno)));
+		log(ERR, "Failed to send packet through socket: " + getNetErrStr());
 	}
 
 	close(sock);
@@ -511,7 +512,7 @@ void ArpPinger::sendRequest(Host* host)
 	if (res <= 0)
 	{
 		host->reason = AR_ScanFailed;
-		log(ERR, "Failed to send packet through BPF: " + string(strerror(errno)));
+		log(ERR, "Failed to send packet through BPF: " + getNetErrStr());
 	}
 
 	close(bpf);
@@ -637,7 +638,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 
 	if ((sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1)
 	{
-		log(ERR, "Failed to open socket with AF_PACKET/SOCK_RAW/ETH_P_ALL.");
+		log(ERR, "Failed to open socket with AF_PACKET/SOCK_RAW/ETH_P_ALL: " + getNetErrStr());
 		return;
 	}
 
@@ -666,7 +667,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 	{
 		close(sock);
 		delete[] bfcode;
-		log(ERR, "Failed to compile and attach filter to socket: " + string(strerror(errno)));
+		log(ERR, "Failed to compile and attach filter to socket: " + getNetErrStr());
 		return;
 	}
 
@@ -763,7 +764,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 		if (ioctl(bpf, BIOCSETIF, &bif) > 0)
 		{
 			close(bpf);
-			log(ERR, "Failed to bind BPF device to interface '" + iface->adapter + "': " + string(strerror(errno)));
+			log(ERR, "Failed to bind BPF device to interface '" + iface->adapter + "': " + getNetErrStr());
 			continue;
 		}
 
@@ -786,7 +787,7 @@ void ArpPinger::sniffReplies(unordered_set<Interface*> ifaces, unordered_map<uns
 		if (ioctl(bpf, BIOCSETF, &bfprog) < 0)
 		{
 			close(bpf);
-			log(ERR, "Failed to compile and attach filter to BPF device for interface '" + iface->adapter + "': " + string(strerror(errno)));
+			log(ERR, "Failed to compile and attach filter to BPF device for interface '" + iface->adapter + "': " + getNetErrStr());
 			continue;
 		}
 

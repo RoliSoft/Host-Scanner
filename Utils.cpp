@@ -154,3 +154,17 @@ tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>
 
 #endif
 }
+
+string getNetErrStr(boost::optional<int> code)
+{
+#if Windows
+	LPSTR errlp = nullptr;
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, 0, code.is_initialized() ? code.get() : WSAGetLastError(), MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), LPSTR(&errlp), 0, 0);
+	string err(errlp);
+	LocalFree(errlp);
+	return err;
+#else
+	char* err = strerror(code.is_initialized() ? code.get() : errno);
+	return err ? err : "";
+#endif
+}

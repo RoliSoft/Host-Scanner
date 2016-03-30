@@ -3,6 +3,7 @@
 #include <string>
 #include <tuple>
 #include <functional>
+#include <boost/optional.hpp>
 
 #if HAVE_CURL
 	#include <curl/curl.h>
@@ -73,3 +74,16 @@ std::string pluralize(int quantity, const std::string& unit);
  *         the downloaded string, if any, and the error message, if any.
  */
 std::tuple<std::string, std::string, int> getURL(const std::string& url, const std::function<void(CURL*)>& opts = nullptr);
+
+/*!
+ * Retrieves the error message for the last I/O error.
+ * 
+ * On Windows, it uses `WSAGetLastError()` with `FormatMessage()`.
+ * On Linux, it uses `errno` with `strerror()`.
+ *
+ * \param code Optional error code. If not specified, will retrieve
+ * 			   the last code from the operating system.
+ * 
+ * \return The net error string.
+ */
+std::string getNetErrStr(boost::optional<int> code = boost::none);

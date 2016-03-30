@@ -82,7 +82,7 @@ void* TcpScanner::initSocket(Service* service)
 		)
 	{
 		service->reason = AR_ScanFailed;
-		log(ERR, "Failed to open socket for tcp://" + service->address + ":" + port + ".");
+		log(ERR, "Failed to open socket for tcp://" + service->address + ":" + port + ": " + getNetErrStr());
 		freeaddrinfo(info);
 		return nullptr;
 	}
@@ -129,7 +129,7 @@ void* TcpScanner::initSocket(Service* service)
 		)
 	{
 		service->reason = AR_ScanFailed;
-		log(ERR, "Failed to connect to tcp://" + service->address + ":" + port + ".");
+		log(ERR, "Failed to connect to tcp://" + service->address + ":" + port + ": " + getNetErrStr());
 
 		freeaddrinfo(info);
 		service->data = nullptr;

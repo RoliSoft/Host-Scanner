@@ -55,6 +55,12 @@
 	#define BOOST_TEST_REQUIRE(a,m) BOOST_CHECK(a)
 #endif
 
+#if BOOST_VERSION >= 105900
+	#define BOOST_AUTO_TEST_CASE_DISABLED(name) BOOST_AUTO_TEST_CASE(name, *boost::unit_test::disabled())
+#else
+	#define BOOST_AUTO_TEST_CASE_DISABLED(name) BOOST_AUTO_TEST_CASE(name)
+#endif
+
 using namespace std;
 using namespace boost;
 
@@ -909,7 +915,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv4Processing)
  * This test requires the `nmap` executable to be reachable from %PATH%,
  * but is regardless disabled, since nmap execution takes too long.
  */
-BOOST_AUTO_TEST_CASE(NmapIpv4PortScan, *unit_test::disabled())
+BOOST_AUTO_TEST_CASE_DISABLED(NmapIpv4PortScan)
 {
 	NmapScanner scan;
 
@@ -964,7 +970,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv6Processing)
  * IPv6 connectivity to be present on the test runner machine,
  * but is regardless disabled, since nmap execution takes too long.
  */
-BOOST_AUTO_TEST_CASE(NmapIpv6PortScan, *unit_test::disabled())
+BOOST_AUTO_TEST_CASE_DISABLED(NmapIpv6PortScan)
 {
 	NmapScanner scan;
 	

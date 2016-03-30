@@ -52,7 +52,7 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 				for (; bsit != end; ++bsit)
 				{
 					auto nums = (*bsit).str();
-					auto numi = atoi(nums.c_str());
+					auto numi = stoi(nums);
 					auto vals = regex_replace(match[numi].str(), vtrgx, "");
 
 					replace_first(cpe, "$" + nums, vals);

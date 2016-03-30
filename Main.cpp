@@ -202,13 +202,13 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 				// from 1 to n	
 
 				a = 1;
-				b = atoi(s_port.substr(1).c_str());
+				b = stoi(s_port.substr(1));
 			}
 			else if (ends_with(s_port, "-"))
 			{
 				// from n to 65535
 
-				a = atoi(s_port.c_str());
+				a = stoi(s_port);
 				b = 65535;
 			}
 			else
@@ -225,8 +225,8 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 					return ports;
 				}
 
-				a = atoi(s_range[0].c_str());
-				b = atoi(s_range[1].c_str());
+				a = stoi(s_range[0]);
+				b = stoi(s_range[1]);
 
 				if (a > b)
 				{
@@ -248,7 +248,7 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 		}
 		else
 		{
-			int port = atoi(s_port.c_str());
+			int port = stoi(s_port);
 
 			if (port < 0 || port > 65535)
 			{
@@ -331,7 +331,7 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 			}
 
 			string addr = s_cidr[0];
-			int cidr = atoi(s_cidr[1].c_str());
+			int cidr = stoi(s_cidr[1]);
 
 			if (cidr < 0 || cidr > 32)
 			{

@@ -106,7 +106,7 @@ void CensysScanner::getHostInfo(Host* host)
 
 		for (auto& ptrun : pt)
 		{
-			unsigned short port = static_cast<unsigned short>(atoi(ptrun.first.data()));
+			unsigned short port = static_cast<unsigned short>(stoi(ptrun.first));
 
 			if (port == 0)
 			{

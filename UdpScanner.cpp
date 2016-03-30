@@ -89,6 +89,20 @@ void* UdpScanner::initSocket(Service* service)
 
 	auto sock = socket(info->ai_family, SOCK_DGRAM, IPPROTO_UDP);
 
+	if (
+#if Windows
+		sock == INVALID_SOCKET
+#else
+		sock < 0
+#endif
+		)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to open socket for udp://" + service->address + ":" + port + ".");
+		freeaddrinfo(info);
+		return nullptr;
+	}
+
 	auto data = new UdpScanData();
 
 	service->data = data;
@@ -128,8 +142,33 @@ void* UdpScanner::initSocket(Service* service)
 		this_thread::sleep_for(chrono::milliseconds(delay) - last);
 	}
 
-	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
-	send(sock, pld.c_str(), pld.length(), 0);
+	auto res = connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
+
+	if (res < 0)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to connect to udp://" + service->address + ":" + port + ".");
+
+		freeaddrinfo(info);
+		service->data = nullptr;
+		delete data;
+
+		return nullptr;
+	}
+
+	res = send(sock, pld.c_str(), pld.length(), 0);
+
+	if (res < 0)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to send packet to udp://" + service->address + ":" + port + ".");
+
+		freeaddrinfo(info);
+		service->data = nullptr;
+		delete data;
+
+		return nullptr;
+	}
 
 	// clean-up
 

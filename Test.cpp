@@ -813,7 +813,7 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 	BOOST_TEST_CHECK(!servs[1]->alive, "0.* should not answer.");
 	
 	BOOST_TEST_CHECK( servs[0]->reason == AR_ReplyReceived, "178.* reason should be ReplyReceived, it is instead " + Service::ReasonString(servs[0]->reason) + ".");
-	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable), "0.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
+	BOOST_TEST_CHECK((servs[1]->reason == AR_TimedOut || servs[1]->reason == AR_IcmpUnreachable || servs[1]->reason == AR_ScanFailed), "0.* reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(servs[1]->reason) + ".");
 }
 
 /*!
@@ -907,6 +907,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv4Processing)
 	BOOST_TEST_CHECK((*hosts)[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString((*hosts)[0]->reason) + ".");
 
 	freeHosts(*hosts);
+	delete hosts;
 }
 
 /*!
@@ -961,6 +962,7 @@ BOOST_AUTO_TEST_CASE(NmapIpv6Processing)
 	BOOST_TEST_CHECK((*hosts)[0]->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString((*hosts)[0]->reason) + ".");
 
 	freeHosts(*hosts);
+	delete hosts;
 }
 
 /*!

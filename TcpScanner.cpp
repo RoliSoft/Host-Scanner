@@ -73,6 +73,20 @@ void* TcpScanner::initSocket(Service* service)
 
 	auto sock = socket(info->ai_family, SOCK_STREAM, IPPROTO_TCP);
 
+	if (
+#if Windows
+		sock == INVALID_SOCKET
+#else
+		sock < 0
+#endif
+		)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to open socket for tcp://" + service->address + ":" + port + ".");
+		freeaddrinfo(info);
+		return nullptr;
+	}
+
 	auto data = new TcpScanData();
 
 	service->data = data;
@@ -105,7 +119,26 @@ void* TcpScanner::initSocket(Service* service)
 
 	service->date = service->host->date = chrono::system_clock::now();
 
-	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
+	auto res = connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
+
+	if (
+		res < 0
+#if Windows
+		&& WSAGetLastError() != WSAEWOULDBLOCK
+#endif
+		)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to connect to tcp://" + service->address + ":" + port + ".");
+
+		freeaddrinfo(info);
+		service->data = nullptr;
+
+		delete data->fdset;
+		delete data;
+
+		return nullptr;
+	}
 
 	// clean-up
 

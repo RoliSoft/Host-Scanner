@@ -16,7 +16,14 @@ bool ThreeDigitTokenizer::CanTokenize(const string& banner)
 
 	static regex rgx("^[2-5]\\d{2}[- ](?!$)", regex::perl);
 
-	return regex_search(banner, rgx);
+	try
+	{
+		return regex_search(banner, rgx);
+	}
+	catch (boost::exception&)
+	{
+		return false;
+	}
 }
 
 vector<string> ThreeDigitTokenizer::Tokenize(const string& banner)

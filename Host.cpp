@@ -115,6 +115,8 @@ Host::~Host()
 	}
 
 	services->clear();
+
+	delete services;
 }
 
 void freeHosts(Hosts& hosts)

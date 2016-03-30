@@ -73,6 +73,7 @@ void* IcmpPinger::initSocket(Service* service)
 
 		service->reason = AR_ScanFailed;
 		log(ERR, "Failed to open socket with AF_INET" + string(info->ai_family == AF_INET6 ? "6" : "") + "/SOCK_RAW.");
+		freeaddrinfo(info);
 		return nullptr;
 	}
 
@@ -118,8 +119,38 @@ void* IcmpPinger::initSocket(Service* service)
 
 	service->date = service->host->date = chrono::system_clock::now();
 
-	connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
-	send(sock, reinterpret_cast<char*>(&pkt), sizeof(pkt), 0);
+	auto res = connect(sock, reinterpret_cast<struct sockaddr*>(info->ai_addr), info->ai_addrlen);
+
+	if (
+		res < 0
+#if Windows
+		&& WSAGetLastError() != WSAEWOULDBLOCK
+#endif
+		)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to connect to icmp://" + service->address + ".");
+
+		freeaddrinfo(info);
+		service->data = nullptr;
+		delete data;
+
+		return nullptr;
+	}
+
+	res = send(sock, reinterpret_cast<char*>(&pkt), sizeof(pkt), 0);
+
+	if (res < 0)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to send packet to icmp://" + service->address + ".");
+
+		freeaddrinfo(info);
+		service->data = nullptr;
+		delete data;
+
+		return nullptr;
+	}
 
 	// clean-up
 

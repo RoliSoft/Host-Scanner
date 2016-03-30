@@ -8,7 +8,14 @@ bool HttpTokenizer::CanTokenize(const string& banner)
 {
 	static regex rgx("^HTTP\\/1\\.[01]\\s(?:\\d{3})(?:\\.\\d+)?\\s", regex::perl);
 
-	return regex_search(banner, rgx);
+	try
+	{
+		return regex_search(banner, rgx);
+	}
+	catch (boost::exception&)
+	{
+		return false;
+	}
 }
 
 vector<string> HttpTokenizer::Tokenize(const string& banner)

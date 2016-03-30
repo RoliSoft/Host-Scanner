@@ -169,7 +169,7 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 		}
 		else
 		{
-			log(VRB, "Scanning the top 100 " + string(isudp ? "UDP" : "TCP") + " ports.");
+			log(VRB, "Scanning the top 100 TCP ports.");
 
 			ports->insert({
 				7 , 9 , 13 , 21 , 22, 23, 25, 26, 37, 53, 79, 80, 81, 88, 106, 110, 111, 113, 119, 135, 139, 143, 144, 179,
@@ -186,7 +186,17 @@ set<unsigned short>* parse_ports(const string& portstr, int& retval, bool isudp 
 	// read all listed ports
 
 	vector<string> portarr;
-	split(portarr, portstr, is_any_of(","), token_compress_on);
+
+	try
+	{
+		split(portarr, portstr, is_any_of(","), token_compress_on);
+	}
+	catch (boost::exception&)
+	{
+		log(ERR, "Unable to parse port list '" + portstr + "'.");
+		retval = EXIT_FAILURE;
+		return ports;
+	}
 
 	for (auto& s_port : portarr)
 	{
@@ -427,9 +437,18 @@ int scan(const po::variables_map& vm)
 
 	if (vm.count("scanner") != 0)
 	{
-		scannerstr = vm["scanner"].as<string>();
-		trim(scannerstr);
-		to_lower(scannerstr);
+		try
+		{
+			scannerstr = vm["scanner"].as<string>();
+			trim(scannerstr);
+			to_lower(scannerstr);
+		}
+		catch (boost::exception&)
+		{
+			log(ERR, "Unable to parse scanner argument.");
+			retval = EXIT_FAILURE;
+			goto cleanup;
+		}
 	}
 	else
 	{

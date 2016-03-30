@@ -34,7 +34,15 @@ bool DataReader::OpenFile(const string& filename)
 	if (fs::path(filename).extension() == ".gz")
 	{
 #if HAVE_ZLIB
-		bs->push(io::gzip_decompressor());
+		try
+		{
+			bs->push(io::gzip_decompressor());
+		}
+		catch (boost::exception&)
+		{
+			Close();
+			return false;
+		}
 #else
 		Close();
 		return false;

@@ -110,6 +110,18 @@ bool EnterpriseLinuxIdentifier::Scan(Host* host)
 		}
 	}
 
+	// save information
+
+	if (isEL)
+	{
+		host->opSys = OpSys::EnterpriseLinux;
+
+		if (elVer.is_initialized())
+		{
+			host->osVer = elVer.get();
+		}
+	}
+
 	return isEL;
 }
 

@@ -53,6 +53,21 @@ bool OpSysIdentifier::AutoProcess(Host* host)
 	return false;
 }
 
+string OpSysIdentifier::OpSysString(OpSys opsys)
+{
+	static unordered_map<int, string> opsyses = {
+		{ Unidentified,    "Unidentified" },
+		{ Debian,          "Debian" },
+		{ Ubuntu,          "Ubuntu" },
+		{ EnterpriseLinux, "Red Hat/CentOS" },
+		{ Fedora,          "Fedora" },
+	};
+
+	auto iter = opsyses.find(opsys);
+
+	return iter != opsyses.end() ? iter->second : "Unkown";
+}
+
 OpSysIdentifier::~OpSysIdentifier()
 {
 }

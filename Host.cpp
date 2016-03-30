@@ -4,7 +4,7 @@ using namespace std;
 
 Host::Host(const Host& host)
 	: address(host.address), alive(host.alive), reason(host.reason),
-	  services(new Services()), data(host.data)
+	  services(new Services()), opSys(opSys), osVer(osVer), data(host.data)
 {
 	for (auto service : *host.services)
 	{
@@ -13,12 +13,12 @@ Host::Host(const Host& host)
 }
 
 Host::Host(const string& address)
-	: address(address), services(new Services()), data(nullptr)
+	: address(address), services(new Services()), opSys(opSys), osVer(osVer), data(nullptr)
 {
 }
 
 Host::Host(const string& address, const set<unsigned short>& tcps, const set<unsigned short>& udps)
-	: address(address), services(new Services()), data(nullptr)
+	: address(address), services(new Services()), opSys(opSys), osVer(osVer), data(nullptr)
 {
 	if (tcps.size() > 0)
 	{

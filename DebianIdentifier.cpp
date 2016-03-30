@@ -21,7 +21,7 @@ unordered_map<string, int> DebianIdentifier::versionNames = unordered_map<string
 };
 
 // compiled by browsing changelogs at https://packages.debian.org/ and https://archive.debian.net/
-unordered_map<string, int> DebianIdentifier::bundledVersions = unordered_map<string, int>{
+unordered_map<string, int> DebianIdentifier::bundledVersions = unordered_map<string, int> {
 	{ "7.2p2",   9 },
 	{ "6.7p1",   8 },
 	{ "6.6p1",   7 }, // backport
@@ -143,6 +143,18 @@ bool DebianIdentifier::Scan(Host* host)
 		if (bver != bundledVersions.end())
 		{
 			debVer = (*bver).second;
+		}
+	}
+
+	// save information
+
+	if (isDeb)
+	{
+		host->opSys = OpSys::Debian;
+
+		if (debVer.is_initialized())
+		{
+			host->osVer = debVer.get();
 		}
 	}
 

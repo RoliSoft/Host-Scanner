@@ -6,6 +6,39 @@
 #include "Service.h"
 
 /*!
+ * List of operating systems.
+ */
+typedef enum
+{
+
+	/*!
+	 * The operating system was not identified.
+	 */
+	Unidentified = -1,
+	
+	/*!
+	 * Debian Linux
+	 */
+	Debian = 1,
+	
+	/*!
+	 * Ubuntu Linux
+	 */
+	Ubuntu = 2,
+	
+	/*!
+	 * Red Hat/CentOS Linux
+	 */
+	EnterpriseLinux = 3,
+	
+	/*!
+	 * Fedora Linux
+	 */
+	Fedora = 4,
+
+} OpSys;
+
+/*!
  * Represents a host which hosts a collection of services.
  */
 class Host
@@ -32,6 +65,16 @@ public:
 	 * List of services on this host.
 	 */
 	Services* services;
+
+	/*!
+	 * The operating system of the host.
+	 */
+	OpSys opSys;
+
+	/*!
+	 * The version of the operating system.
+	 */
+	double osVer;
 
 	/*!
 	 * Time of last packet sent to this host.

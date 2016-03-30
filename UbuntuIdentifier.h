@@ -14,6 +14,9 @@ public:
 	 * Processes the specified host.
 	 * 
 	 * \param host Scanned host.
+	 * 
+	 * \return true if the operating system was identified,
+	 * 		   otherwise false.
 	 */
 	bool Scan(Host* host) override;
 
@@ -27,11 +30,11 @@ private:
 	/*!
 	 * Ubuntu distribution names mapped to their version numbers.
 	 */
-	static std::unordered_map<std::string, float> versionNames;
+	static std::unordered_map<std::string, double> versionNames;
 
 	/*!
 	 * OpenSSH version numbers mapped to the Ubuntu version they came with.
 	 */
-	static std::unordered_map<std::string, float> bundledVersions;
+	static std::unordered_map<std::string, double> bundledVersions;
 
 };

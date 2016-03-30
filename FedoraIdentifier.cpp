@@ -106,6 +106,18 @@ bool FedoraIdentifier::Scan(Host* host)
 		}
 	}
 
+	// save information
+
+	if (isFed)
+	{
+		host->opSys = OpSys::Fedora;
+
+		if (fedVer.is_initialized())
+		{
+			host->osVer = fedVer.get();
+		}
+	}
+
 	return isFed;
 }
 

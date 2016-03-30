@@ -8,7 +8,7 @@ using namespace std;
 using namespace boost;
 
 // https://wiki.ubuntu.com/Releases
-unordered_map<string, float> UbuntuIdentifier::versionNames = unordered_map<string, float> {
+unordered_map<string, double> UbuntuIdentifier::versionNames = unordered_map<string, double> {
 	{ "xenial",   16.04 }, // lts
 	{ "wily",     15.10 },
 	{ "vivid",    15.04 },
@@ -30,12 +30,12 @@ unordered_map<string, float> UbuntuIdentifier::versionNames = unordered_map<stri
 };
 
 // compiled by browsing changelogs at https://launchpad.net/ubuntu/+source/openssh
-unordered_map<string, float> UbuntuIdentifier::bundledVersions = unordered_map<string, float> {
+unordered_map<string, double> UbuntuIdentifier::bundledVersions = unordered_map<string, double> {
 	{ "7.2p2",   16.04 },
 	{ "6.9p1",   15.10 },
 	{ "6.7p1",   15.04 },
 	{ "6.6p1",   14.10 },
-	{ "6.6.1p1", 14.04 }, // .3
+	{ "6.6.1p1", 14.04 }, // .4
 	{ "5.9p1",   14.04 },
 	{ "5.3p1",   10.04 },
 	{ "4.7p1",   8.04 },
@@ -46,7 +46,7 @@ bool UbuntuIdentifier::Scan(Host* host)
 {
 	auto isDeb = false;
 	string sshVer;
-	optional<float> debVer, secUpd;
+	optional<double> debVer, secUpd;
 
 	// check if any SSH services are available
 
@@ -110,7 +110,7 @@ bool UbuntuIdentifier::Scan(Host* host)
 
 		if (sm["debsec"].matched)
 		{
-			secUpd = stof(sm["debsec"].str());
+			secUpd = stod(sm["debsec"].str());
 		}
 	}
 
@@ -129,6 +129,18 @@ bool UbuntuIdentifier::Scan(Host* host)
 		if (bver != bundledVersions.end())
 		{
 			debVer = (*bver).second;
+		}
+	}
+
+	// save information
+	
+	if (isDeb)
+	{
+		host->opSys = OpSys::Ubuntu;
+		
+		if (debVer.is_initialized())
+		{
+			host->osVer = debVer.get();
 		}
 	}
 

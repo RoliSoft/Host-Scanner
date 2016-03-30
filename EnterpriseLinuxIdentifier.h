@@ -14,6 +14,9 @@ public:
 	 * Processes the specified host.
 	 * 
 	 * \param host Scanned host.
+	 * 
+	 * \return true if the operating system was identified,
+	 * 		   otherwise false.
 	 */
 	bool Scan(Host* host) override;
 

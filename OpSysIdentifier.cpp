@@ -3,6 +3,7 @@
 #include "DebianIdentifier.h"
 #include "EnterpriseLinuxIdentifier.h"
 #include "FedoraIdentifier.h"
+#include "WindowsIdentifier.h"
 
 using namespace std;
 
@@ -50,6 +51,15 @@ bool OpSysIdentifier::AutoProcess(Host* host)
 		return true;
 	}
 
+	// try checking if any Windows-exclusive services are running
+
+	static WindowsIdentifier windows;
+
+	if (windows.Scan(host))
+	{
+		return true;
+	}
+
 	return false;
 }
 
@@ -61,6 +71,7 @@ string OpSysIdentifier::OpSysString(OpSys opsys)
 		{ Ubuntu,          "Ubuntu" },
 		{ EnterpriseLinux, "Red Hat/CentOS" },
 		{ Fedora,          "Fedora" },
+		{ WindowsNT,       "Windows" },
 	};
 
 	auto iter = opsyses.find(opsys);

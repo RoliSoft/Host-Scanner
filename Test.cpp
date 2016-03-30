@@ -41,6 +41,7 @@
 #include "DebianIdentifier.h"
 #include "EnterpriseLinuxIdentifier.h"
 #include "FedoraIdentifier.h"
+#include "WindowsIdentifier.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -595,6 +596,32 @@ BOOST_AUTO_TEST_CASE(IdentifyFedora)
 
 	BOOST_TEST_CHECK(hostvr.opSys == OpSys::Fedora, "Failed to identify Fedora, got instead '" + OpSysIdentifier::OpSysString(hostvr.opSys) + "'.");
 	BOOST_TEST_CHECK(hostvr.osVer == 24, "Failed to identify version of Fedora 24, got instead '" + to_string(hostvr.osVer) + "'.");
+}
+
+/*!
+ * Tests the Windows operating system identifier.
+ *
+ * The test checks if any Windows-exclusive services are running on the host.
+ */
+BOOST_AUTO_TEST_CASE(IdentifyWindows)
+{
+	// test Cygwin detection
+
+	Host hostcy("whatever", { 22 });
+	hostcy.services->at(0)->banner = "SSH-2.0-OpenSSH_5.1 Cygwin-1.7.32\r\n";
+
+	// test Microsoft-branded server detection
+
+	Host hostms("whatever", { 80 });
+	hostms.services->at(0)->banner = "HTTP/1.1 200 OK\r\nDate: Wed, 30 Mar 2016 00:49:15 GMT\r\nServer: Microsoft-IIS/8.5\r\nX-Powered-By: ASP.NET\r\n\r\n";
+
+	WindowsIdentifier os;
+
+	BOOST_TEST_CHECK(os.Scan(&hostcy), "Failed to identify Windows via Cygwin.");
+	BOOST_TEST_CHECK(os.Scan(&hostms), "Failed to identify Windows via Microsoft servers.");
+
+	BOOST_TEST_CHECK(hostcy.opSys == OpSys::WindowsNT, "Failed to identify Windows, got instead '" + OpSysIdentifier::OpSysString(hostcy.opSys) + "'.");
+	BOOST_TEST_CHECK(hostms.opSys == OpSys::WindowsNT, "Failed to identify Windows, got instead '" + OpSysIdentifier::OpSysString(hostms.opSys) + "'.");
 }
 
 //---------------------------------------------------------------------------------------------------------------------

@@ -36,6 +36,11 @@ typedef enum
 	 */
 	Fedora = 4,
 
+	/*!
+	 * Windows
+	 */
+	WindowsNT = 10,
+
 } OpSys;
 
 /*!

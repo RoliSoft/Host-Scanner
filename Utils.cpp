@@ -6,6 +6,7 @@
 #if Unix
 	#include <limits.h>
 	#include <unistd.h>
+	#include <string.h>
 #endif
 
 using namespace std;

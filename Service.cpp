@@ -6,13 +6,13 @@ using namespace std;
 Service::Service(const Service& service)
 	: address(service.address), port(service.port), protocol(service.protocol),
 	  alive(service.alive), reason(service.reason), banner(service.banner),
-	  cpe(service.cpe), host(service.host), data(service.data)
+	  cpe(service.cpe), date(service.date), host(service.host), data(service.data)
 {
 }
 
 Service::Service(const string& address, unsigned short port, IPPROTO protocol)
 	: address(address), port(port), protocol(protocol),
-	  alive(false), reason(AR_NotScanned), banner(""), cpe(), host(nullptr), data(nullptr)
+	  alive(false), reason(AR_NotScanned), banner(""), cpe(), date(), host(nullptr), data(nullptr)
 {
 }
 

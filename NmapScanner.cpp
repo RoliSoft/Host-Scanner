@@ -72,7 +72,7 @@ void NmapScanner::Scan(Hosts* hosts)
 	}
 }
 
-Hosts* NmapScanner::Process(string xml)
+Hosts* NmapScanner::Process(const string& xml)
 {
 	auto hosts = new Hosts();
 
@@ -201,7 +201,7 @@ string NmapScanner::runNmap(Hosts* hosts, bool v6)
 	return xml;
 }
 
-void NmapScanner::parseXml(string xml, Hosts* hosts, bool append)
+void NmapScanner::parseXml(const string& xml, Hosts* hosts, bool append)
 {
 	using property_tree::ptree;
 
@@ -265,7 +265,7 @@ void NmapScanner::parseXml(string xml, Hosts* hosts, bool append)
 
 			// clear fields from previous host
 
-			address = "";
+			address.clear();
 
 			// enumerate the attributes of this host
 
@@ -294,11 +294,10 @@ void NmapScanner::parseXml(string xml, Hosts* hosts, bool append)
 
 						// clear fields from previous port
 
-						port   = 0;
 						proto  = IPPROTO_TCP;
 						open   = false;
-						banner = "";
 						reason = AR_NotScanned;
+						banner.clear();
 
 						// parse the attributes accessible from here
 

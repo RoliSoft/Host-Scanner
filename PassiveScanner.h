@@ -71,7 +71,7 @@ private:
 	 * \param src Scan result to merge.
 	 * \param dst Destination for the merger.
 	 */
-	void mergeHosts(Host* src, Host* dst);
+	static void mergeHosts(Host* src, Host* dst);
 
 	/*!
 	 * Merges two service results.
@@ -79,6 +79,6 @@ private:
 	 * \param src Service to merge.
 	 * \param dst Destination for the merger.
 	 */
-	void mergeServices(Service* src, Service* dst);
+	static void mergeServices(Service* src, Service* dst);
 
 };

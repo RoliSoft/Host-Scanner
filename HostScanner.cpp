@@ -95,6 +95,6 @@ unsigned int HostScanner::createBitmask(int cidr)
 const char* HostScanner::uintToIp(unsigned int ip)
 {
 	auto addr = new char[16];
-	snprintf(addr, 16, "%d.%d.%d.%d", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
+	snprintf(addr, 16, "%u.%u.%u.%u", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
 	return addr;
 }

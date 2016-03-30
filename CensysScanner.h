@@ -31,7 +31,7 @@ public:
 	 *
 	 * \param auth API username and password to use for the requests.
 	 */
-	CensysScanner(const std::string& auth);
+	explicit CensysScanner(const std::string& auth);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.

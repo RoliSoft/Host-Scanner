@@ -61,7 +61,13 @@ void* IcmpPinger::initSocket(Service* service)
 
 	auto sock = socket(info->ai_family, SOCK_RAW, service->protocol);
 
-	if (sock < 0)
+	if (
+#if Windows
+		sock == INVALID_SOCKET
+#else
+		sock < 0
+#endif
+		)
 	{
 		// admin rights are required for raw sockets
 

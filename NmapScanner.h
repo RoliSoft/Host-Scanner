@@ -47,7 +47,7 @@ public:
 	 *
 	 * \return Reconstructed list of hosts.
 	 */
-	Hosts* Process(std::string xml);
+	Hosts* Process(const std::string& xml);
 
 	/*!
 	 * Gets the version number of the installed nmap executable.
@@ -82,6 +82,6 @@ private:
 	 * \param hosts List of hosts.
 	 * \param append Whether to manipulate the host list or append to it.
 	 */
-	void parseXml(std::string xml, Hosts* hosts, bool append = false);
+	void parseXml(const std::string& xml, Hosts* hosts, bool append = false);
 
 };

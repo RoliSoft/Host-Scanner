@@ -518,7 +518,7 @@ int scan(const po::variables_map& vm)
 		if (shodan_key.length() < 2)
 		{
 			log(WRN, "Shodan requires an API key via --shodan-key from https://account.shodan.io/");
-			shodan_key = "";
+			shodan_key.clear();
 		}
 
 		if (vm.count("censys-key") != 0)
@@ -529,7 +529,7 @@ int scan(const po::variables_map& vm)
 		if (censys_auth.length() < 2 || censys_auth.find(":") == string::npos)
 		{
 			log(WRN, "Censys requires token in `uid:secret` format via --censys-key from https://censys.io/account");
-			censys_auth = "";
+			censys_auth.clear();
 		}
 
 		if (shodan_key.length() < 2 && censys_auth.length() < 2)
@@ -720,25 +720,11 @@ postScan:
 	}
 
 cleanup:
-	if (scanner != nullptr)
-	{
-		delete scanner;
-	}
 
-	if (hosts != nullptr)
-	{
-		delete hosts;
-	}
-
-	if (ports != nullptr)
-	{
-		delete ports;
-	}
-
-	if (udports != nullptr)
-	{
-		delete udports;
-	}
+	delete scanner;
+	delete hosts;
+	delete ports;
+	delete udports;
 	
 	return retval;
 }

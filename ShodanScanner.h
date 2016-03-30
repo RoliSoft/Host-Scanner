@@ -30,7 +30,7 @@ public:
 	 *
 	 * \param key API key to use for the requests.
 	 */
-	ShodanScanner(const std::string& key);
+	explicit ShodanScanner(const std::string& key);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.

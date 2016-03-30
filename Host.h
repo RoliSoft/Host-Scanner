@@ -103,7 +103,7 @@ public:
 	 * 
 	 * \param address Remote address.
 	 */
-	Host(const std::string& address);
+	explicit Host(const std::string& address);
 
 	/*!
 	 * Creates a new instance of this type.

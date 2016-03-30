@@ -31,6 +31,7 @@
 #include "BannerProcessor.h"
 #include "VulnerabilityLookup.h"
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <tuple>
 #include <vector>

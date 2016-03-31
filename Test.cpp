@@ -42,6 +42,7 @@
 #include "EnterpriseLinuxIdentifier.h"
 #include "FedoraIdentifier.h"
 #include "WindowsIdentifier.h"
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -93,6 +94,10 @@ void log(int level, const string& msg)
 	{
 		return;
 	}
+
+#if BOOST_VERSION < 105900
+	ignore_unused(msg);
+#endif
 
 	BOOST_TEST_WARN(false, msg);
 }

@@ -1,4 +1,4 @@
-#include "OpSysIdentifier.h"
+#include "OperatingSystemIdentifier.h"
 #include "UbuntuIdentifier.h"
 #include "DebianIdentifier.h"
 #include "EnterpriseLinuxIdentifier.h"
@@ -7,7 +7,7 @@
 
 using namespace std;
 
-bool OpSysIdentifier::AutoProcess(Host* host)
+bool OperatingSystemIdentifier::AutoProcess(Host* host)
 {
 	// Ubuntu is tried first, since some distributions tag them as
 	// "Debian-Ubuntu", which might trigger a false-positive with
@@ -63,7 +63,7 @@ bool OpSysIdentifier::AutoProcess(Host* host)
 	return false;
 }
 
-string OpSysIdentifier::OpSysString(OpSys opsys)
+string OperatingSystemIdentifier::OpSysString(OpSys opsys)
 {
 	static unordered_map<int, string> opsyses = {
 		{ Unidentified,    "Unidentified" },
@@ -79,6 +79,6 @@ string OpSysIdentifier::OpSysString(OpSys opsys)
 	return iter != opsyses.end() ? iter->second : "Unkown";
 }
 
-OpSysIdentifier::~OpSysIdentifier()
+OperatingSystemIdentifier::~OperatingSystemIdentifier()
 {
 }

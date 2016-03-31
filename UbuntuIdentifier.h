@@ -1,12 +1,12 @@
 #pragma once
 #include "Stdafx.h"
-#include "OpSysIdentifier.h"
+#include "OperatingSystemIdentifier.h"
 #include <unordered_map>
 
 /*!
  * Implements functionality for identifying Ubuntu based on service banners.
  */
-class UbuntuIdentifier : public OpSysIdentifier
+class UbuntuIdentifier : public OperatingSystemIdentifier
 {
 public:
 	

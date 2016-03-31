@@ -1,12 +1,12 @@
 #pragma once
 #include "Stdafx.h"
-#include "OpSysIdentifier.h"
+#include "OperatingSystemIdentifier.h"
 #include <unordered_map>
 
 /*!
  * Implements functionality for identifying Red Hat and CentOS based on service banners.
  */
-class EnterpriseLinuxIdentifier : public OpSysIdentifier
+class EnterpriseLinuxIdentifier : public OperatingSystemIdentifier
 {
 public:
 	

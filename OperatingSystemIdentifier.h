@@ -5,7 +5,7 @@
 /*!
  * Represents an operating system identifier.
  */
-class OpSysIdentifier
+class OperatingSystemIdentifier
 {
 public:
 
@@ -41,6 +41,6 @@ public:
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
-	virtual ~OpSysIdentifier();
+	virtual ~OperatingSystemIdentifier();
 	
 };

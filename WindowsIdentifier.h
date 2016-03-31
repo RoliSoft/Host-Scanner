@@ -1,11 +1,11 @@
 #pragma once
 #include "Stdafx.h"
-#include "OpSysIdentifier.h"
+#include "OperatingSystemIdentifier.h"
 
 /*!
  * Implements functionality for identifying Windows based on service banners.
  */
-class WindowsIdentifier : public OpSysIdentifier
+class WindowsIdentifier : public OperatingSystemIdentifier
 {
 public:
 	

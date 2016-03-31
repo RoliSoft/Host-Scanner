@@ -36,7 +36,7 @@
 #include "ServiceRegexMatcher.h"
 #include "CpeDictionaryMatcher.h"
 #include "VulnerabilityLookup.h"
-#include "OpSysIdentifier.h"
+#include "OperatingSystemIdentifier.h"
 #include "UbuntuIdentifier.h"
 #include "DebianIdentifier.h"
 #include "EnterpriseLinuxIdentifier.h"
@@ -475,17 +475,17 @@ BOOST_AUTO_TEST_CASE(IdentifyAuto)
 	hostvr.services->at(0)->banner = "SSH-2.0-OpenSSH_5.3\r\n";
 	hostvr.services->at(1)->banner = "HTTP/1.1 200 OK\r\nServer: Apache (CentOS)\r\n\r\n";
 
-	BOOST_TEST_CHECK(OpSysIdentifier::AutoProcess(&hostrn), "Failed to identify release name-based Debian Squeeze.");
-	BOOST_TEST_CHECK(OpSysIdentifier::AutoProcess(&hosttg), "Failed to identify tag-based Ubuntu Trusty Tahr.");
-	BOOST_TEST_CHECK(OpSysIdentifier::AutoProcess(&hostvr), "Failed to identify version-based CentOS 6.");
+	BOOST_TEST_CHECK(OperatingSystemIdentifier::AutoProcess(&hostrn), "Failed to identify release name-based Debian Squeeze.");
+	BOOST_TEST_CHECK(OperatingSystemIdentifier::AutoProcess(&hosttg), "Failed to identify tag-based Ubuntu Trusty Tahr.");
+	BOOST_TEST_CHECK(OperatingSystemIdentifier::AutoProcess(&hostvr), "Failed to identify version-based CentOS 6.");
 
-	BOOST_TEST_CHECK(hostrn.opSys == OpSys::Debian, "Failed to identify Debian, got instead '" + OpSysIdentifier::OpSysString(hostrn.opSys) + "'.");
+	BOOST_TEST_CHECK(hostrn.opSys == OpSys::Debian, "Failed to identify Debian, got instead '" + OperatingSystemIdentifier::OpSysString(hostrn.opSys) + "'.");
 	BOOST_TEST_CHECK(hostrn.osVer == 6, "Failed to identify version of Debian 6, got instead '" + to_string(hostrn.osVer) + "'.");
 
-	BOOST_TEST_CHECK(hosttg.opSys == OpSys::Ubuntu, "Failed to identify Ubuntu, got instead '" + OpSysIdentifier::OpSysString(hosttg.opSys) + "'.");
+	BOOST_TEST_CHECK(hosttg.opSys == OpSys::Ubuntu, "Failed to identify Ubuntu, got instead '" + OperatingSystemIdentifier::OpSysString(hosttg.opSys) + "'.");
 	BOOST_TEST_CHECK(hosttg.osVer == 14.04, "Failed to identify version of Ubuntu 14.04, got instead '" + to_string(hosttg.osVer) + "'.");
 
-	BOOST_TEST_CHECK(hostvr.opSys == OpSys::EnterpriseLinux, "Failed to identify CentOS, got instead '" + OpSysIdentifier::OpSysString(hostvr.opSys) + "'.");
+	BOOST_TEST_CHECK(hostvr.opSys == OpSys::EnterpriseLinux, "Failed to identify CentOS, got instead '" + OperatingSystemIdentifier::OpSysString(hostvr.opSys) + "'.");
 	BOOST_TEST_CHECK(hostvr.osVer == 6, "Failed to identify version of CentOS 6, got instead '" + to_string(hostvr.osVer) + "'.");
 }
 
@@ -518,13 +518,13 @@ BOOST_AUTO_TEST_CASE(IdentifyDebian)
 	BOOST_TEST_CHECK(os.Scan(&hosttg), "Failed to identify tag-based Debian Jessie.");
 	BOOST_TEST_CHECK(os.Scan(&hostvr), "Failed to identify version-based Debian Wheezy.");
 
-	BOOST_TEST_CHECK(hostrn.opSys == OpSys::Debian, "Failed to identify Debian, got instead '" + OpSysIdentifier::OpSysString(hostrn.opSys) + "'.");
+	BOOST_TEST_CHECK(hostrn.opSys == OpSys::Debian, "Failed to identify Debian, got instead '" + OperatingSystemIdentifier::OpSysString(hostrn.opSys) + "'.");
 	BOOST_TEST_CHECK(hostrn.osVer == 6, "Failed to identify version of Debian 6, got instead '" + to_string(hostrn.osVer) + "'.");
 
-	BOOST_TEST_CHECK(hosttg.opSys == OpSys::Debian, "Failed to identify Debian, got instead '" + OpSysIdentifier::OpSysString(hosttg.opSys) + "'.");
+	BOOST_TEST_CHECK(hosttg.opSys == OpSys::Debian, "Failed to identify Debian, got instead '" + OperatingSystemIdentifier::OpSysString(hosttg.opSys) + "'.");
 	BOOST_TEST_CHECK(hosttg.osVer == 8, "Failed to identify version of Debian 8, got instead '" + to_string(hosttg.osVer) + "'.");
 
-	BOOST_TEST_CHECK(hostvr.opSys == OpSys::Debian, "Failed to identify Debian, got instead '" + OpSysIdentifier::OpSysString(hostvr.opSys) + "'.");
+	BOOST_TEST_CHECK(hostvr.opSys == OpSys::Debian, "Failed to identify Debian, got instead '" + OperatingSystemIdentifier::OpSysString(hostvr.opSys) + "'.");
 	BOOST_TEST_CHECK(hostvr.osVer == 7, "Failed to identify version of Debian 7, got instead '" + to_string(hostvr.osVer) + "'.");
 }
 
@@ -551,10 +551,10 @@ BOOST_AUTO_TEST_CASE(IdentifyUbuntu)
 	BOOST_TEST_CHECK(os.Scan(&hosttg), "Failed to identify tag-based Ubuntu Trusty Tahr.");
 	BOOST_TEST_CHECK(os.Scan(&hostvr), "Failed to identify version-based Ubuntu Xenial Xerus.");
 
-	BOOST_TEST_CHECK(hosttg.opSys == OpSys::Ubuntu, "Failed to identify Ubuntu, got instead '" + OpSysIdentifier::OpSysString(hosttg.opSys) + "'.");
+	BOOST_TEST_CHECK(hosttg.opSys == OpSys::Ubuntu, "Failed to identify Ubuntu, got instead '" + OperatingSystemIdentifier::OpSysString(hosttg.opSys) + "'.");
 	BOOST_TEST_CHECK(hosttg.osVer == 14.04, "Failed to identify version of Ubuntu 14.04, got instead '" + to_string(hosttg.osVer) + "'.");
 
-	BOOST_TEST_CHECK(hostvr.opSys == OpSys::Ubuntu, "Failed to identify Ubuntu, got instead '" + OpSysIdentifier::OpSysString(hostvr.opSys) + "'.");
+	BOOST_TEST_CHECK(hostvr.opSys == OpSys::Ubuntu, "Failed to identify Ubuntu, got instead '" + OperatingSystemIdentifier::OpSysString(hostvr.opSys) + "'.");
 	BOOST_TEST_CHECK(hostvr.osVer == 16.04, "Failed to identify version of Ubuntu 16.04, got instead '" + to_string(hostvr.osVer) + "'.");
 }
 
@@ -581,10 +581,10 @@ BOOST_AUTO_TEST_CASE(IdentifyEnterpriseLinux)
 	BOOST_TEST_CHECK(os.Scan(&hosttg), "Failed to identify tag-based RHEL 7.");
 	BOOST_TEST_CHECK(os.Scan(&hostvr), "Failed to identify version-based CentOS 6.");
 
-	BOOST_TEST_CHECK(hosttg.opSys == OpSys::EnterpriseLinux, "Failed to identify Red Hat, got instead '" + OpSysIdentifier::OpSysString(hosttg.opSys) + "'.");
+	BOOST_TEST_CHECK(hosttg.opSys == OpSys::EnterpriseLinux, "Failed to identify Red Hat, got instead '" + OperatingSystemIdentifier::OpSysString(hosttg.opSys) + "'.");
 	BOOST_TEST_CHECK(hosttg.osVer == 7, "Failed to identify version of Red Hat 7, got instead '" + to_string(hosttg.osVer) + "'.");
 
-	BOOST_TEST_CHECK(hostvr.opSys == OpSys::EnterpriseLinux, "Failed to identify CentOS, got instead '" + OpSysIdentifier::OpSysString(hostvr.opSys) + "'.");
+	BOOST_TEST_CHECK(hostvr.opSys == OpSys::EnterpriseLinux, "Failed to identify CentOS, got instead '" + OperatingSystemIdentifier::OpSysString(hostvr.opSys) + "'.");
 	BOOST_TEST_CHECK(hostvr.osVer == 6, "Failed to identify version of CentOS 6, got instead '" + to_string(hostvr.osVer) + "'.");
 }
 
@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE(IdentifyFedora)
 
 	BOOST_TEST_CHECK(os.Scan(&hostvr), "Failed to identify version-based Fedora 24.");
 
-	BOOST_TEST_CHECK(hostvr.opSys == OpSys::Fedora, "Failed to identify Fedora, got instead '" + OpSysIdentifier::OpSysString(hostvr.opSys) + "'.");
+	BOOST_TEST_CHECK(hostvr.opSys == OpSys::Fedora, "Failed to identify Fedora, got instead '" + OperatingSystemIdentifier::OpSysString(hostvr.opSys) + "'.");
 	BOOST_TEST_CHECK(hostvr.osVer == 24, "Failed to identify version of Fedora 24, got instead '" + to_string(hostvr.osVer) + "'.");
 }
 
@@ -631,8 +631,8 @@ BOOST_AUTO_TEST_CASE(IdentifyWindows)
 	BOOST_TEST_CHECK(os.Scan(&hostcy), "Failed to identify Windows via Cygwin.");
 	BOOST_TEST_CHECK(os.Scan(&hostms), "Failed to identify Windows via Microsoft servers.");
 
-	BOOST_TEST_CHECK(hostcy.opSys == OpSys::WindowsNT, "Failed to identify Windows, got instead '" + OpSysIdentifier::OpSysString(hostcy.opSys) + "'.");
-	BOOST_TEST_CHECK(hostms.opSys == OpSys::WindowsNT, "Failed to identify Windows, got instead '" + OpSysIdentifier::OpSysString(hostms.opSys) + "'.");
+	BOOST_TEST_CHECK(hostcy.opSys == OpSys::WindowsNT, "Failed to identify Windows, got instead '" + OperatingSystemIdentifier::OpSysString(hostcy.opSys) + "'.");
+	BOOST_TEST_CHECK(hostms.opSys == OpSys::WindowsNT, "Failed to identify Windows, got instead '" + OperatingSystemIdentifier::OpSysString(hostms.opSys) + "'.");
 }
 
 //---------------------------------------------------------------------------------------------------------------------

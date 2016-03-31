@@ -1,12 +1,12 @@
 #pragma once
 #include "Stdafx.h"
-#include "OpSysIdentifier.h"
+#include "OperatingSystemIdentifier.h"
 #include <unordered_map>
 
 /*!
  * Implements functionality for identifying Debian based on service banners.
  */
-class DebianIdentifier : public OpSysIdentifier
+class DebianIdentifier : public OperatingSystemIdentifier
 {
 public:
 	

@@ -14,6 +14,8 @@ public:
 	 *
 	 * \param passive Whether to fetch existing data via 3rd-party service.
 	 * \param external Whether to use an external scanner.
+	 * 
+	 * \return Instance to be used for scanning.
 	 */
 	static HostScanner* Get(bool passive = false, bool external = false);
 

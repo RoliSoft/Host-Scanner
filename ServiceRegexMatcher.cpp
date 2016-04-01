@@ -38,25 +38,38 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 
 			if (verHasRgx && !cpeHasRgx)
 			{
-				// TODO check whether CPE already has a version field or not
-
 				cpe += ":" + rgx.version;
 				cpeHasRgx = true;
 			}
 
+			// replace regular expression groups to their captured values in the version field
+
 			if (cpeHasRgx)
 			{
-				sregex_token_iterator bsit(cpe.begin(), cpe.end(), bsrgx, 1);
-				sregex_token_iterator end;
+				sregex_iterator bsit(cpe.begin(), cpe.end(), bsrgx);
+				sregex_iterator end;
+
+				string cpe2(cpe);
 
 				for (; bsit != end; ++bsit)
 				{
-					auto nums = (*bsit).str();
+					auto nums = (*bsit)[1].str();
 					auto numi = stoi(nums);
 					auto vals = regex_replace(match[numi].str(), vtrgx, "");
 
-					replace_first(cpe, "$" + nums, vals);
+					replace_first(cpe2, "$" + nums, vals);
 				}
+
+				cpe = cpe2;
+			}
+
+			// strip any irrelevant data
+
+			auto fs = cpe.find(' ');
+
+			if (fs != string::npos)
+			{
+				cpe = cpe.substr(0, fs);
 			}
 
 			matches.push_back(cpe);

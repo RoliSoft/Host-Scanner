@@ -2,6 +2,7 @@
 #include "Stdafx.h"
 #include "OperatingSystemIdentifier.h"
 #include <unordered_map>
+#include <unordered_set>
 
 /*!
  * Implements functionality for identifying Ubuntu based on service banners.
@@ -36,5 +37,10 @@ private:
 	 * OpenSSH version numbers mapped to the Ubuntu version they came with.
 	 */
 	static std::unordered_map<std::string, double> bundledVersions;
+
+	/*!
+	 * List of Long Term Support versions.
+	 */
+	static std::unordered_set<double> ltsVersions;
 
 };

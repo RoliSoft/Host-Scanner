@@ -42,6 +42,10 @@ unordered_map<string, double> UbuntuIdentifier::bundledVersions = unordered_map<
 	{ "4.2p1",   6.06 },
 };
 
+unordered_set<double> UbuntuIdentifier::ltsVersions = unordered_set<double>{
+	16.04, 14.04, 12.04, 10.04, 8.04, 6.06
+};
+
 bool UbuntuIdentifier::Scan(Host* host)
 {
 	auto isDeb = false;
@@ -135,12 +139,23 @@ bool UbuntuIdentifier::Scan(Host* host)
 	
 	if (isDeb)
 	{
+		string cpe = "o:canonical:ubuntu_linux";
+
 		host->opSys = OpSys::Ubuntu;
 		
 		if (debVer.is_initialized())
 		{
+			cpe += ":" + to_string(debVer.get());
+
 			host->osVer = debVer.get();
+
+			if (ltsVersions.find(debVer.get()) != ltsVersions.end())
+			{
+				cpe += "-:lts";
+			}
 		}
+
+		host->cpe.push_back(cpe);
 	}
 
 	return isDeb;

@@ -110,12 +110,18 @@ bool FedoraIdentifier::Scan(Host* host)
 
 	if (isFed)
 	{
+		string cpe = "o:redhat:fedora";
+
 		host->opSys = OpSys::Fedora;
 
 		if (fedVer.is_initialized())
 		{
+			cpe += ":" + to_string(fedVer.get());
+
 			host->osVer = fedVer.get();
 		}
+
+		host->cpe.push_back(cpe);
 	}
 
 	return isFed;

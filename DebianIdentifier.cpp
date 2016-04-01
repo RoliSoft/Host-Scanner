@@ -149,12 +149,18 @@ bool DebianIdentifier::Scan(Host* host)
 
 	if (isDeb)
 	{
+		string cpe = "o:debian:debian_linux";
+
 		host->opSys = OpSys::Debian;
 
 		if (debVer.is_initialized())
 		{
+			cpe += ":" + to_string(debVer.get());
+
 			host->osVer = debVer.get();
 		}
+
+		host->cpe.push_back(cpe);
 	}
 
 	return isDeb;

@@ -19,7 +19,7 @@ unordered_map<string, int> EnterpriseLinuxIdentifier::bundledVersions = unordere
 
 bool EnterpriseLinuxIdentifier::Scan(Host* host)
 {
-	auto isEL = false;
+	auto isEL = false, isCO = false;
 	string sshVer;
 	optional<int> elVer, secUpd;
 
@@ -54,6 +54,9 @@ bool EnterpriseLinuxIdentifier::Scan(Host* host)
 			if (regex_search(service->banner, sm, enttag))
 			{
 				isEL = true;
+
+				auto c = sm[1].str()[0];
+				  isCO = c == 'C' || c == 'c';
 			}
 
 			continue;
@@ -77,6 +80,9 @@ bool EnterpriseLinuxIdentifier::Scan(Host* host)
 		if (sm["tag"].matched)
 		{
 			isEL = true;
+			
+			auto c = sm["tag"].str()[0];
+			  isCO = c == 'C' || c == 'c';
 		}
 
 		// check if release version is present
@@ -114,12 +120,18 @@ bool EnterpriseLinuxIdentifier::Scan(Host* host)
 
 	if (isEL)
 	{
+		auto cpe = "o:" + string(isCO ? "centos:centos" : "redhat:enterprise_linux");
+
 		host->opSys = OpSys::EnterpriseLinux;
 
 		if (elVer.is_initialized())
 		{
+			cpe += ":" + to_string(elVer.get());
+
 			host->osVer = elVer.get();
 		}
+
+		host->cpe.push_back(cpe);
 	}
 
 	return isEL;

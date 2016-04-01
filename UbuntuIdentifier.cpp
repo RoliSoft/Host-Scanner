@@ -112,23 +112,22 @@ bool UbuntuIdentifier::Scan(Host* host)
 		{
 			secUpd = stod(sm["debsec"].str());
 		}
-	}
 
-	// if we are certain the host is running Ubuntu, we have OpenSSH version,
-	// but no Ubuntu distribution version, try to deduce it
-	
-	if (isDeb && !sshVer.empty() && !debVer.is_initialized())
-	{
-		auto ver = sshVer;
+		// otherwise try to deduce Ubuntu distribution based on the OpenSSH version
 
-		trim(ver);
-		to_lower(ver);
-
-		auto bver = bundledVersions.find(ver);
-
-		if (bver != bundledVersions.end())
+		else if (!sshVer.empty() && !debVer.is_initialized())
 		{
-			debVer = (*bver).second;
+			auto ver = sshVer;
+
+			trim(ver);
+			to_lower(ver);
+
+			auto bver = bundledVersions.find(ver);
+
+			if (bver != bundledVersions.end())
+			{
+				debVer = (*bver).second;
+			}
 		}
 	}
 

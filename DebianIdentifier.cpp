@@ -126,23 +126,22 @@ bool DebianIdentifier::Scan(Host* host)
 				secUpd = stoi(sm["debsec"].str());
 			}
 		}
-	}
 
-	// if we are certain the host is running Debian, we have OpenSSH version,
-	// but no Debian distribution version, try to deduce it
-	
-	if (isDeb && !sshVer.empty() && !debVer.is_initialized())
-	{
-		auto ver = sshVer;
+		// otherwise try to deduce Debian distribution based on the OpenSSH version
 
-		trim(ver);
-		to_lower(ver);
-
-		auto bver = bundledVersions.find(ver);
-
-		if (bver != bundledVersions.end())
+		else if (!sshVer.empty() && !debVer.is_initialized())
 		{
-			debVer = (*bver).second;
+			auto ver = sshVer;
+
+			trim(ver);
+			to_lower(ver);
+
+			auto bver = bundledVersions.find(ver);
+
+			if (bver != bundledVersions.end())
+			{
+				debVer = (*bver).second;
+			}
 		}
 	}
 

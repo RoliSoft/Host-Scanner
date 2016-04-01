@@ -67,6 +67,11 @@ public:
 	AliveReason reason = AR_NotScanned;
 
 	/*!
+	 * CPE names of the host.
+	 */
+	std::vector<std::string> cpe;
+
+	/*!
 	 * List of services on this host.
 	 */
 	Services* services;

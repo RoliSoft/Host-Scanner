@@ -48,17 +48,25 @@ vector<string> BannerProcessor::AutoProcess(const string& banner)
 		}
 	}
 
+	// if neither methods matched, re-try matching the full service banner
+	// with the CPE dictionary matcher as a last resort
+
 	if (cpes.size() == 0)
 	{
-		// if neither methods matched, re-try matching the full service banner
-		// with the CPE dictionary matcher as a last resort
-		
 		auto cdlst = cdm.Scan(banner);
 
 		if (cdlst.size() > 0)
 		{
 			cpes.insert(cpes.end(), cdlst.begin(), cdlst.end());
 		}
+	}
+
+	// remove duplicates
+	
+	if (cpes.size() > 1)
+	{
+		sort(cpes.begin(), cpes.end());
+		cpes.erase(unique(cpes.begin(), cpes.end()), cpes.end());
 	}
 
 	return cpes;

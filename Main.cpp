@@ -28,6 +28,7 @@
 #include "PassiveScanner.h"
 #include "ShodanScanner.h"
 #include "CensysScanner.h"
+#include "OperatingSystemIdentifier.h"
 #include "BannerProcessor.h"
 #include "VulnerabilityLookup.h"
 #include <iostream>
@@ -686,10 +687,19 @@ int scan(const po::variables_map& vm)
 postScan:
 	scanner->DumpResults(hosts);
 
-	// start version detection
+	// start OS detection
+
+	log("Initiating identification of " + pluralize(hosts->size(), "operating system") + "...");
 
 	for (auto host : *hosts)
 	{
+		auto res = OperatingSystemIdentifier::AutoProcess(host);
+
+		if (res)
+		{
+			log(MSG, host->address + " is running cpe:/" + host->cpe[0]);
+		}
+
 		for (auto service : *host->services)
 		{
 			if (service->banner.length() != 0)
@@ -698,6 +708,8 @@ postScan:
 			}
 		}
 	}
+
+	// start CPE detection
 
 	log("Initiating identification of " + pluralize(services.size(), "service banner") + "...");
 
@@ -710,9 +722,14 @@ postScan:
 			auto it = cpes.begin();
 			auto cpestr = "cpe:/" + *it;
 
-			for (auto end = cpes.end(); it != end; ++it)
+			if (cpes.size() > 1)
 			{
-				cpestr += ", cpe:/" + *it;
+				++it;
+
+				for (auto end = cpes.end(); it != end; ++it)
+				{
+					cpestr += ", cpe:/" + *it;
+				}
 			}
 
 			log(MSG, service->address + ":" + to_string(service->port) + " is running " + cpestr);
@@ -728,9 +745,14 @@ postScan:
 					auto it2 = vuln.second.begin();
 					auto vulnstr = "CVE-" + (*it2).cve + " (" + trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
 
-					for (auto end = vuln.second.end(); it2 != end; ++it2)
+					if (vuln.second.size() > 1)
 					{
-						vulnstr += ", CVE-" + (*it2).cve + " (" + trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+						++it2;
+
+						for (auto end = vuln.second.end(); it2 != end; ++it2)
+						{
+							vulnstr += ", CVE-" + (*it2).cve + " (" + trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+						}
 					}
 
 					log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr);
@@ -808,6 +830,13 @@ int main(int argc, char *argv[])
 			"Delay between packets sent to the same host. Default is 3 for 100ms. "
 			"Possible values are 0..6, which have the same effect as nmap's -T:\n"
 			"  0 - 5m, 1 - 15s, 2 - 400ms, 3 - 100ms, 4 - 10ms, 5 - 5ms, 6 - no delay")
+		("resolve,r", po::value<string>()->implicit_value(""),
+			"Resolves vulnerable CPE names to their actual package names depending "
+			"on the operating system of the host. The detection of the OS is automatic, "
+			"but specifying an optional argument value sets the OS of the undetected "
+			"hosts to the specified OS. To override detection results, start the value "
+			"with `!`.\n"
+			"  E.g. `debian jessie` or `!rhel 7`")
 		("passive,x",
 			"Globally disables active reconnaissance. Functionality using active "
 			"scanning will break, but ensures no accidental active scans will be "

@@ -76,6 +76,9 @@ The purpose of this project is to implement a network scanner with both active a
 	                          Possible values are 0..6, which have the same effect as nmap's -T:
 	                            0 - 5m, 1 - 15s, 2 - 400ms, 3 - 100ms, 4 - 10ms, 5 - 5ms, 6 - no delay
 
+	  -r [ --resolve ]        Resolves vulnerable CPE names to their actual package names depending on
+							  the automatically detected operating system of the host.
+
 	  -x [ --passive ]        Globally disables active reconnaissance. Functionality using active
 	                          scanning will break, but ensures no accidental active scans will be
 	                          initiated, which might get construed as hostile.
@@ -104,6 +107,18 @@ Scan an IP address or netblock for vulnerabilities passively, with data from bot
 Perform service identification and vulnerability analysis on an earlier XML output of nmap through `nmap -oX report.xml …`:
 
 	./HostScanner -s nmap -f report.xml
+
+Get list of vulnerable packages and command to upgrade it on the host:
+
+	./HostScanner -r 192.168.1.66 192.168.1.71
+
+The above will scan the TCP ports of the specified addresses, perform operating system and service detection followed by vulnerability analysis, and lookup the packages needed to be updated for the discovered CVEs to be mitigated:
+
+	[*] 192.168.1.66 is running cpe:/o:debian:debian_linux:8
+	[*] 192.168.1.71 is running cpe:/o:redhat:enterprise_linux:7
+	    ...
+	[*] 192.168.1.66 -> sudo apt-get install --only-upgrade apache2 php5 python2.7
+	[*] 192.168.1.71 -> sudo yum update httpd php python27-python
 
 ### Persistent Options
 

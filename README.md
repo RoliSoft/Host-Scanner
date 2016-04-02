@@ -34,6 +34,11 @@ The purpose of this project is to implement a network scanner with both active a
 * Vulnerabilitiy Assessment
   * Based on the CVE database, the resolved CPE names (which also include version numbers) are matched against the affected software list of each CVE entry to discover service vulnerabilities.
 
+* Package Lookup
+  * Resolve CPE names to actual operating system packages and get a simple command to update only the vulnerable versions for:
+    * Debian (oldstable to unstable), Ubuntu (all current and lts versions)
+    * Red Hat (5-7), CentOS (5-7), Fedora (all current and rawhide)
+
 * Unit Tests
   * All features are covered by unit tests which are run on three platforms in order to ensure utmost stability and portability.
 

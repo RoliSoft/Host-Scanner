@@ -56,10 +56,11 @@ std::tuple<std::string, std::string> splitPath(const std::string& path);
  *
  * \param quantity Quantity of unit.
  * \param unit Unit to pluralize.
+ * \param addIs Append `is` or `are`.
  *
  * \return String with quantity and unit, pluralized if needed.
  */
-std::string pluralize(int quantity, const std::string& unit);
+std::string pluralize(int quantity, const std::string& unit, bool addIs = false);
 
 /*!
  * Fetches the content behind the specified URL.

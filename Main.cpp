@@ -435,6 +435,7 @@ int scan(const po::variables_map& vm)
 
 	bool resolve;
 	unordered_map<Host*, unordered_set<string>> hostpkgs;
+	unordered_map<char, int> stats;
 
 	Services services;
 
@@ -727,20 +728,14 @@ postScan:
 		{
 			// list detected CPE names
 
-			auto it = cpes.begin();
-			auto cpestr = "cpe:/" + *it;
+			string cpestr;
 
-			if (cpes.size() > 1)
+			for (auto it = cpes.begin(), end = cpes.end(); it != end; ++it)
 			{
-				++it;
-
-				for (auto end = cpes.end(); it != end; ++it)
-				{
-					cpestr += ", cpe:/" + *it;
-				}
+				cpestr += ", cpe:/" + *it;
 			}
 
-			log(MSG, service->address + ":" + to_string(service->port) + " is running " + cpestr);
+			log(MSG, service->address + ":" + to_string(service->port) + " is running " + cpestr.substr(2));
 
 			// perform vulnerability lookup for the names
 
@@ -752,21 +747,36 @@ postScan:
 			{
 				for (auto vuln : vulns)
 				{
-					auto it2 = vuln.second.begin();
-					auto cve = (*it2).cve;
-					auto vulnstr = "CVE-" + (*it2).cve + " (" + trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+					string vulnstr;
 
-					if (vuln.second.size() > 1)
+					for (auto it = vuln.second.begin(), end = vuln.second.end(); it != end; ++it)
 					{
-						++it2;
+						vulnstr += ", CVE-" + (*it).cve + " (" + trim_right_copy_if(to_string((*it).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
 
-						for (auto end = vuln.second.end(); it2 != end; ++it2)
+						if ((*it).severity >= 9)
 						{
-							vulnstr += ", CVE-" + (*it2).cve + " (" + trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+							stats['c']++;
+						}
+						else if ((*it).severity >= 7)
+						{
+							stats['h']++;
+						}
+						else if ((*it).severity >= 4)
+						{
+							stats['m']++;
+						}
+						else
+						{
+							stats['l']++;
+						}
+
+						if ((*it).access == "n")
+						{
+							stats['r']++;
 						}
 					}
 
-					log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr);
+					log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr.substr(2));
 
 					// resolve CPE name to OS package, if requested
 
@@ -776,26 +786,20 @@ postScan:
 
 						if (vpl != nullptr)
 						{
-							auto pkgs = vpl->FindVulnerability("CVE-" + cve);
+							auto pkgs = vpl->FindVulnerability("CVE-" + (*vuln.second.begin()).cve);
 
 							if (pkgs.size() > 0)
 							{
 								hostpkgs[service->host].insert(pkgs.begin(), pkgs.end());
 
-								auto it3 = pkgs.begin();
-								auto pkgstr = *it3;
+								string pkgstr;
 
-								if (pkgs.size() > 1)
+								for (auto it = pkgs.begin(), end = pkgs.end(); it != end; ++it)
 								{
-									++it3;
-
-									for (auto end = pkgs.end(); it3 != end; ++it3)
-									{
-										pkgstr += ", " + *it3;
-									}
+									pkgstr += ", " + *it;
 								}
 
-								log(MSG, service->address + " needs update for " + pkgstr);
+								log(MSG, service->address + " needs update for " + pkgstr.substr(2));
 							}
 						}
 					}
@@ -805,6 +809,16 @@ postScan:
 	}
 
 	// print final stats
+
+	if (!stats.empty())
+	{
+		if (stats['r'] > 0)
+		{
+			log(MSG, pluralize(stats['r'], "service", true) + " remotely exploitable.");
+		}
+
+		log(MSG, to_string(stats['c']) + " critical, " + to_string(stats['h']) + " high, " + to_string(stats['m']) + " medium and " + to_string(stats['l']) + " low severity vulnerabilities across " + pluralize(services.size(), "service") + " and " + pluralize(hosts->size(), "server") + ".");
+	}
 
 	if (resolve && !hostpkgs.empty())
 	{

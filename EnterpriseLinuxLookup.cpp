@@ -6,12 +6,14 @@
 using namespace std;
 using namespace boost;
 
-void EnterpriseLinuxLookup::FindVulnerability(const string& cve)
+unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve, OpSys distrib, float ver)
 {
+	unordered_set<string> pkgs;
+
 	if (!ValidateCVE(cve))
 	{
 		log(ERR, "Specified CVE identifier '" + cve + "' is not syntactically valid.");
-		return;
+		return pkgs;
 	}
 
 	auto resp = getURL("https://bugzilla.redhat.com/show_bug.cgi?ctype=xml&id=" + cve);
@@ -27,7 +29,7 @@ void EnterpriseLinuxLookup::FindVulnerability(const string& cve)
 			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
 		}
 
-		return;
+		return pkgs;
 	}
 
 	auto html = get<0>(resp);
@@ -54,10 +56,10 @@ void EnterpriseLinuxLookup::FindVulnerability(const string& cve)
 		auto dist = m["dist"].str();
 		auto sts  = m["status"].str();
 
-		log(pkg + " " + dist + " " + sts);
+		pkgs.emplace(pkg);
 	}
 
-	smatch cfism;
+	/*smatch cfism;
 
 	if (regex_search(html, cfism, cfirgx))
 	{
@@ -71,7 +73,35 @@ void EnterpriseLinuxLookup::FindVulnerability(const string& cve)
 			trim(str);
 			log(str);
 		}
+	}*/
+
+	return pkgs;
+}
+
+string EnterpriseLinuxLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, float ver)
+{
+	if (pkgs.empty())
+	{
+		return "";
 	}
+
+	string cmd;
+
+	if (distrib == OpSys::Fedora && ver >= 22)
+	{
+		cmd = "sudo dnf update";
+	}
+	else
+	{
+		cmd = "sudo yum update";
+	}
+
+	for (auto& pkg : pkgs)
+	{
+		cmd += " " + pkg;
+	}
+
+	return cmd;
 }
 
 EnterpriseLinuxLookup::~EnterpriseLinuxLookup()

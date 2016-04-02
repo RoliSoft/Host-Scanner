@@ -5,12 +5,14 @@
 using namespace std;
 using namespace boost;
 
-void UbuntuLookup::FindVulnerability(const string& cve)
+unordered_set<string> UbuntuLookup::FindVulnerability(const string& cve, OpSys distrib, float ver)
 {
+	unordered_set<string> pkgs;
+
 	if (!ValidateCVE(cve))
 	{
 		log(ERR, "Specified CVE identifier '" + cve + "' is not syntactically valid.");
-		return;
+		return pkgs;
 	}
 
 	auto resp = getURL("https://people.canonical.com/~ubuntu-security/cve/" + cve.substr(4, 4) + "/" + cve + ".html");
@@ -26,7 +28,7 @@ void UbuntuLookup::FindVulnerability(const string& cve)
 			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
 		}
 
-		return;
+		return pkgs;
 	}
 
 	auto html = get<0>(resp);
@@ -49,8 +51,27 @@ void UbuntuLookup::FindVulnerability(const string& cve)
 		auto sts  = m["status"].str();
 		auto ver  = m["ver"].str();
 
-		log(pkg + " " + dist + " " + sts + " " + ver);
+		pkgs.emplace(pkg);
 	}
+
+	return pkgs;
+}
+
+string UbuntuLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, float ver)
+{
+	if (pkgs.empty())
+	{
+		return "";
+	}
+
+	string cmd = "sudo apt-get install --only-upgrade";
+
+	for (auto& pkg : pkgs)
+	{
+		cmd += " " + pkg;
+	}
+
+	return cmd;
 }
 
 UbuntuLookup::~UbuntuLookup()

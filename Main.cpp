@@ -31,6 +31,7 @@
 #include "OperatingSystemIdentifier.h"
 #include "BannerProcessor.h"
 #include "VulnerabilityLookup.h"
+#include "VendorLookupFactory.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -432,6 +433,9 @@ int scan(const po::variables_map& vm)
 	Hosts *hosts = nullptr;
 	set<unsigned short> *ports = nullptr, *udports = nullptr;
 
+	bool resolve;
+	unordered_map<Host*, unordered_set<string>> hostpkgs;
+
 	Services services;
 
 	// get scanner
@@ -711,6 +715,8 @@ postScan:
 
 	// start CPE detection
 
+	resolve = vm.count("resolve") != 0;
+
 	log("Initiating identification of " + pluralize(services.size(), "service banner") + "...");
 
 	for (auto service : services)
@@ -719,6 +725,8 @@ postScan:
 
 		if (cpes.size() != 0)
 		{
+			// list detected CPE names
+
 			auto it = cpes.begin();
 			auto cpestr = "cpe:/" + *it;
 
@@ -734,6 +742,8 @@ postScan:
 
 			log(MSG, service->address + ":" + to_string(service->port) + " is running " + cpestr);
 
+			// perform vulnerability lookup for the names
+
 			VulnerabilityLookup vl;
 
 			auto vulns = vl.Scan(cpes);
@@ -743,6 +753,7 @@ postScan:
 				for (auto vuln : vulns)
 				{
 					auto it2 = vuln.second.begin();
+					auto cve = (*it2).cve;
 					auto vulnstr = "CVE-" + (*it2).cve + " (" + trim_right_copy_if(to_string((*it2).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
 
 					if (vuln.second.size() > 1)
@@ -756,8 +767,64 @@ postScan:
 					}
 
 					log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr);
+
+					// resolve CPE name to OS package, if requested
+
+					if (resolve && service->host->opSys != OpSys::Unidentified)
+					{
+						auto vpl = VendorLookupFactory::Get(service->host->opSys);
+
+						if (vpl != nullptr)
+						{
+							auto pkgs = vpl->FindVulnerability("CVE-" + cve);
+
+							if (pkgs.size() > 0)
+							{
+								hostpkgs[service->host].insert(pkgs.begin(), pkgs.end());
+
+								auto it3 = pkgs.begin();
+								auto pkgstr = *it3;
+
+								if (pkgs.size() > 1)
+								{
+									++it3;
+
+									for (auto end = pkgs.end(); it3 != end; ++it3)
+									{
+										pkgstr += ", " + *it3;
+									}
+								}
+
+								log(MSG, service->address + " needs update for " + pkgstr);
+							}
+						}
+					}
 				}
 			}
+		}
+	}
+
+	// print final stats
+
+	if (resolve && !hostpkgs.empty())
+	{
+		for (auto& pkgs : hostpkgs)
+		{
+			if (pkgs.second.empty())
+			{
+				continue;
+			}
+
+			auto vpl = VendorLookupFactory::Get(pkgs.first->opSys);
+
+			if (vpl == nullptr)
+			{
+				continue;
+			}
+
+			auto cmd = vpl->GetUpgradeCommand(pkgs.second);
+
+			log(MSG, pkgs.first->address + " -> " + cmd);
 		}
 	}
 
@@ -830,13 +897,9 @@ int main(int argc, char *argv[])
 			"Delay between packets sent to the same host. Default is 3 for 100ms. "
 			"Possible values are 0..6, which have the same effect as nmap's -T:\n"
 			"  0 - 5m, 1 - 15s, 2 - 400ms, 3 - 100ms, 4 - 10ms, 5 - 5ms, 6 - no delay")
-		("resolve,r", po::value<string>()->implicit_value(""),
+		("resolve,r",
 			"Resolves vulnerable CPE names to their actual package names depending "
-			"on the operating system of the host. The detection of the OS is automatic, "
-			"but specifying an optional argument value sets the OS of the undetected "
-			"hosts to the specified OS. To override detection results, start the value "
-			"with `!`.\n"
-			"  E.g. `debian jessie` or `!rhel 7`")
+			"on the automatically detected operating system of the host.")
 		("passive,x",
 			"Globally disables active reconnaissance. Functionality using active "
 			"scanning will break, but ensures no accidental active scans will be "

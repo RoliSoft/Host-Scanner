@@ -888,6 +888,8 @@ postScan:
 				replace(cpestr.begin(), cpestr.end(), ':', ' ');
 				replace(cpestr.begin(), cpestr.end(), '_', ' ');
 
+				cpestr = regex_replace(cpestr, regex("\\b(\\w+)\\s+\\1\\b"), "\\1");
+
 				latexContent += "\n\tThis host was identified to be running " + cpestr.substr(2) + ".\n";
 			}
 
@@ -915,6 +917,8 @@ postScan:
 
 					replace(cpestr.begin(), cpestr.end(), ':', ' ');
 					replace(cpestr.begin(), cpestr.end(), '_', ' ');
+
+					cpestr = regex_replace(cpestr, regex("\\b(\\w+)\\s+\\1\\b"), "\\1");
 
 					latexContent += "\n\t\tThis service was identified to be running " + cpestr.substr(2) + ".\n";
 
@@ -948,25 +952,40 @@ postScan:
 
 							latexContent += "\n\t\t\\subsubsection{\\textcolor{" + color + "}{CVE-" + cve.cve + "}}\n";
 
+							if (!cve.descr.empty())
+							{
+								auto descr = regex_replace(cve.descr, regex("\\\\"), "\\\\\\\\");
+								     descr = regex_replace(descr, regex("([_#$])"), "\\\\\\1");
+
+								latexContent += "\n\t\t\t" + descr + "\n";
+							}
+
 							string access;
 
 							switch (cve.access[0])
 							{
 							case 'l':
-								access = "Exploitation of this vulnerability requires local access, and";
+								access = "requires local access to exploit";
 								break;
 							case 'a':
-								access = "Exploitation of this vulnerability requires adjacent network access, and";
+								access = "requires access to the adjacent network to exploit";
 								break;
 							case 'n':
-								access = "This vulnerability is \\textbf{remotely exploitable}, and";
+								access = "is \\textbf{remotely exploitable}";
 								break;
 							default:
-								access = "This vulnerability";
+								access = "its access vector is unknown";
 								break;
 							}
 
-							latexContent += "\n\t\t\t" + access + " has a CVSS score of \\textbf{" + trim_right_copy_if(to_string(cve.severity), [](char c) { return c == '0' || c == '.'; }) + "}.\n";
+							auto scpestr = cpe.substr(2);
+
+							replace(scpestr.begin(), scpestr.end(), ':', ' ');
+							replace(scpestr.begin(), scpestr.end(), '_', ' ');
+
+							scpestr = regex_replace(scpestr, regex("\\b(\\w+)\\s+\\1\\b"), "\\1");
+
+							latexContent += "\n\t\t\tThis vulnerability affects " + scpestr + ", it has a CVSS score of \\textbf{" + trim_right_copy_if(to_string(cve.severity), [](char c) { return c == '0' || c == '.'; }) + "} and " + access + ".\n";
 							latexContent += "\n\t\t\t\\href{https://web.nvd.nist.gov/view/vuln/detail?vulnId=" + cve.cve + "}{Vulnerability Summary at NVD}\n";
 						}
 					}
@@ -1028,6 +1047,7 @@ postScan:
 			string("\\usepackage[usenames,dvipsnames]{color}\n") +
 			string("\\usepackage{hyperref}\n") +
 			string("\\usepackage{indentfirst}\n\n") +
+			string("\\setlength{\\parskip}{0.25em}\n\n") +
 			string("\\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=black,pdfborder={0 0 0}}\n\n") +
 			string("\\title{" + latexTitle + "}\n") +
 			string("\\author{\\href{https://github.com/RoliSoft/Host-Scanner}{Host Scanner}}\n\n") +

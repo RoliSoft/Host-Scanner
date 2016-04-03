@@ -1109,7 +1109,7 @@ int main(int argc, char *argv[])
 			"Resolves vulnerable CPE names to their actual package names depending "
 			"on the automatically detected operating system of the host.")
 		("output-latex,o", po::value<string>(),
-			"Saves the scan results into a LaTeX file.")
+			"Exports the scan results into a LaTeX file, with all the available information gathered during the scan.")
 		("passive,x",
 			"Globally disables active reconnaissance. Functionality using active "
 			"scanning will break, but ensures no accidental active scans will be "

@@ -39,6 +39,9 @@ The purpose of this project is to implement a network scanner with both active a
     * Debian (oldstable to unstable), Ubuntu (all current and lts versions)
     * Red Hat (5-7), CentOS (5-7), Fedora (all current and rawhide)
 
+* Reporting
+  * Generate a L<sup>A</sup>T<sub>E</sub>X report of the scanned network, which includes open ports, identified services, discovered vulnerabilities and mitigation recommendations.
+
 * Unit Tests
   * All features are covered by unit tests which are run on three platforms in order to ensure utmost stability and portability.
 
@@ -84,6 +87,9 @@ The purpose of this project is to implement a network scanner with both active a
 	  -r [ --resolve ]        Resolves vulnerable CPE names to their actual package names depending on
 							  the automatically detected operating system of the host.
 
+	  -o [ --output-latex ] arg Exports the scan results into a LaTeX file, with all the available
+	                            information gathered during the scan.
+
 	  -x [ --passive ]        Globally disables active reconnaissance. Functionality using active
 	                          scanning will break, but ensures no accidental active scans will be
 	                          initiated, which might get construed as hostile.
@@ -124,6 +130,10 @@ The above will scan the TCP ports of the specified addresses, perform operating 
 	    ...
 	[*] 192.168.1.66 -> sudo apt-get install --only-upgrade apache2 php5 python2.7
 	[*] 192.168.1.71 -> sudo yum update httpd php python27-python
+
+Generate a L<sup>A</sup>T<sub>E</sub>X report with all the information gathered during the scan, including open ports, identified services, discovered vulnerabilities and mitigation recommendations:
+
+	./HostScanner -o report.tex -r 192.168.1.66 192.168.1.71
 
 ### Persistent Options
 

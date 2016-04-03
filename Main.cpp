@@ -434,8 +434,12 @@ int scan(const po::variables_map& vm)
 	set<unsigned short> *ports = nullptr, *udports = nullptr;
 
 	bool resolve;
+	unordered_map<string, vector<CveEntry>> cpevulns;
 	unordered_map<Host*, unordered_set<string>> hostpkgs;
+	unordered_map<Service*, unordered_set<string>> servpkgs;
 	unordered_map<char, int> stats;
+
+	string latexOut, latexContent, latexTitle, latexAbstract;
 
 	Services services;
 
@@ -692,6 +696,20 @@ int scan(const po::variables_map& vm)
 postScan:
 	scanner->DumpResults(hosts);
 
+	if (vm.count("output-latex") != 0)
+	{
+		latexOut = vm["output-latex"].as<string>();
+
+		latexTitle = "Scan report for ";
+
+		for (auto hoststr : hoststrs)
+		{
+			latexTitle += hoststr + ", ";
+		}
+
+		latexTitle = latexTitle.substr(0, latexTitle.size() - 2);
+	}
+
 	// start OS detection
 
 	log("Initiating identification of " + pluralize(hosts->size(), "operating system") + "...");
@@ -726,81 +744,94 @@ postScan:
 
 		if (cpes.size() != 0)
 		{
-			// list detected CPE names
+			service->cpe.insert(service->cpe.end(), cpes.begin(), cpes.end());
+			sort(service->cpe.begin(), service->cpe.end());
+			service->cpe.erase(unique(service->cpe.begin(), service->cpe.end()), service->cpe.end());
+		}
 
+		// list detected CPE names
+
+		if (service->cpe.size() != 0)
+		{
 			string cpestr;
 
-			for (auto it = cpes.begin(), end = cpes.end(); it != end; ++it)
+			for (auto it = service->cpe.begin(), end = service->cpe.end(); it != end; ++it)
 			{
 				cpestr += ", cpe:/" + *it;
 			}
 
 			log(MSG, service->address + ":" + to_string(service->port) + " is running " + cpestr.substr(2));
+		}
 
-			// perform vulnerability lookup for the names
+		// perform vulnerability lookup for the names
 
-			VulnerabilityLookup vl;
+		VulnerabilityLookup vl;
 
-			auto vulns = vl.Scan(cpes);
+		auto vulns = vl.Scan(service->cpe);
 
-			if (vulns.size() > 0)
+		if (vulns.size() > 0)
+		{
+			for (auto vuln : vulns)
 			{
-				for (auto vuln : vulns)
+				if (cpevulns[vuln.first].empty())
 				{
-					string vulnstr;
+					cpevulns[vuln.first].insert(cpevulns[vuln.first].end(), vuln.second.begin(), vuln.second.end());
+				}
 
-					for (auto it = vuln.second.begin(), end = vuln.second.end(); it != end; ++it)
+				string vulnstr;
+
+				for (auto it = vuln.second.begin(), end = vuln.second.end(); it != end; ++it)
+				{
+					vulnstr += ", CVE-" + (*it).cve + " (" + trim_right_copy_if(to_string((*it).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+
+					if ((*it).severity >= 9)
 					{
-						vulnstr += ", CVE-" + (*it).cve + " (" + trim_right_copy_if(to_string((*it).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
-
-						if ((*it).severity >= 9)
-						{
-							stats['c']++;
-						}
-						else if ((*it).severity >= 7)
-						{
-							stats['h']++;
-						}
-						else if ((*it).severity >= 4)
-						{
-							stats['m']++;
-						}
-						else
-						{
-							stats['l']++;
-						}
-
-						if ((*it).access == "n")
-						{
-							stats['r']++;
-						}
+						stats['c']++;
+					}
+					else if ((*it).severity >= 7)
+					{
+						stats['h']++;
+					}
+					else if ((*it).severity >= 4)
+					{
+						stats['m']++;
+					}
+					else
+					{
+						stats['l']++;
 					}
 
-					log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr.substr(2));
-
-					// resolve CPE name to OS package, if requested
-
-					if (resolve && service->host->opSys != OpSys::Unidentified)
+					if ((*it).access == "n")
 					{
-						auto vpl = VendorLookupFactory::Get(service->host->opSys);
+						stats['r']++;
+					}
+				}
 
-						if (vpl != nullptr)
+				log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr.substr(2));
+
+				// resolve CPE name to OS package, if requested
+
+				if (resolve && service->host->opSys != OpSys::Unidentified)
+				{
+					auto vpl = VendorLookupFactory::Get(service->host->opSys);
+
+					if (vpl != nullptr)
+					{
+						auto pkgs = vpl->FindVulnerability("CVE-" + (*vuln.second.begin()).cve);
+
+						if (pkgs.size() > 0)
 						{
-							auto pkgs = vpl->FindVulnerability("CVE-" + (*vuln.second.begin()).cve);
+							servpkgs[service].insert(pkgs.begin(), pkgs.end());
+							hostpkgs[service->host].insert(pkgs.begin(), pkgs.end());
 
-							if (pkgs.size() > 0)
+							string pkgstr;
+
+							for (auto it = pkgs.begin(), end = pkgs.end(); it != end; ++it)
 							{
-								hostpkgs[service->host].insert(pkgs.begin(), pkgs.end());
-
-								string pkgstr;
-
-								for (auto it = pkgs.begin(), end = pkgs.end(); it != end; ++it)
-								{
-									pkgstr += ", " + *it;
-								}
-
-								log(MSG, service->address + " needs update for " + pkgstr.substr(2));
+								pkgstr += ", " + *it;
 							}
+
+							log(MSG, service->address + " needs update for " + pkgstr.substr(2));
 						}
 					}
 				}
@@ -810,7 +841,7 @@ postScan:
 
 	// print final stats
 
-	if (!stats.empty())
+	if (!stats.empty() || !latexOut.empty())
 	{
 		if (stats['r'] > 0)
 		{
@@ -818,6 +849,169 @@ postScan:
 		}
 
 		log(MSG, to_string(stats['c']) + " critical, " + to_string(stats['h']) + " high, " + to_string(stats['m']) + " medium and " + to_string(stats['l']) + " low severity vulnerabilities across " + pluralize(services.size(), "service") + " and " + pluralize(hosts->size(), "server") + ".");
+
+	}
+
+	// generate latex report, if requested
+	
+	if (!latexOut.empty())
+	{
+		// generate abstract
+
+		latexAbstract = "On the " + pluralize(hosts->size(), "IP") + " scanned, " + pluralize(services.size(), "service") + " were discovered having " + to_string(stats['c']) + " critical, " + to_string(stats['h']) + " high, " + to_string(stats['m']) + " medium and " + to_string(stats['l']) + " low severity vulnerabilities.";
+
+		if (stats['r'] > 0)
+		{
+			latexAbstract += " " + pluralize(stats['r'], "service") + " were found to be remotely exploitable.";
+		}
+		else
+		{
+			latexAbstract += " No services were found to be remotely exploitable.";
+		}
+
+		// generate content
+		
+		for (auto host : *hosts)
+		{
+			latexContent += "\n\\section{" + host->address + "}\n";
+
+			if (!host->cpe.empty())
+			{
+				string cpestr;
+
+				for (auto it = host->cpe.begin(), end = host->cpe.end(); it != end; ++it)
+				{
+					cpestr += ", " + (*it).substr(2);
+				}
+
+				replace(cpestr.begin(), cpestr.end(), ':', ' ');
+				replace(cpestr.begin(), cpestr.end(), '_', ' ');
+
+				latexContent += "\n\tThis host was identified to be running " + cpestr.substr(2) + ".\n";
+			}
+
+			auto any = false;
+
+			for (auto service : *host->services)
+			{
+				if (!service->alive)
+				{
+					continue;
+				}
+
+				any = true;
+
+				latexContent += "\n\t\\subsection{Port " + to_string(service->port) + "}\n";
+
+				if (!service->cpe.empty())
+				{
+					string cpestr;
+
+					for (auto it = service->cpe.begin(), end = service->cpe.end(); it != end; ++it)
+					{
+						cpestr += ", " + (*it).substr(2);
+					}
+
+					replace(cpestr.begin(), cpestr.end(), ':', ' ');
+					replace(cpestr.begin(), cpestr.end(), '_', ' ');
+
+					latexContent += "\n\t\tThis service was identified to be running " + cpestr.substr(2) + ".\n";
+
+					for (auto cpe : service->cpe)
+					{
+						if (cpevulns[cpe].empty())
+						{
+							continue;
+						}
+
+						for (auto cve : cpevulns[cpe])
+						{
+							string color;
+
+							if (cve.severity >= 9)
+							{
+								color = "Red";
+							}
+							else if (cve.severity >= 7)
+							{
+								color = "Orange";
+							}
+							else if (cve.severity >= 4)
+							{
+								color = "Yellow";
+							}
+							else
+							{
+								color = "Black";
+							}
+
+							latexContent += "\n\t\t\\subsubsection{\\textcolor{" + color + "}{CVE-" + cve.cve + "}}\n";
+
+							string access;
+
+							switch (cve.access[0])
+							{
+							case 'l':
+								access = "Exploitation of this vulnerability requires local access, and";
+								break;
+							case 'a':
+								access = "Exploitation of this vulnerability requires adjacent network access, and";
+								break;
+							case 'n':
+								access = "This vulnerability is \\textbf{remotely exploitable}, and";
+								break;
+							default:
+								access = "This vulnerability";
+								break;
+							}
+
+							latexContent += "\n\t\t\t" + access + " has a CVSS score of \\textbf{" + trim_right_copy_if(to_string(cve.severity), [](char c) { return c == '0' || c == '.'; }) + "}.\n";
+							latexContent += "\n\t\t\t\\href{https://web.nvd.nist.gov/view/vuln/detail?vulnId=" + cve.cve + "}{Vulnerability Summary at NVD}\n";
+						}
+					}
+				}
+				else
+				{
+					latexContent += "\n\t\tThis port was open, but failed to be identified.\n";
+				}
+			}
+
+			if (!any)
+			{
+				latexContent += "\n\tThis host was scanned, but no services were discovered.\n";
+			}
+		}
+
+		latexContent = 
+			string("\\documentclass[12pt,a4paper]{article}\n\n") +
+			string("\\usepackage[usenames,dvipsnames]{color}\n") +
+			string("\\usepackage{hyperref}\n") +
+			string("\\usepackage{indentfirst}\n\n") +
+			string("\\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=black,pdfborder={0 0 0}}\n\n") +
+			string("\\title{" + latexTitle + "}\n") +
+			string("\\author{\\href{https://github.com/RoliSoft/Host-Scanner}{Host Scanner}}\n\n") +
+			string("\\begin{document}\n\n") +
+			string("\\maketitle\n\n") +
+			string("\\begin{abstract}\n") +
+			string("	" + latexAbstract + "\n") +
+			string("\\end{abstract}\n\n") +
+			string("\\tableofcontents\n") +
+			latexContent +
+			string("\n\\end{document}");
+
+		ofstream out(latexOut);
+
+		if (out.good())
+		{
+			out << latexContent;
+			out.close();
+
+			log(MSG, "LaTeX report saved to file '" + latexOut + "'.");
+		}
+		else
+		{
+			log(ERR, "Failed to save LaTeX report to file '" + latexOut + "'.");
+		}
 	}
 
 	if (resolve && !hostpkgs.empty())
@@ -914,6 +1108,8 @@ int main(int argc, char *argv[])
 		("resolve,r",
 			"Resolves vulnerable CPE names to their actual package names depending "
 			"on the automatically detected operating system of the host.")
+		("output-latex,o", po::value<string>(),
+			"Saves the scan results into a LaTeX file.")
 		("passive,x",
 			"Globally disables active reconnaissance. Functionality using active "
 			"scanning will break, but ensures no accidental active scans will be "

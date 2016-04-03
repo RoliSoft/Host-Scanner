@@ -89,7 +89,7 @@ bool DebianIdentifier::Scan(Host* host)
 
 		sshVer = sm["ver"].str();
 
-		service->cpe.push_back("cpe:/a:openbsd:openssh:" + regex_replace(sshVer, cpever, cpepatch));
+		service->cpe.push_back("a:openbsd:openssh:" + regex_replace(sshVer, cpever, cpepatch));
 
 		// if there is a "Debian" tag in the banner, this host runs Debian for sure
 		

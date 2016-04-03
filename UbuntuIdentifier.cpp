@@ -101,7 +101,7 @@ bool UbuntuIdentifier::Scan(Host* host)
 
 		sshVer = sm["ver"].str();
 
-		service->cpe.push_back("cpe:/a:openbsd:openssh:" + regex_replace(sshVer, cpever, cpepatch));
+		service->cpe.push_back("a:openbsd:openssh:" + regex_replace(sshVer, cpever, cpepatch));
 
 		// if there is an "Ubuntu" tag in the banner, this host runs Ubuntu for sure
 		

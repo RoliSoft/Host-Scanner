@@ -85,7 +85,7 @@ bool FedoraIdentifier::Scan(Host* host)
 
 		sshVer = sm["ver"].str();
 
-		service->cpe.push_back("cpe:/a:openbsd:openssh:" + regex_replace(sshVer, cpever, cpepatch));
+		service->cpe.push_back("a:openbsd:openssh:" + regex_replace(sshVer, cpever, cpepatch));
 	}
 
 	// if we are certain the host is running Fedora, we have OpenSSH version,

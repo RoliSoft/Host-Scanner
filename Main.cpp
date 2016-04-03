@@ -45,6 +45,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <boost/regex.hpp>
 
 #if HAVE_CURL
 	#include <curl/curl.h>
@@ -938,11 +939,11 @@ postScan:
 							}
 							else if (cve.severity >= 4)
 							{
-								color = "Yellow";
+								color = "Black";
 							}
 							else
 							{
-								color = "Black";
+								color = "Green";
 							}
 
 							latexContent += "\n\t\t\\subsubsection{\\textcolor{" + color + "}{CVE-" + cve.cve + "}}\n";
@@ -981,8 +982,48 @@ postScan:
 				latexContent += "\n\tThis host was scanned, but no services were discovered.\n";
 			}
 		}
+	}
 
-		latexContent = 
+	if (resolve && !hostpkgs.empty())
+	{
+		if (!latexOut.empty())
+		{
+			latexContent += "\n\\section{Mitigation Recommendations}\n";
+		}
+
+		for (auto& pkgs : hostpkgs)
+		{
+			if (pkgs.second.empty())
+			{
+				continue;
+			}
+
+			auto vpl = VendorLookupFactory::Get(pkgs.first->opSys);
+
+			if (vpl == nullptr)
+			{
+				continue;
+			}
+
+			auto cmd = vpl->GetUpgradeCommand(pkgs.second);
+
+			log(MSG, pkgs.first->address + " -> " + cmd);
+
+			if (!latexOut.empty())
+			{
+				auto texcmd = regex_replace(cmd, regex("_"), "\\_");
+
+				latexContent += "\n\t\\subsection{" + pkgs.first->address + "}\n";
+				latexContent += "\n\t" + texcmd + "\n";
+			}
+		}
+	}
+
+	// save latex report
+
+	if (!latexOut.empty())
+	{
+		latexContent =
 			string("\\documentclass[12pt,a4paper]{article}\n\n") +
 			string("\\usepackage[usenames,dvipsnames]{color}\n") +
 			string("\\usepackage{hyperref}\n") +
@@ -1011,28 +1052,6 @@ postScan:
 		else
 		{
 			log(ERR, "Failed to save LaTeX report to file '" + latexOut + "'.");
-		}
-	}
-
-	if (resolve && !hostpkgs.empty())
-	{
-		for (auto& pkgs : hostpkgs)
-		{
-			if (pkgs.second.empty())
-			{
-				continue;
-			}
-
-			auto vpl = VendorLookupFactory::Get(pkgs.first->opSys);
-
-			if (vpl == nullptr)
-			{
-				continue;
-			}
-
-			auto cmd = vpl->GetUpgradeCommand(pkgs.second);
-
-			log(MSG, pkgs.first->address + " -> " + cmd);
 		}
 	}
 

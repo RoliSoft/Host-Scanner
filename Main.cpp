@@ -906,6 +906,11 @@ postScan:
 
 				latexContent += "\n\t\\subsection{Port " + to_string(service->port) + "}\n";
 
+				if (!service->banner.empty())
+				{
+					latexContent += "\n\t\t\\begin{lstlisting}\n" + service->banner + "\n\t\t\\end{lstlisting}\n";
+				}
+
 				if (!service->cpe.empty())
 				{
 					string cpestr;
@@ -920,7 +925,7 @@ postScan:
 
 					cpestr = regex_replace(cpestr, regex("\\b(\\w+)\\s+\\1\\b"), "\\1");
 
-					latexContent += "\n\t\tThis service was identified to be running " + cpestr.substr(2) + ".\n";
+					latexContent += "\n\t\tThis service was identified to be running " + cpestr.substr(2) + "." + (!service->banner.empty() ? "\\\\" : "") + "\n";
 
 					for (auto cpe : service->cpe)
 					{
@@ -992,7 +997,7 @@ postScan:
 				}
 				else
 				{
-					latexContent += "\n\t\tThis port was open, but failed to be identified.\n";
+					latexContent += "\n\t\tThis port was open, but failed to be identified." + string(!service->banner.empty() ? "\\\\" : "") + "\n";
 				}
 			}
 
@@ -1044,11 +1049,14 @@ postScan:
 	{
 		latexContent =
 			string("\\documentclass[12pt,a4paper]{article}\n\n") +
+			string("\\usepackage[a4paper,total={6.5in,9in}]{geometry}\n") +
 			string("\\usepackage[usenames,dvipsnames]{color}\n") +
 			string("\\usepackage{hyperref}\n") +
-			string("\\usepackage{indentfirst}\n\n") +
-			string("\\setlength{\\parskip}{0.25em}\n\n") +
-			string("\\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=black,pdfborder={0 0 0}}\n\n") +
+			string("\\usepackage{indentfirst}\n") +
+			string("\\usepackage{listings}\n\n") +
+			string("\\setlength{\\parskip}{0.25em}\n") +
+			string("\\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=black,pdfborder={0 0 0}}\n") +
+			string("\\lstset{basicstyle=\\footnotesize\\ttfamily,numbers=left,numberstyle=\\scriptsize,numbersep=7pt,breaklines=true,breakatwhitespace=true,tabsize=4,backgroundcolor=\\color[rgb]{0.95,0.95,0.95}}\n\n") +
 			string("\\title{" + latexTitle + "}\n") +
 			string("\\author{\\href{https://github.com/RoliSoft/Host-Scanner}{Host Scanner}}\n\n") +
 			string("\\begin{document}\n\n") +

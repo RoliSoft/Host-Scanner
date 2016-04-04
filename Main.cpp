@@ -890,7 +890,7 @@ postScan:
 
 				cpestr = regex_replace(cpestr, regex("\\b(\\w+)\\s+\\1\\b"), "\\1");
 
-				latexContent += "\n\tThis host was identified to be running " + cpestr.substr(2) + ".\n";
+				latexContent += "\n\tThis host was identified to be running \\textbf{" + cpestr.substr(2) + "}.\n";
 			}
 
 			auto any = false;
@@ -925,7 +925,7 @@ postScan:
 
 					cpestr = regex_replace(cpestr, regex("\\b(\\w+)\\s+\\1\\b"), "\\1");
 
-					latexContent += "\n\t\tThis service was identified to be running " + cpestr.substr(2) + "." + (!service->banner.empty() ? "\\\\" : "") + "\n";
+					latexContent += "\n\t\tThis service was identified to be running \\textbf{" + cpestr.substr(2) + "}." + (!service->banner.empty() ? "\\\\" : "") + "\n";
 
 					for (auto cpe : service->cpe)
 					{
@@ -1051,7 +1051,7 @@ postScan:
 			string("\\documentclass[12pt,a4paper]{article}\n\n") +
 			string("\\usepackage[a4paper,total={6.5in,9in}]{geometry}\n") +
 			string("\\usepackage[usenames,dvipsnames]{color}\n") +
-			string("\\usepackage{hyperref}\n") +
+			string("\\usepackage[bookmarksdepth=3]{hyperref}\n") +
 			string("\\usepackage{indentfirst}\n") +
 			string("\\usepackage{listings}\n\n") +
 			string("\\setlength{\\parskip}{0.25em}\n") +
@@ -1064,6 +1064,7 @@ postScan:
 			string("\\begin{abstract}\n") +
 			string("	" + latexAbstract + "\n") +
 			string("\\end{abstract}\n\n") +
+			string("\\setcounter{tocdepth}{2}\n") +
 			string("\\tableofcontents\n") +
 			latexContent +
 			string("\n\\end{document}");

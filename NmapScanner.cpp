@@ -253,6 +253,7 @@ void NmapScanner::parseXml(const string& xml, Hosts* hosts, bool append)
 		IPPROTO proto;
 		bool open;
 		AliveReason reason;
+		vector<string> cpes;
 
 		// enumerate hosts
 
@@ -298,6 +299,7 @@ void NmapScanner::parseXml(const string& xml, Hosts* hosts, bool append)
 						open   = false;
 						reason = AR_NotScanned;
 						banner.clear();
+						cpes.clear();
 
 						// parse the attributes accessible from here
 
@@ -366,6 +368,24 @@ void NmapScanner::parseXml(const string& xml, Hosts* hosts, bool append)
 									banner = "HTTP/1.1 200 OK\r\nServer: " + ptport.second.get<string>("<xmlattr>.output", "") + "\r\n\r\n";
 								}
 							}
+
+							// extract any service information, if available, such as CPE names
+
+							else if (ptport.first.data() == string("service"))
+							{
+								for (auto& ptserv : ptport.second)
+								{
+									if (ptserv.first.data() == string("cpe"))
+									{
+										auto cpe = ptserv.second.get<string>("");
+
+										if (cpe.length() > 5)
+										{
+											cpes.push_back(cpe.substr(5));
+										}
+									}
+								}
+							}
 						}
 
 						// new port info available at this phase, store it if relevant
@@ -401,6 +421,11 @@ void NmapScanner::parseXml(const string& xml, Hosts* hosts, bool append)
 								service->banner = banner;
 							}
 
+							if (cpes.size() != 0)
+							{
+								service->cpe.insert(service->cpe.end(), cpes.begin(), cpes.end());
+							}
+
 							if (!host->alive && service->alive)
 							{
 								host->alive  = open;
@@ -425,6 +450,11 @@ void NmapScanner::parseXml(const string& xml, Hosts* hosts, bool append)
 										if (banner.length() != 0)
 										{
 											service->banner = banner;
+										}
+
+										if (cpes.size() != 0)
+										{
+											service->cpe.insert(service->cpe.end(), cpes.begin(), cpes.end());
 										}
 
 										if (!host->alive && service->alive)

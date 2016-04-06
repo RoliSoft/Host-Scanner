@@ -184,7 +184,7 @@ void ShodanScanner::getHostInfo(Host* host)
 
 					if (cpe.length() != 0)
 					{
-						service->cpe.push_back(cpe);
+						service->cpe.push_back(cpe.substr(5));
 					}
 				}
 			}

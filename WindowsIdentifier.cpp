@@ -10,7 +10,7 @@ bool WindowsIdentifier::Scan(Host* host)
 
 	// check if any Microsoft services are running
 
-	static regex wintag("\\b(?:microsoft.?(iis|ftp|esmtp|httpapi)|cygwin|windows)\\b", regex::icase);
+	static regex wintag("\\b(?:microsoft.?(iis|ftp|esmtp|httpapi)|cygwin|windows|win32|win64)\\b", regex::icase);
 
 	for (auto service : *host->services)
 	{
@@ -30,6 +30,7 @@ bool WindowsIdentifier::Scan(Host* host)
 	if (isWin)
 	{
 		host->opSys = OpSys::WindowsNT;
+		host->cpe.push_back("o:microsoft:windows");
 	}
 
 	return isWin;

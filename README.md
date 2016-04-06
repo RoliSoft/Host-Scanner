@@ -75,7 +75,16 @@ The purpose of this project is to implement a network scanner with both active a
 	                            shosys   - Uses data from both Shodan and Censys. (passive)
 
 	  --shodan-key arg        Specifies an API key for Shodan.
+	  --shodan-uri arg        Overrides the API endpoint used for Shodan. You may specify an URI
+	                          starting with file:// pointing to a directory containing previously
+	                          downloaded JSON responses.
+	                            Default: https://api.shodan.io/shodan
+
 	  --censys-key arg        Specifies an API key for Censys in the `uid:secret` format.
+	  --censys-uri arg        Overrides the API endpoint used for Censys. You may specify an URI
+	                          starting with file:// pointing to a directory containing previously
+	                          downloaded JSON responses.
+	                            Default: https://censys.io/api/v1
 
 	  -f [ --input-file ] arg Process an input file with the selected scanner.
 	                            E.g. the nmap scanner can parse XML reports.

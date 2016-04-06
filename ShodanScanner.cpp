@@ -5,9 +5,13 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace boost;
+
+namespace fs = boost::filesystem;
 
 ShodanScanner::ShodanScanner(const string& key)
 	: key(key)
@@ -42,27 +46,55 @@ void ShodanScanner::getHostInfo(Host* host)
 		return;
 	}
 
-	log(VRB, "Downloading https://" + endpoint + "/host/" + host->address + "...");
+	string json;
 
-	auto json = getURL("https://" + endpoint + "/host/" + host->address + "?key=" + key);
-
-	if (get<2>(json) != 200)
+	if (starts_with(endpoint, "file://"))
 	{
-		if (get<2>(json) == -1)
+		auto path = fs::path(endpoint.substr(7)) / fs::path(host->address);
+
+		log(VRB, "Reading " + path.string() + "...");
+
+		ifstream fs(path.string());
+
+		if (!fs.good())
 		{
-			log(ERR, "Failed to send HTTP request: " + get<1>(json));
-		}
-		else
-		{
-			log(ERR, "Failed to get JSON reply: HTTP response code was " + to_string(get<2>(json)) + ".");
+			log(ERR, "Failed to open JSON file for reading: " + path.string());
+			return;
 		}
 
-		return;
+		stringstream buf;
+		buf << fs.rdbuf();
+
+		json = buf.str();
+	}
+	else
+	{
+		auto url = endpoint + "/host/" + host->address + "?key=" + key;
+
+		log(VRB, "Downloading " + url + "...");
+
+		auto req = getURL(url);
+
+		if (get<2>(req) != 200)
+		{
+			if (get<2>(req) == -1)
+			{
+				log(ERR, "Failed to send HTTP request: " + get<1>(req));
+			}
+			else
+			{
+				log(ERR, "Failed to get JSON reply: HTTP response code was " + to_string(get<2>(req)) + ".");
+			}
+
+			return;
+		}
+
+		json = get<0>(req);
 	}
 
 	// parse the JSON response from Shodan
 
-	istringstream jstr(get<0>(json));
+	istringstream jstr(json);
 	ptree pt;
 
 	try

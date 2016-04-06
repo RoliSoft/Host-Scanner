@@ -19,7 +19,7 @@ public:
 	/*!
 	 * API endpoint location.
 	 */
-	std::string endpoint = "censys.io/api/v1";
+	std::string endpoint = "https://censys.io/api/v1";
 
 	/*!
 	 * Initializes a new instance of this class.

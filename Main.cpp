@@ -518,6 +518,11 @@ int scan(const po::variables_map& vm)
 		}
 
 		scanner = new ShodanScanner(key);
+
+		if (vm.count("shodan-uri") != 0)
+		{
+			reinterpret_cast<ShodanScanner*>(scanner)->endpoint = vm["shodan-uri"].as<string>();
+		}
 	}
 	else if (scannerstr == "censys")
 	{
@@ -536,6 +541,11 @@ int scan(const po::variables_map& vm)
 		}
 
 		scanner = new CensysScanner(auth);
+
+		if (vm.count("censys-uri") != 0)
+		{
+			reinterpret_cast<CensysScanner*>(scanner)->endpoint = vm["censys-uri"].as<string>();
+		}
 	}
 	else if (scannerstr == "shosys" || scannerstr == "cendan")
 	{
@@ -571,6 +581,16 @@ int scan(const po::variables_map& vm)
 		}
 
 		scanner = new PassiveScanner(shodan_key, censys_auth);
+
+		if (vm.count("shodan-uri") != 0)
+		{
+			reinterpret_cast<PassiveScanner*>(scanner)->shodan_uri = vm["shodan-uri"].as<string>();
+		}
+
+		if (vm.count("censys-uri") != 0)
+		{
+			reinterpret_cast<PassiveScanner*>(scanner)->censys_uri = vm["censys-uri"].as<string>();
+		}
 	}
 #else
 	else if (scannerstr == "shodan" || scannerstr == "censys" || scannerstr == "shosys" || scannerstr == "cendan")
@@ -861,7 +881,7 @@ postScan:
 	{
 		// generate abstract
 
-		latexAbstract = pluralize(hosts->size(), "IP", true, true) + " scanned having " + pluralize(services.size(), "service") + ", of which " + pluralize(stats['i'], "service", true, true) + " identified, having " + to_string(stats['c']) + " critical, " + to_string(stats['h']) + " high, " + to_string(stats['m']) + " medium and " + to_string(stats['l']) + " low severity vulnerabilities.";
+		latexAbstract = pluralize(hosts->size(), "IP", true, true) + " scanned having " + pluralize(services.size(), "service") + " from which " + pluralize(stats['i'], "service", true, true) + " identified, having " + to_string(stats['c']) + " critical, " + to_string(stats['h']) + " high, " + to_string(stats['m']) + " medium and " + to_string(stats['l']) + " low severity vulnerabilities.";
 
 		if (stats['r'] > 0)
 		{
@@ -876,10 +896,14 @@ postScan:
 		
 		for (auto host : *hosts)
 		{
-			latexContent += "\n\\section{" + host->address + "}\n";
+			auto section = "\n\\section{" + host->address + "}\n";
+			auto any = false;
 
 			if (!host->cpe.empty())
 			{
+				latexContent += section;
+				any = true;
+
 				string cpestr;
 
 				for (auto it = host->cpe.begin(), end = host->cpe.end(); it != end; ++it)
@@ -895,16 +919,18 @@ postScan:
 				latexContent += "\n\tThis host was identified to be running \\textbf{" + cpestr.substr(2) + "}.\n";
 			}
 
-			auto any = false;
-
 			for (auto service : *host->services)
 			{
-				if (!service->alive)
+				if (!service->alive || (service->cpe.empty() && service->banner.empty()))
 				{
 					continue;
 				}
 
-				any = true;
+				if (!any)
+				{
+					latexContent += section;
+					any = true;
+				}
 
 				latexContent += "\n\t\\subsection{Port " + to_string(service->port) + "}\n";
 
@@ -1001,11 +1027,6 @@ postScan:
 				{
 					latexContent += "\n\t\tThis port was open, but failed to be identified." + string(!service->banner.empty() ? "\\\\" : "") + "\n";
 				}
-			}
-
-			if (!any)
-			{
-				latexContent += "\n\tThis host was scanned, but no services were discovered.\n";
 			}
 		}
 	}
@@ -1146,8 +1167,16 @@ int main(int argc, char *argv[])
 			"  shosys   - Uses data from both Shodan and Censys. (passive)")
 		("shodan-key", po::value<string>(),
 			"Specifies an API key for Shodan.")
+		("shodan-uri", po::value<string>(),
+			"Overrides the API endpoint used for Shodan. You may specify an URI starting with "
+			"file:// pointing to a directory containing previously downloaded JSON responses.\n"
+			"  Default: https://api.shodan.io/shodan")
 		("censys-key", po::value<string>(),
 			"Specifies an API key for Censys in the `uid:secret` format.")
+		("censys-uri", po::value<string>(),
+			"Overrides the API endpoint used for Censys. You may specify an URI starting with "
+			"file:// pointing to a directory containing previously downloaded JSON responses.\n"
+			"  Default: https://censys.io/api/v1")
 		("input-file,f", po::value<string>(),
 			"Process an input file with the selected scanner.\n"
 			"  E.g. the nmap scanner can parse XML reports.")

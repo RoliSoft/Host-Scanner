@@ -16,9 +16,19 @@ public:
 	std::string shodan_key;
 
 	/*!
+	 * API endpoint location of Shodan.
+	 */
+	std::string shodan_uri;
+
+	/*!
 	 * Censys API username and password to use for the requests.
 	 */
 	std::string censys_auth;
+
+	/*!
+	 * API endpoint location of Censys.
+	 */
+	std::string censys_uri;
 
 	/*!
 	 * Initializes a new instance of this class.

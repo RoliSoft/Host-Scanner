@@ -20,6 +20,16 @@ void PassiveScanner::Scan(Host* host)
 	static ShodanScanner ss(shodan_key);
 	static CensysScanner cs(censys_auth);
 
+	if (!shodan_uri.empty())
+	{
+		ss.endpoint = shodan_uri;
+	}
+
+	if (!censys_uri.empty())
+	{
+		cs.endpoint = censys_uri;
+	}
+
 	auto shost = new Host(*host);
 	auto chost = new Host(*host);
 

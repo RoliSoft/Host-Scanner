@@ -5,6 +5,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
 
 #if HAVE_CURL
 	#include <curl/curl.h>
@@ -12,6 +14,8 @@
 
 using namespace std;
 using namespace boost;
+
+namespace fs = boost::filesystem;
 
 CensysScanner::CensysScanner(const string& auth)
 	: auth(auth)
@@ -46,35 +50,63 @@ void CensysScanner::getHostInfo(Host* host)
 		return;
 	}
 
-	log(VRB, "Downloading https://" + endpoint + "/view/ipv4/" + host->address + "...");
+	string json;
 
-	auto json = getURL("https://" + endpoint + "/view/ipv4/" + host->address
+	if (starts_with(endpoint, "file://"))
+	{
+		auto path = fs::path(endpoint.substr(7)) / fs::path(host->address);
+
+		log(VRB, "Reading " + path.string() + "...");
+
+		ifstream fs(path.string());
+
+		if (!fs.good())
+		{
+			log(ERR, "Failed to open JSON file for reading: " + path.string());
+			return;
+		}
+
+		stringstream buf;
+		buf << fs.rdbuf();
+
+		json = buf.str();
+	}
+	else
+	{
+		auto url = endpoint + "/view/ipv4/" + host->address;
+
+		log(VRB, "Downloading " + url + "...");
+
+		auto req = getURL(url
 #if HAVE_CURL
-		, [this](CURL* curl)
+			, [this](CURL* curl)
 		{
 			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 			curl_easy_setopt(curl, CURLOPT_USERPWD, auth.c_str());
 		}
 #endif
-	);
+		);
 
-	if (get<2>(json) != 200)
-	{
-		if (get<2>(json) == -1)
+		if (get<2>(req) != 200)
 		{
-			log(ERR, "Failed to send HTTP request: " + get<1>(json));
-		}
-		else
-		{
-			log(ERR, "Failed to get JSON reply: HTTP response code was " + to_string(get<2>(json)) + ".");
+			if (get<2>(req) == -1)
+			{
+				log(ERR, "Failed to send HTTP request: " + get<1>(req));
+			}
+			else
+			{
+				log(ERR, "Failed to get JSON reply: HTTP response code was " + to_string(get<2>(req)) + ".");
+			}
+
+			return;
 		}
 
-		return;
+		json = get<0>(req);
 	}
 
 	// parse the JSON response from Censys
 
-	istringstream jstr(get<0>(json));
+	istringstream jstr(json);
 	ptree pt;
 
 	try
@@ -106,9 +138,13 @@ void CensysScanner::getHostInfo(Host* host)
 
 		for (auto& ptrun : pt)
 		{
-			unsigned short port = static_cast<unsigned short>(stoi(ptrun.first));
-
-			if (port == 0)
+			unsigned short port;
+			
+			try
+			{
+				port = static_cast<unsigned short>(stoi(ptrun.first));
+			}
+			catch (invalid_argument const&)
 			{
 				continue;
 			}

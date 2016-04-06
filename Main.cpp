@@ -754,6 +754,8 @@ postScan:
 
 		if (service->cpe.size() != 0)
 		{
+			stats['i']++;
+
 			string cpestr;
 
 			for (auto it = service->cpe.begin(), end = service->cpe.end(); it != end; ++it)
@@ -859,11 +861,11 @@ postScan:
 	{
 		// generate abstract
 
-		latexAbstract = "On the " + pluralize(hosts->size(), "IP") + " scanned, " + pluralize(services.size(), "service") + " were discovered having " + to_string(stats['c']) + " critical, " + to_string(stats['h']) + " high, " + to_string(stats['m']) + " medium and " + to_string(stats['l']) + " low severity vulnerabilities.";
+		latexAbstract = pluralize(hosts->size(), "IP", true, true) + " scanned having " + pluralize(services.size(), "service") + ", of which " + pluralize(stats['i'], "service", true, true) + " identified, having " + to_string(stats['c']) + " critical, " + to_string(stats['h']) + " high, " + to_string(stats['m']) + " medium and " + to_string(stats['l']) + " low severity vulnerabilities.";
 
 		if (stats['r'] > 0)
 		{
-			latexAbstract += " " + pluralize(stats['r'], "service") + " were found to be remotely exploitable.";
+			latexAbstract += " " + to_string(stats['r']) + " service vulnerabilit" + (stats['r'] > 1 ? "ies were" : "y was") + " found to be remotely exploitable.";
 		}
 		else
 		{
@@ -1038,7 +1040,7 @@ postScan:
 				auto texcmd = regex_replace(cmd, regex("_"), "\\_");
 
 				latexContent += "\n\t\\subsection{" + pkgs.first->address + "}\n";
-				latexContent += "\n\t" + texcmd + "\n";
+				latexContent += "\n\t\begin{lstlisting}\n" + texcmd + "\n\t\\end{lstlisting}\n";
 			}
 		}
 	}

@@ -38,6 +38,7 @@
 #include <tuple>
 #include <vector>
 #include <set>
+#include <iomanip>
 #include <unordered_set>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -936,7 +937,23 @@ postScan:
 
 				if (!service->banner.empty())
 				{
-					latexContent += "\n\t\t\\begin{lstlisting}\n" + service->banner + "\n\t\t\\end{lstlisting}\n";
+					// escape non-printable characters in service banner
+
+					ostringstream banner;
+
+					for (auto it = service->banner.begin(), end = service->banner.end(); it != end; ++it)
+					{
+						if (' ' <= *it && *it <= '~' || *it == '\r' || *it == '\n' || *it == '\t')
+						{
+							banner << *it;
+						}
+						else
+						{
+							banner << "\\x" << setw(2) << hex << setfill('0') << *it;
+						}
+					}
+
+					latexContent += "\n\t\t\\begin{lstlisting}\n" + banner.str() + "\n\t\t\\end{lstlisting}\n";
 				}
 
 				if (!service->cpe.empty())

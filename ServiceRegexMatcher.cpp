@@ -29,51 +29,64 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 	{
 		match_results<string::const_iterator> match;
 
-		if (regex_search(banner, match, rgx.regex, match_single_line))
+		auto found = false;
+
+		try
 		{
-			auto cpe = rgx.cpe;
-
-			auto cpeHasRgx = cpe.find('$') != string::npos;
-			auto verHasRgx = rgx.version.length() > 0 && rgx.version.find('$') != string::npos;
-
-			if (verHasRgx && !cpeHasRgx)
-			{
-				cpe += ":" + rgx.version;
-				cpeHasRgx = true;
-			}
-
-			// replace regular expression groups to their captured values in the version field
-
-			if (cpeHasRgx)
-			{
-				sregex_iterator bsit(cpe.begin(), cpe.end(), bsrgx);
-				sregex_iterator end;
-
-				string cpe2(cpe);
-
-				for (; bsit != end; ++bsit)
-				{
-					auto nums = (*bsit)[1].str();
-					auto numi = stoi(nums);
-					auto vals = regex_replace(match[numi].str(), vtrgx, "");
-
-					replace_first(cpe2, "$" + nums, vals);
-				}
-
-				cpe = cpe2;
-			}
-
-			// strip any irrelevant data
-
-			auto fs = cpe.find(' ');
-
-			if (fs != string::npos)
-			{
-				cpe = cpe.substr(0, fs);
-			}
-
-			matches.push_back(cpe);
+			found = regex_search(banner, match, rgx.regex, match_single_line);
 		}
+		catch (boost::exception const&)
+		{
+			continue;
+		}
+
+		if (!found)
+		{
+			continue;
+		}
+
+		auto cpe = rgx.cpe;
+
+		auto cpeHasRgx = cpe.find('$') != string::npos;
+		auto verHasRgx = rgx.version.length() > 0 && rgx.version.find('$') != string::npos;
+
+		if (verHasRgx && !cpeHasRgx)
+		{
+			cpe += ":" + rgx.version;
+			cpeHasRgx = true;
+		}
+
+		// replace regular expression groups to their captured values in the version field
+
+		if (cpeHasRgx)
+		{
+			sregex_iterator bsit(cpe.begin(), cpe.end(), bsrgx);
+			sregex_iterator end;
+
+			string cpe2(cpe);
+
+			for (; bsit != end; ++bsit)
+			{
+				auto nums = (*bsit)[1].str();
+				auto numi = stoi(nums);
+				auto vals = regex_replace(match[numi].str(), vtrgx, "");
+
+				replace_first(cpe2, "$" + nums, vals);
+			}
+
+			cpe = cpe2;
+		}
+
+		// strip any irrelevant data
+
+		auto fs = cpe.find(' ');
+
+		if (fs != string::npos)
+		{
+			cpe = cpe.substr(0, fs);
+		}
+
+		matches.push_back(cpe);
 	}
 
 	return matches;

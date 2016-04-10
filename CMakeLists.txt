@@ -87,6 +87,33 @@ list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp")
 add_executable(HostScanner ${HEADERS} ${SOURCES} Main.cpp)
 add_executable(TestScanner ${HEADERS} ${SOURCES} Test.cpp)
 
+file(GLOB MISC_SRCS "*.*")
+source_group("Miscellaneous" FILES ${MISC_SRCS})
+
+file(GLOB IDENTIFIER_SRCS "*Identifier.*")
+source_group("Identifiers" FILES ${IDENTIFIER_SRCS})
+
+file(GLOB TOKENIZER_SRCS "*Tokenizer.*")
+source_group("Tokenizers" FILES ${TOKENIZER_SRCS})
+
+file(GLOB LOOKUP_SRCS "*Lookup.*")
+source_group("Lookups" FILES ${LOOKUP_SRCS})
+
+file(GLOB MATCHER_SRCS "*Matcher.*" "BannerProcessor.*")
+source_group("Matchers" FILES ${MATCHER_SRCS})
+
+file(GLOB ACTIVE_SRCS "*Scanner*" "*Pinger*")
+source_group("Scanners/Active" FILES ${ACTIVE_SRCS})
+
+file(GLOB EXTERNAL_SRCS "Nmap*.*")
+source_group("Scanners/External" FILES ${EXTERNAL_SRCS})
+
+file(GLOB PASSIVE_SRCS "Shodan*.*" "Censys*.*" "Passive*.*")
+source_group("Scanners/Passive" FILES ${PASSIVE_SRCS})
+
+file(GLOB FACTORY_SRCS "*Factory.*")
+source_group("Factories" FILES ${FACTORY_SRCS})
+
 if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	file(GLOB CURL_DLLS ${CURL_INCLUDE_DIR}/../bin/*.dll)
 	

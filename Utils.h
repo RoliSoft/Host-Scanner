@@ -89,3 +89,23 @@ std::tuple<std::string, std::string, int> getURL(const std::string& url, const s
  * \return The net error string.
  */
 std::string getNetErrStr(boost::optional<int> code = boost::none);
+
+/*!
+ * Converts RFC1123 dates to Unix timestamps.
+ * 
+ * \param datetime Textual date in RFC1123 format.
+ *
+ * \return Number of seconds elapsed until specified date
+ * 		   since Unix epoch.
+ */
+long rfc1123ToUnix(const std::string& datetime);
+
+/*!
+ * Escapes the specified input in order to be used in a regular expression.
+ *
+ * \param input String to be escaped.
+ *
+ * \return String with characters having special meanings in regular
+ * 		   expressions escaped safely.
+ */
+std::string escapeRegex(const std::string& input);

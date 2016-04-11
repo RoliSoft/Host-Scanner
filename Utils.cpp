@@ -1,7 +1,9 @@
 #include "Utils.h"
 #include <stdlib.h>
 #include <string>
+#include <boost/regex.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 #if Unix
 	#include <limits.h>
@@ -10,6 +12,7 @@
 #endif
 
 using namespace std;
+using namespace boost;
 
 string execute(const char* cmd)
 {
@@ -147,8 +150,8 @@ tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>
 #else
 
 #if __GNUC__ || __clang__
-	boost::ignore_unused(url);
-	boost::ignore_unused(opts);
+	ignore_unused(url);
+	ignore_unused(opts);
 #endif
 
 	return make_tuple("", "not compiled with curl support", -1);
@@ -156,7 +159,7 @@ tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>
 #endif
 }
 
-string getNetErrStr(boost::optional<int> code)
+string getNetErrStr(optional<int> code)
 {
 #if Windows
 	LPSTR errlp = nullptr;
@@ -168,4 +171,31 @@ string getNetErrStr(boost::optional<int> code)
 	char* err = strerror(code.is_initialized() ? code.get() : errno);
 	return err ? err : "";
 #endif
+}
+
+long rfc1123ToUnix(const string& datetime)
+{
+	using namespace gregorian;
+	using namespace local_time;
+	using namespace posix_time;
+
+	ptime epoch(date(1970, 1, 1));
+
+	auto dt(local_sec_clock::local_time(time_zone_ptr()));
+	auto lf(new local_time_input_facet("%a, %d %b %Y %H:%M:%S %q"));
+
+	stringstream ss(datetime);
+	ss.imbue(locale(locale::classic(), lf));
+
+	ss >> dt;
+
+	return (dt.utc_time() - epoch).total_seconds();
+}
+
+string escapeRegex(const string& input)
+{
+	static const regex  escape("[.^$|()\\[\\]{}*+?\\\\]");
+	static const string replace = "\\\\&";
+
+	return regex_replace(input, escape, replace, match_default | format_sed);
 }

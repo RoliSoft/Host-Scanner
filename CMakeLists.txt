@@ -62,7 +62,7 @@ endif()
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-find_package(Boost 1.55.0 COMPONENTS system regex iostreams filesystem program_options unit_test_framework ${ADDITIONAL_BOOST_COMPONENTS} REQUIRED)
+find_package(Boost 1.55.0 COMPONENTS system regex iostreams filesystem date_time program_options unit_test_framework ${ADDITIONAL_BOOST_COMPONENTS} REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if (NOT DEFINED WITHOUT_CURL OR NOT ${WITHOUT_CURL} EQUAL 1)

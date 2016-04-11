@@ -1,5 +1,6 @@
 #include "CpeDictionaryMatcher.h"
 #include "DataReader.h"
+#include "Utils.h"
 #include <mutex>
 
 using namespace std;
@@ -48,10 +49,11 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 			continue;
 		}
 
+		string bestcpe, bestver;
+
 		auto bestdist   = UINT_MAX;
 		auto besttokens = 0u;
-		auto bestcpe    = string();
-
+		
 		// if so, check if any associated versions are also in the input
 
 		for (auto& version : ent.versions)
@@ -101,13 +103,28 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 				bestdist   = dist;
 				besttokens = version.tokens.size();
 				bestcpe    = ent.cpe + ":" + version.cpe;
+				bestver    = version.version;
 			}
 		}
 
-		if (bestcpe.length() != 0)
+		if (bestcpe.length() == 0)
 		{
-			matches.push_back(bestcpe);
+			continue;
 		}
+
+		// find vendor patch level, if any
+		
+		smatch what;
+		regex verfind(escapeRegex(bestver) + "(?<sep>[-+~_])(?<tag>[^$;\\s\\)\\/]+)");
+
+		if (regex_search(banner, what, verfind))
+		{
+			//log(ERR, what["sep"].str() + what["tag"].str());
+		}
+
+		// save matching CPE
+
+		matches.push_back(bestcpe);
 	}
 
 	return matches;
@@ -193,7 +210,7 @@ void CpeDictionaryMatcher::loadEntries()
 
 		for (auto j = 0u; j < tnum; j++)
 		{
-			ent.tokens.push_back(move(regex("\\b(" + dr.ReadString() + ")\\b", regex::icase)));
+			ent.tokens.push_back(std::move(regex("\\b(" + dr.ReadString() + ")\\b", regex::icase)));
 		}
 
 		unsigned int vnum;
@@ -215,7 +232,7 @@ void CpeDictionaryMatcher::loadEntries()
 
 			for (auto k = 0u; k < vtnum; k++)
 			{
-				ver.tokens.push_back(move(regex("\\b(" + dr.ReadString() + ")\\b", regex::icase)));
+				ver.tokens.push_back(std::move(regex("\\b(" + dr.ReadString() + ")\\b", regex::icase)));
 			}
 
 			ent.versions.push_back(ver);

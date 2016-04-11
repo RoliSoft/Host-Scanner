@@ -77,6 +77,20 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 			cpe = cpe2;
 		}
 
+		// find vendor patch level, if any
+
+		smatch what;
+		regex verfind("^(?:[^:]+:){3}.*?(?<sep>[-+~_])(?<tag>[^:$;\\s\\)\\/]+)");
+
+		if (regex_search(cpe, what, verfind))
+		{
+			// remove vendor patch level from CPE
+
+			cpe = cpe.substr(0, distance(cpe.cbegin(), what["sep"].begin()));
+
+			//log(ERR, what["sep"].str() + what["tag"].str());
+		}
+
 		// strip any irrelevant data
 
 		auto fs = cpe.find(' ');

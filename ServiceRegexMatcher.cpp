@@ -86,7 +86,7 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 		{
 			// remove vendor patch level from CPE
 
-			cpe = cpe.substr(0, distance(cpe.cbegin(), what["sep"].begin()));
+			cpe = cpe.substr(0, distance(cpe.cbegin(), what["sep"].str().cbegin()));
 
 			//log(ERR, what["sep"].str() + what["tag"].str());
 		}

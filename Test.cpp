@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(TcpIpv4PortScan)
 {
 	TcpScanner scan;
 
-	Host host("178.62.249.168", { 20, 25, 80 }); // euvps.rolisoft.net
+	Host host("188.166.36.214", { 20, 25, 80 }); // excelsior.rolisoft.net
 
 	auto& servs = *host.services;
 
@@ -717,7 +717,7 @@ BOOST_AUTO_TEST_CASE(TcpIpv6PortScan)
 {
 	TcpScanner scan;
 
-	Host host("2a03:b0c0:2:d0::19:6001", { 20, 25, 80 }); // euvps.rolisoft.net
+	Host host("2a03:b0c0:2:d0::383:c001", { 20, 25, 80 }); // excelsior.rolisoft.net
 
 	auto& servs = *host.services;
 
@@ -759,7 +759,7 @@ BOOST_AUTO_TEST_CASE(UdpIpv4PortScan)
 {
 	UdpScanner scan;
 
-	Host host1("178.62.249.168", { }, { 53 }); // euvps.rolisoft.net
+	Host host1("188.166.36.214", { }, { 53 }); // excelsior.rolisoft.net
 	Host host2("208.67.222.222", { }, { 53 }); // OpenDNS
 
 	Services servs = { host1.services->front(), host2.services->front() };
@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE(UdpIpv6PortScan)
 {
 	UdpScanner scan;
 
-	Host host1("2a03:b0c0:2:d0::19:6001", { }, { 53 }); // euvps.rolisoft.net
+	Host host1("2a03:b0c0:2:d0::383:c001", { }, { 53 }); // excelsior.rolisoft.net
 	Host host2("2620:0:ccc::2", { }, { 53 }); // OpenDNS
 
 	Services servs = { host1.services->front(), host2.services->front() };
@@ -807,7 +807,7 @@ BOOST_AUTO_TEST_CASE(IcmpIpv4Ping)
 {
 	IcmpPinger scan;
 
-	Host host1("178.62.249.168", { 0 }); // euvps.rolisoft.net
+	Host host1("188.166.36.214", { 0 }); // excelsior.rolisoft.net
 	Host host2("0.0.1.0", { 0 }); // bogon
 
 	Services servs = { host1.services->front(), host2.services->front() };
@@ -830,7 +830,7 @@ BOOST_AUTO_TEST_CASE(IcmpIpv6Ping)
 {
 	IcmpPinger scan;
 
-	Host host1("2a03:b0c0:2:d0::19:6001", { 0 }); // euvps.rolisoft.net
+	Host host1("2a03:b0c0:2:d0::383:c001", { 0 }); // excelsior.rolisoft.net
 	Host host2("0100::", { 0 }); // bogon
 
 	Services servs = { host1.services->front(), host2.services->front() };
@@ -854,7 +854,7 @@ BOOST_AUTO_TEST_CASE(ArpPing)
 	Hosts hosts = {
 		new Host("192.168.1.1"), // bogon
 		new Host("192.168.1.254"), // bogon
-		new Host("178.62.249.168"), // euvps.rolisoft.net
+		new Host("188.166.36.214"), // excelsior.rolisoft.net
 	};
 
 	scan.Scan(&hosts);
@@ -898,12 +898,12 @@ BOOST_AUTO_TEST_CASE(NmapIpv4Processing)
 {
 	NmapScanner scan;
 
-	auto hosts = scan.Process("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE nmaprun><nmaprun scanner=\"nmap\" args=\"...\" start=\"1459035690\" startstr=\"Sun Mar 27 00:41:30 2016\" version=\"7.00\" xmloutputversion=\"1.04\"><scaninfo type=\"syn\" protocol=\"tcp\" numservices=\"1\" services=\"25\"/><scaninfo type=\"udp\" protocol=\"udp\" numservices=\"0\" services=\"\"/><verbose level=\"0\"/><debugging level=\"0\"/><host starttime=\"1459035698\" endtime=\"1459035698\"><status state=\"up\" reason=\"user-set\" reason_ttl=\"0\"/><address addr=\"178.62.249.168\" addrtype=\"ipv4\"/><hostnames><hostname name=\"euvps.rolisoft.net\" type=\"PTR\"/></hostnames><ports><port protocol=\"tcp\" portid=\"25\"><state state=\"open\" reason=\"syn-ack\" reason_ttl=\"53\"/><service name=\"smtp\" method=\"table\" conf=\"3\"/><script id=\"banner\" output=\"220 euvps.rolisoft.net ESMTP Sat, 26 Mar 2016 23:41:41 +0000\"/></port></ports><times srtt=\"38000\" rttvar=\"38000\" to=\"190000\"/></host><runstats><finished time=\"1459035698\" timestr=\"Sun Mar 27 00:41:38 2016\" elapsed=\"8.10\" summary=\"Nmap done at Sun Mar 27 00:41:38 2016; 1 IP address (1 host up) scanned in 8.10 seconds\" exit=\"success\"/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>");
+	auto hosts = scan.Process("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE nmaprun><nmaprun scanner=\"nmap\" args=\"...\" start=\"1459035690\" startstr=\"Sun Mar 27 00:41:30 2016\" version=\"7.00\" xmloutputversion=\"1.04\"><scaninfo type=\"syn\" protocol=\"tcp\" numservices=\"1\" services=\"25\"/><scaninfo type=\"udp\" protocol=\"udp\" numservices=\"0\" services=\"\"/><verbose level=\"0\"/><debugging level=\"0\"/><host starttime=\"1459035698\" endtime=\"1459035698\"><status state=\"up\" reason=\"user-set\" reason_ttl=\"0\"/><address addr=\"188.166.36.214\" addrtype=\"ipv4\"/><hostnames><hostname name=\"excelsior.rolisoft.net\" type=\"PTR\"/></hostnames><ports><port protocol=\"tcp\" portid=\"25\"><state state=\"open\" reason=\"syn-ack\" reason_ttl=\"53\"/><service name=\"smtp\" method=\"table\" conf=\"3\"/><script id=\"banner\" output=\"220 excelsior.rolisoft.net ESMTP Sat, 26 Mar 2016 23:41:41 +0000\"/></port></ports><times srtt=\"38000\" rttvar=\"38000\" to=\"190000\"/></host><runstats><finished time=\"1459035698\" timestr=\"Sun Mar 27 00:41:38 2016\" elapsed=\"8.10\" summary=\"Nmap done at Sun Mar 27 00:41:38 2016; 1 IP address (1 host up) scanned in 8.10 seconds\" exit=\"success\"/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>");
 
 	BOOST_TEST_REQUIRE(hosts->size() == 1, "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
 	BOOST_TEST_REQUIRE((*hosts)[0]->services->size() == 1, "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
 
-	BOOST_TEST_CHECK((*hosts)[0]->address == "178.62.249.168", "Host should be 178.62.249.168.");
+	BOOST_TEST_CHECK((*hosts)[0]->address == "188.166.36.214", "Host should be 188.166.36.214.");
 	BOOST_TEST_CHECK((*hosts)[0]->alive, "Port 25 should be alive.");
 
 	BOOST_TEST_CHECK((*(*hosts)[0]->services)[0]->port == 25,          "Port of first service should be 25.");
@@ -926,7 +926,7 @@ BOOST_AUTO_TEST_CASE_DISABLED(NmapIpv4PortScan)
 	NmapScanner scan;
 
 	Hosts hosts = {
-		new Host("178.62.249.168", { 25 }), // euvps.rolisoft.net
+		new Host("188.166.36.214", { 25 }), // excelsior.rolisoft.net
 	};
 
 	scan.Scan(&hosts);
@@ -953,12 +953,12 @@ BOOST_AUTO_TEST_CASE(NmapIpv6Processing)
 {
 	NmapScanner scan;
 
-	auto hosts = scan.Process("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE nmaprun><nmaprun scanner=\"nmap\" args=\"...\" start=\"1459035966\" startstr=\"Sun Mar 27 00:46:06 2016\" version=\"7.00\" xmloutputversion=\"1.04\"><scaninfo type=\"syn\" protocol=\"tcp\" numservices=\"1\" services=\"25\"/><scaninfo type=\"udp\" protocol=\"udp\" numservices=\"0\" services=\"\"/><verbose level=\"0\"/><debugging level=\"0\"/><host starttime=\"1459035974\" endtime=\"1459035974\"><status state=\"up\" reason=\"user-set\" reason_ttl=\"0\"/><address addr=\"2a03:b0c0:2:d0::19:6001\" addrtype=\"ipv6\"/><hostnames><hostname name=\"euvps.rolisoft.net\" type=\"PTR\"/></hostnames><ports><port protocol=\"tcp\" portid=\"25\"><state state=\"open\" reason=\"syn-ack\" reason_ttl=\"56\"/><service name=\"smtp\" method=\"table\" conf=\"3\"/><script id=\"banner\" output=\"220 euvps.rolisoft.net ESMTP Sat, 26 Mar 2016 23:46:17 +0000\"/></port></ports><times srtt=\"49000\" rttvar=\"49000\" to=\"245000\"/></host><runstats><finished time=\"1459035974\" timestr=\"Sun Mar 27 00:46:14 2016\" elapsed=\"8.06\" summary=\"Nmap done at Sun Mar 27 00:46:14 2016; 1 IP address (1 host up) scanned in 8.06 seconds\" exit=\"success\"/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>");
+	auto hosts = scan.Process("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE nmaprun><nmaprun scanner=\"nmap\" args=\"...\" start=\"1459035966\" startstr=\"Sun Mar 27 00:46:06 2016\" version=\"7.00\" xmloutputversion=\"1.04\"><scaninfo type=\"syn\" protocol=\"tcp\" numservices=\"1\" services=\"25\"/><scaninfo type=\"udp\" protocol=\"udp\" numservices=\"0\" services=\"\"/><verbose level=\"0\"/><debugging level=\"0\"/><host starttime=\"1459035974\" endtime=\"1459035974\"><status state=\"up\" reason=\"user-set\" reason_ttl=\"0\"/><address addr=\"2a03:b0c0:2:d0::383:c001\" addrtype=\"ipv6\"/><hostnames><hostname name=\"excelsior.rolisoft.net\" type=\"PTR\"/></hostnames><ports><port protocol=\"tcp\" portid=\"25\"><state state=\"open\" reason=\"syn-ack\" reason_ttl=\"56\"/><service name=\"smtp\" method=\"table\" conf=\"3\"/><script id=\"banner\" output=\"220 excelsior.rolisoft.net ESMTP Sat, 26 Mar 2016 23:46:17 +0000\"/></port></ports><times srtt=\"49000\" rttvar=\"49000\" to=\"245000\"/></host><runstats><finished time=\"1459035974\" timestr=\"Sun Mar 27 00:46:14 2016\" elapsed=\"8.06\" summary=\"Nmap done at Sun Mar 27 00:46:14 2016; 1 IP address (1 host up) scanned in 8.06 seconds\" exit=\"success\"/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>");
 
 	BOOST_TEST_REQUIRE(hosts->size() == 1, "Number of scanned hosts should be 1, it is instead " + to_string(hosts->size()) + ".");
 	BOOST_TEST_REQUIRE((*hosts)[0]->services->size() == 1, "Number of discovered services should be 1, it is instead " + to_string((*hosts)[0]->services->size()) + ".");
 
-	BOOST_TEST_CHECK((*hosts)[0]->address == "2a03:b0c0:2:d0::19:6001", "Host should be 2a03:b0c0:2:d0::19:6001.");
+	BOOST_TEST_CHECK((*hosts)[0]->address == "2a03:b0c0:2:d0::383:c001", "Host should be 2a03:b0c0:2:d0::383:c001.");
 	BOOST_TEST_CHECK((*hosts)[0]->alive, "Port 25 should be alive.");
 
 	BOOST_TEST_CHECK((*(*hosts)[0]->services)[0]->port == 25,          "Port of first service should be 25.");
@@ -982,7 +982,7 @@ BOOST_AUTO_TEST_CASE_DISABLED(NmapIpv6PortScan)
 	NmapScanner scan;
 	
 	Hosts hosts = {
-		new Host("2a03:b0c0:2:d0::19:6001", { 25 }), // euvps.rolisoft.net
+		new Host("2a03:b0c0:2:d0::383:c001", { 25 }), // excelsior.rolisoft.net
 	};
 
 	scan.Scan(&hosts);

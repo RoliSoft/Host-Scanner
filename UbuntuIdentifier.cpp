@@ -117,9 +117,9 @@ bool UbuntuIdentifier::Scan(Host* host)
 			secUpd = stod(sm["debsec"].str());
 		}
 
-		// otherwise try to deduce Ubuntu distribution based on the OpenSSH version
+		// try to deduce Ubuntu distribution based on the OpenSSH version
 
-		else if (!sshVer.empty() && !debVer.is_initialized())
+		if (!sshVer.empty() && !debVer.is_initialized())
 		{
 			auto ver = sshVer;
 

@@ -127,9 +127,9 @@ bool DebianIdentifier::Scan(Host* host)
 			}
 		}
 
-		// otherwise try to deduce Debian distribution based on the OpenSSH version
+		// try to deduce Debian distribution based on the OpenSSH version
 
-		else if (!sshVer.empty() && !debVer.is_initialized())
+		if (!sshVer.empty() && !debVer.is_initialized())
 		{
 			auto ver = sshVer;
 

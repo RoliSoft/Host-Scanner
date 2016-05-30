@@ -108,7 +108,7 @@ source_group("Scanners/Active" FILES ${ACTIVE_SRCS})
 file(GLOB EXTERNAL_SRCS "Nmap*.*")
 source_group("Scanners/External" FILES ${EXTERNAL_SRCS})
 
-file(GLOB PASSIVE_SRCS "Shodan*.*" "Censys*.*" "Passive*.*")
+file(GLOB PASSIVE_SRCS "Shodan*.*" "Censys*.*" "Looquer*.*" "Passive*.*")
 source_group("Scanners/Passive" FILES ${PASSIVE_SRCS})
 
 file(GLOB FACTORY_SRCS "*Factory.*")

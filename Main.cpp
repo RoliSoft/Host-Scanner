@@ -28,6 +28,7 @@
 #include "PassiveScanner.h"
 #include "ShodanScanner.h"
 #include "CensysScanner.h"
+#include "LooquerScanner.h"
 #include "OperatingSystemIdentifier.h"
 #include "BannerProcessor.h"
 #include "VulnerabilityLookup.h"
@@ -548,9 +549,32 @@ int scan(const po::variables_map& vm)
 			reinterpret_cast<CensysScanner*>(scanner)->endpoint = vm["censys-uri"].as<string>();
 		}
 	}
+	else if (scannerstr == "looquer")
+	{
+		string key;
+
+		if (vm.count("looquer-key") != 0)
+		{
+			key = vm["looquer-key"].as<string>();
+		}
+
+		if (key.length() < 2)
+		{
+			log(ERR, "Mr Looquer requires an API key via --looquer-key from https://mrlooquer.com/manage");
+			retval = EXIT_FAILURE;
+			goto cleanup;
+		}
+
+		scanner = new LooquerScanner(key);
+
+		if (vm.count("looquer-uri") != 0)
+		{
+			reinterpret_cast<LooquerScanner*>(scanner)->endpoint = vm["looquer-uri"].as<string>();
+		}
+	}
 	else if (scannerstr == "shosys" || scannerstr == "cendan")
 	{
-		string shodan_key, censys_auth;
+		string shodan_key, censys_auth, looquer_key;
 
 		if (vm.count("shodan-key") != 0)
 		{
@@ -574,14 +598,25 @@ int scan(const po::variables_map& vm)
 			censys_auth.clear();
 		}
 
-		if (shodan_key.length() < 2 && censys_auth.length() < 2)
+		if (vm.count("looquer-key") != 0)
+		{
+			looquer_key = vm["looquer-key"].as<string>();
+		}
+
+		if (looquer_key.length() < 2)
+		{
+			log(WRN, "Mr Looquer requires an API key via --looquer-key from https://mrlooquer.com/manage");
+			looquer_key.clear();
+		}
+
+		if (shodan_key.length() < 2 && censys_auth.length() < 2 && looquer_key.length() < 2)
 		{
 			log(ERR, "You need to specify at least one API key for this scanner.");
 			retval = EXIT_FAILURE;
 			goto cleanup;
 		}
 
-		scanner = new PassiveScanner(shodan_key, censys_auth);
+		scanner = new PassiveScanner(shodan_key, censys_auth, looquer_key);
 
 		if (vm.count("shodan-uri") != 0)
 		{
@@ -592,9 +627,14 @@ int scan(const po::variables_map& vm)
 		{
 			reinterpret_cast<PassiveScanner*>(scanner)->censys_uri = vm["censys-uri"].as<string>();
 		}
+
+		if (vm.count("looquer-uri") != 0)
+		{
+			reinterpret_cast<PassiveScanner*>(scanner)->looquer_uri = vm["looquer-uri"].as<string>();
+		}
 	}
 #else
-	else if (scannerstr == "shodan" || scannerstr == "censys" || scannerstr == "shosys" || scannerstr == "cendan")
+	else if (scannerstr == "shodan" || scannerstr == "censys" || scannerstr == "looquer" || scannerstr == "shosys" || scannerstr == "cendan")
 	{
 		log(ERR, "Scanner '" + scannerstr + "' is not available as this version of the binary was compiled without libcurl.");
 		retval = EXIT_FAILURE;
@@ -1181,7 +1221,8 @@ int main(int argc, char *argv[])
 			"  nmap     - Uses 3rd-party application Nmap. (active)\n"
 			"  shodan   - Uses data from Shodan. (passive; requires API key)\n"
 			"  censys   - Uses data from Censys. (passive; requires API key)\n"
-			"  shosys   - Uses data from both Shodan and Censys. (passive)")
+			"  looquer  - Uses data from Mr Looquer. (passive; requires API key)\n"
+			"  shosys   - Uses data from Shodan, Censys and Mr Looquer. (passive)")
 		("shodan-key", po::value<string>(),
 			"Specifies an API key for Shodan.")
 		("shodan-uri", po::value<string>(),
@@ -1194,6 +1235,12 @@ int main(int argc, char *argv[])
 			"Overrides the API endpoint used for Censys. You may specify an URI starting with "
 			"file:// pointing to a directory containing previously downloaded JSON responses.\n"
 			"  Default: https://censys.io/api/v1")
+		("looquer-key", po::value<string>(),
+			"Specifies an API key for Mr Looquer.")
+		("looquer-uri", po::value<string>(),
+			"Overrides the API endpoint used for Mr Looquer. You may specify an URI starting with "
+			"file:// pointing to a directory containing previously downloaded JSON responses.\n"
+			"  Default: https://mrlooquer.com/api/v1")
 		("input-file,f", po::value<string>(),
 			"Process an input file with the selected scanner.\n"
 			"  E.g. the nmap scanner can parse XML reports.")

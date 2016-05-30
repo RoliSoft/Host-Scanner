@@ -179,6 +179,15 @@ void LooquerScanner::getHostInfo(Host* host)
 				service->banner = jdata;
 			}
 
+			// get CPEs, if any
+
+			auto jcpe = ptrun.second.get<string>("cpe", "");
+
+			if (jcpe.length() != 0)
+			{
+				service->cpe.push_back(jcpe.substr(5));
+			}
+
 			// save extended port data
 
 			if (service->data == nullptr)

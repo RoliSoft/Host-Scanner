@@ -69,7 +69,7 @@ void LooquerScanner::getHostInfo(Host* host)
 	}
 	else
 	{
-		auto url = endpoint + "/v1/search?token=" + key + "&q=ip" + (host->address.find(':') == string::npos ? "v4" : "") + ":%22" + host->address + "%22";
+		auto url = endpoint + "/search?token=" + key + "&q=ip" + (host->address.find(':') == string::npos ? "v4" : "") + ":%22" + host->address + "%22";
 
 		log(VRB, "Downloading " + url + "...");
 

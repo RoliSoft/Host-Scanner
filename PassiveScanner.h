@@ -29,6 +29,16 @@ public:
 	 * API endpoint location of Censys.
 	 */
 	std::string censys_uri;
+	
+	/*!
+	 * Mr Looquer API key to use for the requests.
+	 */
+	std::string looquer_key;
+
+	/*!
+	 * API endpoint location of Mr Looquer.
+	 */
+	std::string looquer_uri;
 
 	/*!
 	 * Initializes a new instance of this class.
@@ -40,8 +50,9 @@ public:
 	 *
 	 * \param shodan_key Shodan API key to use for the requests.
 	 * \param censys_auth Censys API username and password to use for the requests.
+	 * \param looquer_key Mr Looquer API key to use for the requests.
 	 */
-	PassiveScanner(const std::string& shodan_key, const std::string& censys_auth);
+	PassiveScanner(const std::string& shodan_key, const std::string& censys_auth, const std::string& looquer_key);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.

@@ -18,7 +18,7 @@ public:
 	/*!
 	 * API endpoint location.
 	 */
-	std::string endpoint = "https://mrlooquer.com/api";
+	std::string endpoint = "https://mrlooquer.com/api/v1";
 
 	/*!
 	 * Initializes a new instance of this class.

@@ -1,12 +1,13 @@
 #include "PassiveScanner.h"
 #include "ShodanScanner.h"
 #include "CensysScanner.h"
+#include "LooquerScanner.h"
 #include <future>
 
 using namespace std;
 
-PassiveScanner::PassiveScanner(const string& shodan_key, const string& censys_auth)
-	: shodan_key(shodan_key), censys_auth(censys_auth)
+PassiveScanner::PassiveScanner(const string& shodan_key, const string& censys_auth, const string& looquer_key)
+	: shodan_key(shodan_key), censys_auth(censys_auth), looquer_key(looquer_key)
 {
 }
 
@@ -19,6 +20,7 @@ void PassiveScanner::Scan(Host* host)
 {
 	static ShodanScanner ss(shodan_key);
 	static CensysScanner cs(censys_auth);
+	static LooquerScanner ls(looquer_key);
 
 	if (!shodan_uri.empty())
 	{
@@ -30,20 +32,30 @@ void PassiveScanner::Scan(Host* host)
 		cs.endpoint = censys_uri;
 	}
 
+	if (!looquer_uri.empty())
+	{
+		ls.endpoint = looquer_uri;
+	}
+
 	auto shost = new Host(*host);
 	auto chost = new Host(*host);
+	auto lhost = new Host(*host);
 
 	auto sf = async(launch::async, [shost]() { ss.Scan(shost); });
 	auto sc = async(launch::async, [chost]() { cs.Scan(chost); });
+	auto sl = async(launch::async, [lhost]() { ls.Scan(lhost); });
 
 	sf.wait();
 	sc.wait();
+	sl.wait();
 
 	mergeHosts(shost, host);
 	mergeHosts(chost, host);
+	mergeHosts(lhost, host);
 
 	delete shost;
 	delete chost;
+	delete lhost;
 }
 
 void PassiveScanner::Scan(Hosts* hosts)

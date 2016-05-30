@@ -24,6 +24,7 @@ The purpose of this project is to implement a network scanner with both active a
   * Support for passive reconnaissance by fetching data already available from relevant services intended for security researchers:
     * Shodan
     * Censys
+    * Mr Looquer
 
 * Service Identification
   * Autonomous Identification:
@@ -72,7 +73,8 @@ The purpose of this project is to implement a network scanner with both active a
 	                            nmap     - Uses 3rd-party application Nmap. (active)
 	                            shodan   - Uses data from Shodan. (passive; requires API key)
 	                            censys   - Uses data from Censys. (passive; requires API key)
-	                            shosys   - Uses data from both Shodan and Censys. (passive)
+	                            looquer  - Uses data from Mr Looquer. (passive; requires API key)
+	                            shosys   - Uses data from Shodan, Censys and Mr Looquer. (passive)
 
 	  --shodan-key arg        Specifies an API key for Shodan.
 	  --shodan-uri arg        Overrides the API endpoint used for Shodan. You may specify an URI
@@ -85,6 +87,12 @@ The purpose of this project is to implement a network scanner with both active a
 	                          starting with file:// pointing to a directory containing previously
 	                          downloaded JSON responses.
 	                            Default: https://censys.io/api/v1
+
+	  --looquer-key arg       Specifies an API key for Mr Looquer.
+	  --looquer-uri arg       Overrides the API endpoint used for Mr Looquer. You may specify an URI
+	                          starting with file:// pointing to a directory containing previously
+	                          downloaded JSON responses.
+	                            Default: https://mrlooquer.com/api/v1
 
 	  -f [ --input-file ] arg Process an input file with the selected scanner.
 	                            E.g. the nmap scanner can parse XML reports.
@@ -120,7 +128,7 @@ Scan a network for vulnerabilities on the top 100 TCP ports and known UDP ports 
 
 	./HostScanner -p t -u t 192.168.1.0/24
 
-Scan an IP address or netblock for vulnerabilities passively, with data from both Shodan and Censys:
+Scan an IP address or netblock for vulnerabilities passively, with data from Shodan, Censys and Mr Looquer:
 
 	./HostScanner -x 178.62.192.0/18
 
@@ -163,12 +171,13 @@ As an example, this feature can be used to persist Shodan/Censys API keys:
 
 	shodan-key=abcdefghijklmnopqrstuvwxyz012345
     censys-key=abcdefgh-ijkl-mnop-qrst-uvwxyz012345:abcdefghijklmnopqrstuvwxyz012345
+    looquer-key=abcdefghijklmnopqrstuvwxyz012345
 
 Similarly, the `-x` option can be stored, in order to globally disallow any active scanner usage as a fail-safe:
 
 	passive
 
-This option cannot be disabled through the command line. To use an active scanner again, this line needs to be removed from the configuration file. Otherwise, only analysis of Shodan/Censys data and nmap reports are allowed.
+This option cannot be disabled through the command line. To use an active scanner again, this line needs to be removed from the configuration file. Otherwise, only analysis of Shodan/Censys/Looquer data and nmap reports are allowed.
 
 ## Building
 

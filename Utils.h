@@ -109,3 +109,15 @@ long rfc1123ToUnix(const std::string& datetime);
  * 		   expressions escaped safely.
  */
 std::string escapeRegex(const std::string& input);
+
+/*!
+ * Compares the two specified version numbers.
+ *
+ * \param a First version number.
+ * \param b Second version number.
+ *
+ * \return -1 if the first version is older,
+ *          0 if the two versions are equal,
+ *          1 if the first version is newer.
+ */
+int compareVersions(const std::string& a, const std::string& b);

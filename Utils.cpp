@@ -199,3 +199,61 @@ string escapeRegex(const string& input)
 
 	return regex_replace(input, escape, replace, match_default | format_sed);
 }
+
+int compareVersions(const string& a, const string& b)
+{
+	static const regex intrgx("(\\d+)");
+
+	sregex_iterator ait(a.begin(), a.end(), intrgx);
+	sregex_iterator bit(b.begin(), b.end(), intrgx);
+	sregex_iterator end;
+
+	while (true)
+	{
+		auto am = *ait;
+		auto bm = *bit;
+
+		auto ai = stoi(am[1].str());
+		auto bi = stoi(bm[1].str());
+
+		if (ai < bi)
+		{
+			// A is older
+
+			return -1;
+		}
+		
+		if (ai > bi)
+		{
+			// A is newer
+
+			return 1;
+		}
+
+		// if they're equal, fall-through to next
+
+		++ait;
+		++bit;
+
+		if (ait == end && bit == end)
+		{
+			// if both end here, they're equal
+
+			return 0;
+		}
+		
+		if (ait == end)
+		{
+			// if A ends here and B doesn't, A is older
+
+			return -1;
+		}
+		
+		if (bit == end)
+		{
+			// if B ends here and A doesn't, A is newer
+
+			return 1;
+		}
+	}
+}

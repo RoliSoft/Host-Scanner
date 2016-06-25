@@ -21,6 +21,7 @@
 #define BOOST_TEST_MODULE TestScanner
 
 #include "Stdafx.h"
+#include "Utils.h"
 #include "ServiceScannerFactory.h"
 #include "HostScannerFactory.h"
 #include "TaskQueueRunner.h"
@@ -552,6 +553,36 @@ BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 
 			BOOST_TEST_CHECK(found, "Failed to find vulnerability `" + cve + "` for the CPE `" + entry.first + "`.");
 		}
+	}
+}
+
+/*!
+ * Tests the version comparison function.
+ * 
+ * This function should compare version numbers regardless of style, with the proper
+ * handling of the vendor-level patches. Should work best with Apache and semantic versioning,
+ * however every sane versioning scheme should adhere to the rules used by the checker.
+ */
+BOOST_AUTO_TEST_CASE(VersionComparison)
+{
+	vector<tuple<string, string, int>> vers = {
+		{ "a:apache:http_server:2.2.22", "a:apache:http_server:2.2.22",  0 },
+		{ "a:apache:http_server:2.2.22", "a:apache:http_server:2.2.21",  1 },
+		{ "a:apache:http_server:2.2.22", "a:apache:http_server:2.2.23", -1 },
+		{ "a:apache:http_server:2.2.22", "a:apache:http_server:2.3",    -1 },
+		{ "a:php:php:5.5.5;deb8u1",      "a:php:php:5.5.5;deb8u1",       0 },
+		{ "a:php:php:5.4.5;deb8u1",      "a:php:php:5.5.5;deb8u1",      -1 },
+		{ "a:php:php:5.5.5;deb8u2",      "a:php:php:5.5.5;deb8u1",       1 },
+		{ "a:php:php:5.5.5;deb8u1",      "a:php:php:5.5.5;deb10",       -1 },
+		{ "a:php:php:5.5.5",             "a:php:php:5.5.5;u1",          -1 }
+	};
+
+	for (auto& ver : vers)
+	{
+		auto res = compareVersions(get<0>(ver), get<1>(ver));
+		auto exp = get<2>(ver);
+
+		BOOST_TEST_CHECK(res == exp, "CPE `" + get<0>(ver) + "` should be " + (exp == 0 ? "`equal` to" : (exp == 1 ? "`newer` than" : "`older` than")) +  " `" + get<1>(ver) + "`, it instead is `" + (res == 0 ? "equal" : (res == 1 ? "newer" : "older")) + "`.");
 	}
 }
 

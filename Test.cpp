@@ -32,6 +32,8 @@
 #include "NmapScanner.h"
 #include "InternalScanner.h"
 #include "ShodanScanner.h"
+#include "CensysScanner.h"
+#include "LooquerScanner.h"
 #include "HttpTokenizer.h"
 #include "ThreeDigitTokenizer.h"
 #include "ServiceRegexMatcher.h"
@@ -43,6 +45,9 @@
 #include "EnterpriseLinuxIdentifier.h"
 #include "FedoraIdentifier.h"
 #include "WindowsIdentifier.h"
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/parsers.hpp>
 #include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -101,6 +106,59 @@ void log(int level, const string& msg)
 #endif
 
 	BOOST_TEST_WARN(false, msg);
+}
+
+/*!
+ * Reads a key value from the global persistent configuration store.
+ * 
+ * This is not efficient, however it is supposed to be only used by the tests
+ * requiring a single API key to be specified, which means it will be called
+ * once per such case.
+ * 
+ * \param key Key to read.
+ *
+ * \return Value of the key, or empty string if key not found or read failed.
+*/
+string readKey(const string& key)
+{
+	namespace po = boost::program_options;
+	namespace fs = boost::filesystem;
+
+	po::options_description desc("arguments", 100);
+	desc.add_options()
+		(key.c_str(), po::value<string>(), "");
+
+	po::variables_map vm;
+
+	vector<string> paths = {
+#if Windows
+		get<0>(splitPath(getAppPath())) + "\\HostScanner.ini",
+		getEnvVar("APPDATA") + "\\RoliSoft\\Host Scanner\\HostScanner.ini"
+#else
+		get<0>(splitPath(getAppPath())) + "/HostScanner.ini",
+		getEnvVar("HOME") + "/.HostScanner.conf",
+		"/etc/HostScanner/HostScanner.conf"
+#endif
+	};
+
+	for (auto path : paths)
+	{
+		fs::path fp(path);
+
+		if (fs::exists(fp) && fs::is_regular_file(fp))
+		{
+			po::store(po::parse_config_file<char>(path.c_str(), desc, true), vm);
+		}
+	}
+
+	po::notify(vm);
+
+	if (vm.count(key) != 0)
+	{
+		return vm[key].as<string>();
+	}
+
+	return "";
 }
 
 /*!
@@ -840,6 +898,252 @@ BOOST_AUTO_TEST_CASE(HostScanFactory)
 	auto nmp = HostScannerFactory::Get(false, true);
 	BOOST_TEST_CHECK((typeid(*nmp) == typeid(NmapScanner)), "Factory should have spawned NmapScanner for <!passive,external>, but instead spawned `" + string(typeid(*nmp).name()) + "`.");
 	delete nmp;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Passive Port Scanner Tests
+//---------------------------------------------------------------------------------------------------------------------
+
+/*!
+ * Tests the Shodan passive scanner.
+ */
+BOOST_AUTO_TEST_CASE(ShodanPassiveScan)
+{
+	ShodanScanner scan(readKey("shodan-key"));
+
+	if (scan.key.empty())
+	{
+		BOOST_FAIL("Failed to get `shodan-key` configuration entry from the persistent store.");
+		return;
+	}
+	
+	Host host("188.166.36.214"); // excelsior.rolisoft.net
+
+	unordered_set<unsigned short> exp = { 25, 80 };
+
+	scan.Scan(&host);
+
+	BOOST_TEST_CHECK(host.services->size() != 0, "Failed to find any open ports.");
+
+	for (auto& serv : *host.services)
+	{
+		switch (serv->port)
+		{
+		case 20:
+			exp.erase(20);
+
+			BOOST_TEST_CHECK(!serv->alive, "Port 20 should not be alive.");
+			BOOST_TEST_CHECK((serv->reason == AR_TimedOut || serv->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 25:
+			exp.erase(25);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 25 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 25.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 80:
+			exp.erase(80);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 80 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 80.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+		}
+	}
+
+	if (!exp.empty())
+	{
+		for (auto port : exp)
+		{
+			BOOST_TEST_CHECK(false, "Port " + to_string(port) + " was not in the dataset.");
+		}
+	}
+}
+
+/*!
+ * Tests the Censys passive scanner.
+ */
+BOOST_AUTO_TEST_CASE(CensysPassiveScan)
+{
+	CensysScanner scan(readKey("censys-key"));
+
+	if (scan.auth.empty())
+	{
+		BOOST_FAIL("Failed to get `censys-key` configuration entry from the persistent store.");
+		return;
+	}
+	
+	Host host("188.166.36.214"); // excelsior.rolisoft.net
+
+	unordered_set<unsigned short> exp = { 25, 80 };
+
+	scan.Scan(&host);
+
+	BOOST_TEST_CHECK(host.services->size() != 0, "Failed to find any open ports.");
+
+	for (auto& serv : *host.services)
+	{
+		switch (serv->port)
+		{
+		case 20:
+			exp.erase(20);
+
+			BOOST_TEST_CHECK(!serv->alive, "Port 20 should not be alive.");
+			BOOST_TEST_CHECK((serv->reason == AR_TimedOut || serv->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 25:
+			exp.erase(25);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 25 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 25.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 80:
+			exp.erase(80);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 80 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 80.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+		}
+	}
+
+	if (!exp.empty())
+	{
+		for (auto port : exp)
+		{
+			BOOST_TEST_CHECK(false, "Port " + to_string(port) + " was not in the dataset.");
+		}
+	}
+}
+
+/*!
+ * Tests the Mr. Looquer passive scanner for IPv6 addresses.
+ */
+BOOST_AUTO_TEST_CASE(LooquerIPv6PassiveScan)
+{
+	LooquerScanner scan(readKey("looquer-key"));
+
+	if (scan.key.empty())
+	{
+		BOOST_FAIL("Failed to get `looquer-key` configuration entry from the persistent store.");
+		return;
+	}
+	
+	Host host("2620:0:cc1:115::218"); // OpenDNS
+
+	unordered_set<unsigned short> exp = { 80, 443 };
+
+	scan.Scan(&host);
+
+	BOOST_TEST_CHECK(host.services->size() != 0, "Failed to find any open ports.");
+
+	for (auto& serv : *host.services)
+	{
+		switch (serv->port)
+		{
+		case 20:
+			exp.erase(20);
+
+			BOOST_TEST_CHECK(!serv->alive, "Port 20 should not be alive.");
+			BOOST_TEST_CHECK((serv->reason == AR_TimedOut || serv->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 80:
+			exp.erase(80);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 80 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 80.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 443:
+			exp.erase(443);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 443 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 443.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 443 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+		}
+	}
+
+	if (!exp.empty())
+	{
+		for (auto port : exp)
+		{
+			BOOST_TEST_CHECK(false, "Port " + to_string(port) + " was not in the dataset.");
+		}
+	}
+}
+
+/*!
+ * Tests the Mr. Looquer passive scanner for IPv4 addresses.
+ * 
+ * This service focuses on IPv6 addresses, however IPv4 addresses can also be queried,
+ * when the service successfully made a connection between the addresses.
+ * 
+ * This test queries the IPv4 address of the same host queried for in the IPv6 test,
+ * and performs the same checks on it.
+ */
+BOOST_AUTO_TEST_CASE(LooquerIPv4PassiveScan)
+{
+	LooquerScanner scan(readKey("looquer-key"));
+
+	if (scan.key.empty())
+	{
+		BOOST_FAIL("Failed to get `looquer-key` configuration entry from the persistent store.");
+		return;
+	}
+	
+	Host host("67.215.92.219"); // OpenDNS
+
+	unordered_set<unsigned short> exp = { 80, 443 };
+
+	scan.Scan(&host);
+
+	BOOST_TEST_CHECK(host.services->size() != 0, "Failed to find any open ports.");
+
+	for (auto& serv : *host.services)
+	{
+		switch (serv->port)
+		{
+		case 20:
+			exp.erase(20);
+
+			BOOST_TEST_CHECK(!serv->alive, "Port 20 should not be alive.");
+			BOOST_TEST_CHECK((serv->reason == AR_TimedOut || serv->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 80:
+			exp.erase(80);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 80 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 80.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 443:
+			exp.erase(443);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 443 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 443.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 443 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+		}
+	}
+
+	if (!exp.empty())
+	{
+		for (auto port : exp)
+		{
+			BOOST_TEST_CHECK(false, "Port " + to_string(port) + " was not in the dataset.");
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------------------------

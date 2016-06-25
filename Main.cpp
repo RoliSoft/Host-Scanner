@@ -39,6 +39,7 @@
 #include <tuple>
 #include <vector>
 #include <set>
+#include <mutex>
 #include <iomanip>
 #include <unordered_set>
 #include <boost/filesystem.hpp>
@@ -82,6 +83,9 @@ void log(int level, const string& msg)
 	{
 		return;
 	}
+
+	static mutex mtx;
+	lock_guard<mutex> guard(mtx);
 
 	ostream* os;
 

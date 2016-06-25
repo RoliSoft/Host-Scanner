@@ -111,6 +111,18 @@ long rfc1123ToUnix(const std::string& datetime);
 std::string escapeRegex(const std::string& input);
 
 /*!
+ * Compares the two specified dates.
+ *
+ * \param a First date.
+ * \param b Second date.
+ *
+ * \return -1 if the first date is older,
+ *          0 if the two dates are equal,
+ *          1 if the first date is newer.
+ */
+int compareDates(const std::string& a, const std::string& b);
+
+/*!
  * Compares the two specified version numbers.
  *
  * \param a First version number.

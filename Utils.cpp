@@ -200,6 +200,24 @@ string escapeRegex(const string& input)
 	return regex_replace(input, escape, replace, match_default | format_sed);
 }
 
+int compareDates(const string& a, const string& b)
+{
+	auto al = rfc1123ToUnix(a);
+	auto bl = rfc1123ToUnix(b);
+
+	if (al < bl)
+	{
+		return -1;
+	}
+
+	if (al > bl)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 int compareVersions(const string& a, const string& b)
 {
 	static const regex intrgx("(\\d+)");

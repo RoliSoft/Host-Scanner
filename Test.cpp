@@ -574,7 +574,9 @@ BOOST_AUTO_TEST_CASE(VersionComparison)
 		{ "a:php:php:5.4.5;deb8u1",      "a:php:php:5.5.5;deb8u1",      -1 },
 		{ "a:php:php:5.5.5;deb8u2",      "a:php:php:5.5.5;deb8u1",       1 },
 		{ "a:php:php:5.5.5;deb8u1",      "a:php:php:5.5.5;deb10",       -1 },
-		{ "a:php:php:5.5.5",             "a:php:php:5.5.5;u1",          -1 }
+		{ "a:php:php:5.5.5",             "a:php:php:5.5.5;u1",          -1 },
+		{ "a:exim:exim:4.84.2-1",        "a:exim:exim:4.87;3~bpo8+1",   -1 },
+		{ "a:exim:exim:4.87-4",          "a:exim:exim:4.87;3~bpo8+1",    1 }
 	};
 
 	for (auto& ver : vers)
@@ -583,6 +585,28 @@ BOOST_AUTO_TEST_CASE(VersionComparison)
 		auto exp = get<2>(ver);
 
 		BOOST_TEST_CHECK(res == exp, "CPE `" + get<0>(ver) + "` should be " + (exp == 0 ? "`equal` to" : (exp == 1 ? "`newer` than" : "`older` than")) +  " `" + get<1>(ver) + "`, it instead is `" + (res == 0 ? "equal" : (res == 1 ? "newer" : "older")) + "`.");
+	}
+}
+
+/*!
+ * Tests the date and time parsing function.
+ * 
+ * This case tests the parsing and relative comparison of RFC1123-formatted dates.
+ */
+BOOST_AUTO_TEST_CASE(DateTimeComparison)
+{
+	vector<tuple<string, string, int>> dates = {
+		{ "Sun, 08 May 2016 14:03:10", "Sat, 30 Apr 2016 13:38:29",  1 },
+		{ "Thu, 07 Apr 2016 19:26:59", "Sat, 30 Apr 2016 13:38:29", -1 },
+		{ "Fri, 01 Apr 2016 19:04:07", "Fri, 01 Apr 2016 19:04:07",  0 }
+	};
+
+	for (auto& date : dates)
+	{
+		auto res = compareDates(get<0>(date), get<1>(date));
+		auto exp = get<2>(date);
+
+		BOOST_TEST_CHECK(res == exp, "Date `" + get<0>(date) + "` should be " + (exp == 0 ? "`equal` to" : (exp == 1 ? "`newer` than" : "`older` than")) +  " `" + get<1>(date) + "`, it instead is `" + (res == 0 ? "equal" : (res == 1 ? "newer" : "older")) + "`.");
 	}
 }
 

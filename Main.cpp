@@ -806,7 +806,7 @@ postScan:
 
 	for (auto service : services)
 	{
-		auto cpes = BannerProcessor::AutoProcess(service->banner);
+		auto cpes = BannerProcessor::AutoProcess(service->banner, true);
 
 		if (cpes.size() != 0)
 		{

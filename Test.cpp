@@ -497,11 +497,8 @@ BOOST_AUTO_TEST_CASE(MatchCpeDictionaryVendorPatch)
 /*!
  * Tests the vulnerability lookup mechanism.
  * 
- * The automatic matcher calls each supported matcher and merges the results.
- * 
- * The banner being tested against contains a product with an inexistent version numbers in order to test
- * pattern-based version extraction, and another product whose version number is listed within the CPE
- * dictionary but has no regular expression defined in the pattern matcher's database.
+ * Since vendor-level patches are not present in the CVE database, those should be discarded.
+ * There are tests inside the case to make sure this is properly handled.
  */
 BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 {
@@ -509,16 +506,18 @@ BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 
 	vector<string> cpes = {
 		"a:apache:http_server:2.2.22",
-		"a:php:php:5.5.5"
+		"a:php:php:5.5.5;dfsg-0+deb8u1",
+		"a:php:php:5.5.5~dfsg-0+deb8u1"
 	};
 
 	unordered_map<string, vector<string>> reference = {
 		{ "a:apache:http_server:2.2.22", {
 			"2012-2687", "2014-0231"
 		}},
-		{ "a:php:php:5.5.5", {
+		{ "a:php:php:5.5.5;dfsg-0+deb8u1", { // when vendoring is properly discarded
 			"2013-6712", "2015-6836"
-		}}
+		}},
+		{ "a:php:php:5.5.5~dfsg-0+deb8u1", { } } // when vendoring is not handled properly
 	};
 
 	auto cves = vl.Scan(cpes);
@@ -529,7 +528,7 @@ BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 	{
 		auto cveit = cves.find(entry.first);
 
-		BOOST_TEST_CHECK((cveit != cves.end()), "Failed to find any vulnerabilities for the CPE `" + entry.first + "`.");
+		BOOST_TEST_CHECK((cveit != cves.end() || entry.second.size() == 0), "Failed to find any vulnerabilities for the CPE `" + entry.first + "`.");
 
 		if (cveit == cves.end())
 		{

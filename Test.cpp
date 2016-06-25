@@ -280,11 +280,42 @@ BOOST_AUTO_TEST_CASE(MatchAuto)
 {
 	string banner = "HTTP/1.1 200 OK\r\nServer: Apache/31.33.7 PHP/5.2.4-2ubuntu5.2.5\r\n\r\n2600";
 
-	auto cpes = BannerProcessor::AutoProcess(banner);
+	auto cpes = BannerProcessor::AutoProcess(banner, false);
 
 	vector<string> reference = {
 		"a:apache:http_server:31.33.7",
 		"a:php:php:5.2.4"
+	};
+
+	BOOST_TEST_CHECK(cpes.size() == reference.size(), "Size mismatch between extracted and reference CPEs array. Expected " + to_string(reference.size()) + " items, got " + to_string(cpes.size()) + " items.");
+
+	sort(cpes.begin(), cpes.end());
+
+	for (auto i = 0u; i < min(cpes.size(), reference.size()); i++)
+	{
+		BOOST_TEST_CHECK(cpes[i] == reference[i], "Value mismatch between extracted and reference CPE. Expected `" + reference[i] + "`, got `" + cpes[i] + "`.");
+	}
+}
+
+/*!
+ * Tests automatic service matching with vendor-level patch handling.
+ * 
+ * The automatic matcher calls each supported matcher with vendor-level patch handling requested,
+ * and merges the results. The vendor-level patches extracted should not differ between matchers.
+ * 
+ * The banner being tested against contains a product with an inexistent version numbers in order to test
+ * pattern-based version extraction, and another product whose version number is listed within the CPE
+ * dictionary but has no regular expression defined in the pattern matcher's database.
+ */
+BOOST_AUTO_TEST_CASE(MatchAutoVendorPatch)
+{
+	string banner = "HTTP/1.1 200 OK\r\nServer: Apache/31.33.7 PHP/5.2.4-2ubuntu5.2.5\r\n\r\n2600";
+
+	auto cpes = BannerProcessor::AutoProcess(banner, true);
+
+	vector<string> reference = {
+		"a:apache:http_server:31.33.7",
+		"a:php:php:5.2.4;2ubuntu5.2.5"
 	};
 
 	BOOST_TEST_CHECK(cpes.size() == reference.size(), "Size mismatch between extracted and reference CPEs array. Expected " + to_string(reference.size()) + " items, got " + to_string(cpes.size()) + " items.");
@@ -323,14 +354,50 @@ BOOST_AUTO_TEST_CASE(MatchServiceRegex)
 
 	vector<string> reference = {
 		"a:openbsd:openssh:13.37",
-		"a:exim:exim:13.37",
+		"a:exim:exim:13.37~RC6-2", // patch should not be handled and removed
 		"a:igor_sysoev:nginx:13.37",
 		"a:dovecot:dovecot"
 	};
 
 	for (auto i = 0u; i < banners.size(); i++)
 	{
-		auto cpes = sm.Scan(banners[i]);
+		auto cpes = sm.Scan(banners[i], false);
+
+		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner " + to_string(i) + ".");
+		BOOST_TEST_CHECK(cpes.size() < 2, "Multiple CPEs extracted from banner " + to_string(i) + ": `" + algorithm::join(cpes, "`") + "`");
+		BOOST_TEST_CHECK(cpes[0] == reference[i], "Value mismatch between extracted and reference CPE. Expected `" + reference[i] + "`, got `" + cpes[0] + "`.");
+	}
+}
+
+/*!
+ * Tests the service banner pattern matcher with vendor-level patch handling.
+ * 
+ * This case tests against the same service banners as the `MatchServiceRegex` one, and therefore has the same requirements,
+ * but expects proper handling of the vendor-level patch version numbers.
+ * 
+ * The banners being tested against contain inexistent version numbers in order to test pattern-based version extraction.
+ */
+BOOST_AUTO_TEST_CASE(MatchServiceRegexVendorPatch)
+{
+	ServiceRegexMatcher sm;
+
+	vector<string> banners = {
+		"SSH-2.0-OpenSSH_13.37\r\nProtocol mismatch.\r\n",
+		"220-xxx.xxx.xxx.xxx ESMTP Exim 13.37~RC6-2 #2 Wed, 02 Mar 2016 06:44:36 -0700 \r\n220-We do not authorize the use of this system to transport unsolicited, \r\n220 and/or bulk e-mail.\r\n250-xxx.xxx.xxx.xxx Hello xxx.xxx.xxx.xxx [xxx.xxx.xxx.xxx]\r\n250-SIZE 52428800\r\n250-8BITMIME\r\n250-PIPELINING",
+		"HTTP/1.1 400 Bad Request\r\nServer: nginx/13.37\r\nDate: Wed, 02 Mar 2016 13:47:28 GMT\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 166\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body bgcolor=\"white\">\r\n<center><h1>400 Bad Request</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>",
+		"* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE NAMESPACE AUTH=PLAIN AUTH=LOGIN] Dovecot ready.\r\n* CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE NAMESPACE AUTH=PLAIN AUTH=LOGIN\r\nA001 OK Pre-login capabilities listed, post-login capabilities have more.\r\n* ID (\"name\" \"Dovecot\")\r\nA002 OK ID completed.\r\nA003 BAD Error in IMAP command received by server.\r\n* BYE Logging out\r\nA004 OK Logout completed."
+	};
+
+	vector<string> reference = {
+		"a:openbsd:openssh:13.37",
+		"a:exim:exim:13.37;RC6-2",
+		"a:igor_sysoev:nginx:13.37",
+		"a:dovecot:dovecot"
+	};
+
+	for (auto i = 0u; i < banners.size(); i++)
+	{
+		auto cpes = sm.Scan(banners[i], true);
 
 		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner " + to_string(i) + ".");
 		BOOST_TEST_CHECK(cpes.size() < 2, "Multiple CPEs extracted from banner " + to_string(i) + ": `" + algorithm::join(cpes, "`") + "`");
@@ -367,7 +434,49 @@ BOOST_AUTO_TEST_CASE(MatchCpeDictionary)
 
 	for (auto i = 0u; i < banners.size(); i++)
 	{
-		auto cpes = cm.Scan(banners[i]);
+		auto cpes = cm.Scan(banners[i], false);
+
+		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner " + to_string(i) + ".");
+		BOOST_TEST_CHECK(cpes.size() == reference[i].size(), "Size mismatch between extracted and reference CPEs array. Expected " + to_string(reference[i].size()) + " items, got " + to_string(cpes.size()) + " items.");
+		
+		sort(cpes.begin(), cpes.end());
+
+		for (auto j = 0u; j < min(cpes.size(), reference[i].size()); j++)
+		{
+			BOOST_TEST_CHECK(cpes[j] == reference[i][j], "Value mismatch between extracted and reference CPE. Expected `" + reference[i][j] + "`, got `" + cpes[j] + "`.");
+		}
+	}
+}
+
+/*!
+ * Tests the CPE dictionary matcher with vendor-level patch handling.
+ * 
+ * This case tests against the same service banners as the `MatchCpeDictionary` one, and therefore has the same requirements,
+ * but expects proper handling of the vendor-level patch version numbers.
+ * 
+ * The banners being tested against contain version numbers listed within the CPE dictionary as they serve a
+ * crucial two-fold purpose during the recognition phase, however the vendor-level patch numbers are not part of
+ * the CPE dictionary, and as such are handled separately.
+ */
+BOOST_AUTO_TEST_CASE(MatchCpeDictionaryVendorPatch)
+{
+	CpeDictionaryMatcher cm;
+
+	vector<string> banners = {
+		"Cisco IOS Software, ME340x Software (ME340x-METROIPACCESS-M), Version 12.2(53)SE, RELEASE SOFTWARE (fc2)\r\nTechnical Support: http://www.cisco.com/techsupport\r\nCopyright (c) 1986-2009 by Cisco Systems, Inc.\r\nCompiled Sun 13-Dec-09 17:46 by prod_rel_team",
+		"220-xxx.xxx.xxx.xxx 2.12 ESMTP Exim 3.14~RC6-2 #2 Wed, 02 Mar 2016 06:44:36 -0700 \r\n220-We do not authorize the use of this system to transport unsolicited, \r\n220 and/or bulk e-mail.\r\n250-xxx.xxx.xxx.xxx Hello xxx.xxx.xxx.xxx [xxx.xxx.xxx.xxx]\r\n250-SIZE 52428800\r\n250-8BITMIME\r\n250-PIPELINING",
+		"HTTP/1.1 400 Bad Request\r\nServer: nginx/1.1.2 PHP/5.2.4-2ubuntu5.1.1 with Suhosin-Patch\r\nDate: Wed, 02 Mar 2016 13:47:28 GMT\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 166\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body bgcolor=\"white\">\r\n<center><h1>400 Bad Request</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>"
+	};
+
+	vector<vector<string>> reference = {
+		{ "o:cisco:ios:12.2se" },
+		{ "a:exim:exim:3.14;RC6-2" },
+		{ "a:nginx:nginx:1.1.2", "a:php:php:5.2.4;2ubuntu5.1.1" }
+	};
+
+	for (auto i = 0u; i < banners.size(); i++)
+	{
+		auto cpes = cm.Scan(banners[i], true);
 
 		BOOST_TEST_CHECK(cpes.size() > 0, "Failed to extract any CPEs from banner " + to_string(i) + ".");
 		BOOST_TEST_CHECK(cpes.size() == reference[i].size(), "Size mismatch between extracted and reference CPEs array. Expected " + to_string(reference[i].size()) + " items, got " + to_string(cpes.size()) + " items.");

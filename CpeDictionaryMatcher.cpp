@@ -9,7 +9,7 @@ using namespace boost;
 vector<CpeEntry> CpeDictionaryMatcher::entries = vector<CpeEntry>();
 unordered_map<string, vector<string>> CpeDictionaryMatcher::aliases = unordered_map<string, vector<string>>();
 
-vector<string> CpeDictionaryMatcher::Scan(const string& banner)
+vector<string> CpeDictionaryMatcher::Scan(const string& banner, bool processVendor)
 {
 	if (entries.size() == 0)
 	{
@@ -112,14 +112,19 @@ vector<string> CpeDictionaryMatcher::Scan(const string& banner)
 			continue;
 		}
 
-		// find vendor patch level, if any
+		// find vendor patch level, if any and asked
 		
-		smatch what;
-		regex verfind(escapeRegex(bestver) + "(?<sep>[-+~_])(?<tag>[^$;\\s\\)\\/]+)");
-
-		if (regex_search(banner, what, verfind))
+		if (processVendor)
 		{
-			//log(ERR, what["sep"].str() + what["tag"].str());
+			smatch what;
+			regex verfind(escapeRegex(bestver) + "(?<sep>[-+~_])(?<tag>[^$;\\s\\)\\/]+)");
+
+			if (regex_search(banner, what, verfind))
+			{
+				// append vendor patch level to the CPE into a separate field
+
+				bestcpe += ";" + what["tag"].str();
+			}
 		}
 
 		// save matching CPE

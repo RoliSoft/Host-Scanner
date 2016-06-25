@@ -15,7 +15,7 @@ void BannerProcessor::Scan(Service* service)
 	}
 }
 
-vector<string> BannerProcessor::AutoProcess(const string& banner)
+vector<string> BannerProcessor::AutoProcess(const string& banner, bool processVendor)
 {
 	vector<string> cpes;
 
@@ -24,7 +24,7 @@ vector<string> BannerProcessor::AutoProcess(const string& banner)
 
 	static ServiceRegexMatcher srm;
 
-	auto rmlst = srm.Scan(banner);
+	auto rmlst = srm.Scan(banner, processVendor);
 
 	if (rmlst.size() > 0)
 	{
@@ -40,7 +40,7 @@ vector<string> BannerProcessor::AutoProcess(const string& banner)
 
 	for (auto token : tokens)
 	{
-		auto cdlst = cdm.Scan(token);
+		auto cdlst = cdm.Scan(token, processVendor);
 
 		if (cdlst.size() > 0)
 		{
@@ -53,7 +53,7 @@ vector<string> BannerProcessor::AutoProcess(const string& banner)
 
 	if (cpes.size() == 0)
 	{
-		auto cdlst = cdm.Scan(banner);
+		auto cdlst = cdm.Scan(banner, processVendor);
 
 		if (cdlst.size() > 0)
 		{

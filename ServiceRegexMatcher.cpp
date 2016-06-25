@@ -8,7 +8,7 @@ using namespace boost;
 
 vector<ServiceRegex> ServiceRegexMatcher::regexes = vector<ServiceRegex>();
 
-vector<string> ServiceRegexMatcher::Scan(const string& banner)
+vector<string> ServiceRegexMatcher::Scan(const string& banner, bool processVendor)
 {
 	if (regexes.size() == 0)
 	{
@@ -77,18 +77,22 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 			cpe = cpe2;
 		}
 
-		// find vendor patch level, if any
+		// find vendor patch level, if any and asked
 
-		smatch what;
-		regex verfind("^(?:[^:]+:){3}.*?(?<sep>[-+~_])(?<tag>[^:$;\\s\\)\\/]+)");
+		string patch;
 
-		if (regex_search(cpe, what, verfind))
+		if (processVendor)
 		{
-			// remove vendor patch level from CPE
+			smatch what;
+			regex verfind("^(?:[^:]+:){3}.*?(?<sep>[-+~_])(?<tag>[^:$;\\s\\)\\/]+)");
 
-			cpe = cpe.substr(0, distance(cpe.cbegin(), what["sep"].first));
+			if (regex_search(cpe, what, verfind))
+			{
+				// remove vendor patch level from CPE version
 
-			//log(ERR, what["sep"].str() + what["tag"].str());
+				patch = what["tag"].str();
+				cpe   = cpe.substr(0, distance(cpe.cbegin(), what["sep"].first));
+			}
 		}
 
 		// strip any irrelevant data
@@ -98,6 +102,13 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner)
 		if (fs != string::npos)
 		{
 			cpe = cpe.substr(0, fs);
+		}
+
+		// append vendor patch level separately, if any
+
+		if (processVendor && !patch.empty())
+		{
+			cpe += ";" + patch;
 		}
 
 		matches.push_back(cpe);

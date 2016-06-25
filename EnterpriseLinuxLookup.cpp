@@ -6,7 +6,7 @@
 using namespace std;
 using namespace boost;
 
-unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve, OpSys distrib, float ver)
+unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
 {
 	unordered_set<string> pkgs;
 
@@ -78,7 +78,7 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 	return pkgs;
 }
 
-string EnterpriseLinuxLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, float ver)
+string EnterpriseLinuxLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, double ver)
 {
 	if (pkgs.empty())
 	{

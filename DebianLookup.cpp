@@ -5,7 +5,7 @@
 using namespace std;
 using namespace boost;
 
-unordered_set<string> DebianLookup::FindVulnerability(const string& cve, OpSys distrib, float ver)
+unordered_set<string> DebianLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
 {
 	unordered_set<string> pkgs;
 
@@ -55,7 +55,7 @@ unordered_set<string> DebianLookup::FindVulnerability(const string& cve, OpSys d
 	return pkgs;
 }
 
-string DebianLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, float ver)
+string DebianLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, double ver)
 {
 	if (pkgs.empty())
 	{

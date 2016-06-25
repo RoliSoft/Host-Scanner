@@ -19,7 +19,7 @@ public:
 	 *
 	 * \return List of vulnerable packages.
 	 */
-	virtual std::unordered_set<std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::Unidentified, float ver = 0.0) = 0;
+	virtual std::unordered_set<std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::Unidentified, double ver = 0.0) = 0;
 
 	/*!
 	 * Generates a command which upgrades the specified vulnerable packages
@@ -31,7 +31,7 @@ public:
 	 *
 	 * \return Upgrade command.
 	 */
-	virtual std::string GetUpgradeCommand(const std::unordered_set<std::string>& pkgs, OpSys distrib = OpSys::Unidentified, float ver = 0.0) = 0;
+	virtual std::string GetUpgradeCommand(const std::unordered_set<std::string>& pkgs, OpSys distrib = OpSys::Unidentified, double ver = 0.0) = 0;
 
 	/*!
 	 * Determines whether the specified CVE identifier is syntactically correct.

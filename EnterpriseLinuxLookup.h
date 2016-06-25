@@ -18,7 +18,7 @@ public:
 	 *
 	 * \return List of vulnerable packages.
 	 */
-	std::unordered_set<std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::EnterpriseLinux, float ver = 0.0) override;
+	std::unordered_set<std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::EnterpriseLinux, double ver = 0.0) override;
 	
 	/*!
 	 * Generates a command which upgrades the specified vulnerable packages
@@ -30,7 +30,7 @@ public:
 	 *
 	 * \return Upgrade command.
 	 */
-	std::string GetUpgradeCommand(const std::unordered_set<std::string>& pkgs, OpSys distrib = OpSys::EnterpriseLinux, float ver = 0.0) override;
+	std::string GetUpgradeCommand(const std::unordered_set<std::string>& pkgs, OpSys distrib = OpSys::EnterpriseLinux, double ver = 0.0) override;
 
 	/*!
 	 * Frees up the resources allocated during the lifetime of this instance.

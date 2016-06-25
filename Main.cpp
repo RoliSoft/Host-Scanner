@@ -885,7 +885,7 @@ postScan:
 
 					if (vpl != nullptr)
 					{
-						auto pkgs = vpl->FindVulnerability("CVE-" + (*vuln.second.begin()).cve);
+						auto pkgs = vpl->FindVulnerability("CVE-" + (*vuln.second.begin()).cve, service->host->opSys, service->host->osVer);
 
 						if (pkgs.size() > 0)
 						{

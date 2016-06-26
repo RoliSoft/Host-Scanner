@@ -6,6 +6,40 @@
 
 using namespace std;
 
+bool InternalScanner::GetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		*reinterpret_cast<unsigned long*>(value) = timeout;
+		return true;
+
+	case OPT_DELAY:
+		*reinterpret_cast<unsigned long*>(value) = delay;
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool InternalScanner::SetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		timeout = *reinterpret_cast<unsigned long*>(value);
+		return true;
+
+	case OPT_DELAY:
+		delay = *reinterpret_cast<unsigned long*>(value);
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 bool InternalScanner::IsPassive()
 {
 	return false;

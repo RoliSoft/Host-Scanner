@@ -11,11 +11,24 @@ class NmapScanner : public HostScanner
 public:
 
 	/*!
-	 * The `-T` option of nmap. Value between 0..5, which maps
-	 * to the same timeouts as the other scanners within this
-	 * application. Level 6 will be 5, since 6 is not available.
+	 * Gets the currently set value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
 	 */
-	int delay = 3;
+	bool GetOption(int option, void* value);
+
+	/*!
+	 * Sets a specified value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	bool SetOption(int option, void* value);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.
@@ -62,6 +75,13 @@ public:
 	~NmapScanner() override;
 
 private:
+
+	/*!
+	 * The `-T` option of nmap. Value between 0..5, which maps
+	 * to the same timeouts as the other scanners within this
+	 * application. Level 6 will be 5, since 6 is not available.
+	 */
+	int delay = 3;
 
 	/*!
 	 * Runs Nmap on the specified hosts.

@@ -492,7 +492,7 @@ int scan(const po::variables_map& vm)
 			case 6: delayms = 0; break;
 			}
 
-			reinterpret_cast<InternalScanner*>(scanner)->delay = delayms;
+			reinterpret_cast<InternalScanner*>(scanner)->SetOption(OPT_DELAY, &delayms);
 		}
 	}
 	else if (scannerstr == "nmap")
@@ -503,7 +503,7 @@ int scan(const po::variables_map& vm)
 		{
 			auto delay = min(max(0, vm["delay"].as<int>()), 5);
 
-			reinterpret_cast<NmapScanner*>(scanner)->delay = delay;
+			reinterpret_cast<NmapScanner*>(scanner)->SetOption(OPT_DELAY, &delay);
 		}
 	}
 #if HAVE_CURL

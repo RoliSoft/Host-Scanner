@@ -33,21 +33,6 @@ class UdpScanner : public ServiceScanner
 public:
 	
 	/*!
-	 * Number of milliseconds to wait for response.
-	 */
-	unsigned long timeout = 3000;
-	
-	/*!
-	 * Number of milliseconds to wait between packets sent to the same host.
-	 */
-	unsigned long delay = 100;
-
-	/*!
-	 * Indicates whether to wait for and grab service banners.
-	 */
-	bool grabBanner = true;
-	
-	/*!
 	 * Gets the currently set value for the option key.
 	 *
 	 * \param option Option index, see `OPT_*` macros.
@@ -89,6 +74,21 @@ public:
 	~UdpScanner() override;
 
 private:
+	
+	/*!
+	 * Number of milliseconds to wait for response.
+	 */
+	unsigned long timeout = 3000;
+	
+	/*!
+	 * Number of milliseconds to wait between packets sent to the same host.
+	 */
+	unsigned long delay = 100;
+
+	/*!
+	 * Indicates whether to wait for and grab service banners.
+	 */
+	bool grabBanner = true;
 
 	/*!
 	 * Map of well-known ports and their example payload.

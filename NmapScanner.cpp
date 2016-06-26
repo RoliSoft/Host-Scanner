@@ -1,5 +1,6 @@
 #include "NmapScanner.h"
 #include "Utils.h"
+#include "ServiceScanner.h"
 #include <iostream>
 #include <string>
 #include <set>
@@ -13,6 +14,32 @@
 
 using namespace std;
 using namespace boost;
+
+bool NmapScanner::GetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_DELAY:
+		*reinterpret_cast<int*>(value) = delay;
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool NmapScanner::SetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_DELAY:
+		delay = *reinterpret_cast<int*>(value);
+		return true;
+
+	default:
+		return false;
+	}
+}
 
 bool NmapScanner::IsPassive()
 {

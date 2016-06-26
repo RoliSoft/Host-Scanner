@@ -83,11 +83,6 @@ class IcmpPinger : public ServiceScanner
 public:
 	
 	/*!
-	 * Number of milliseconds to wait for a reply packet.
-	 */
-	unsigned long timeout = 3000;
-	
-	/*!
 	 * Gets the currently set value for the option key.
 	 *
 	 * \param option Option index, see `OPT_*` macros.
@@ -122,6 +117,11 @@ public:
 	~IcmpPinger() override;
 
 private:
+	
+	/*!
+	 * Number of milliseconds to wait for a reply packet.
+	 */
+	unsigned long timeout = 3000;
 
 	/*!
 	 * Global sequence counter for the ping packets.

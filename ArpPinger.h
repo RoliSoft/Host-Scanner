@@ -155,16 +155,31 @@ struct ArpScanData
 class ArpPinger : public HostScanner
 {
 public:
-	
-	/*!
-	 * Number of milliseconds to wait for a reply packet.
-	 */
-	unsigned long timeout = 3000;
 
 	/*!
 	 * Creates a new instance of this type.
 	 */
 	ArpPinger();
+
+	/*!
+	 * Gets the currently set value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	bool GetOption(int option, void* value);
+
+	/*!
+	 * Sets a specified value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
+	 */
+	bool SetOption(int option, void* value);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.
@@ -197,6 +212,11 @@ public:
 	~ArpPinger() override;
 
 private:
+	
+	/*!
+	 * Number of milliseconds to wait for a reply packet.
+	 */
+	unsigned long timeout = 3000;
 
 	/*!
 	 * List of available interfaces and their properties.

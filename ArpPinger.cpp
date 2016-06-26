@@ -1,5 +1,6 @@
 #include "ArpPinger.h"
 #include "Utils.h"
+#include "ServiceScanner.h"
 #include <iostream>
 #include <vector>
 #include <unordered_map>
@@ -43,6 +44,32 @@ using namespace std;
 ArpPinger::ArpPinger()
 	: interfaces()
 {
+}
+
+bool ArpPinger::GetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		*reinterpret_cast<unsigned long*>(value) = timeout;
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool ArpPinger::SetOption(int option, void* value)
+{
+	switch (option)
+	{
+	case OPT_TIMEOUT:
+		timeout = *reinterpret_cast<unsigned long*>(value);
+		return true;
+
+	default:
+		return false;
+	}
 }
 
 bool ArpPinger::IsPassive()

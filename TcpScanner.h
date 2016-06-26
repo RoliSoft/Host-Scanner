@@ -40,21 +40,6 @@ struct TcpScanData
 class TcpScanner : public ServiceScanner
 {
 public:
-	
-	/*!
-	 * Number of milliseconds to wait for connections to finish.
-	 */
-	unsigned long timeout = 3000;
-	
-	/*!
-	 * Number of milliseconds to wait between packets sent to the same host.
-	 */
-	unsigned long delay = 100;
-
-	/*!
-	 * Indicates whether to wait for and grab service banners.
-	 */
-	bool grabBanner = true;
 
 	/*!
 	 * Gets the currently set value for the option key.
@@ -91,6 +76,21 @@ public:
 	~TcpScanner() override;
 
 private:
+	
+	/*!
+	 * Number of milliseconds to wait for connections to finish.
+	 */
+	unsigned long timeout = 3000;
+	
+	/*!
+	 * Number of milliseconds to wait between packets sent to the same host.
+	 */
+	unsigned long delay = 100;
+
+	/*!
+	 * Indicates whether to wait for and grab service banners.
+	 */
+	bool grabBanner = true;
 
 	/*!
 	 * Initializes the socket and starts the non-blocking connection.

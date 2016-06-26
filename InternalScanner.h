@@ -11,18 +11,26 @@
 class InternalScanner : public HostScanner
 {
 public:
-	
+
 	/*!
-	 * Number of milliseconds to wait for connections to finish.
-	 * Since this scanner uses multiple sub-scanners, this will be the
-	 * applied timeout to each individual scanner, multiplying the final timeout.
+	 * Gets the currently set value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
 	 */
-	unsigned long timeout = 3000;
-	
+	bool GetOption(int option, void* value);
+
 	/*!
-	 * Number of milliseconds to wait between packets sent to the same host.
+	 * Sets a specified value for the option key.
+	 *
+	 * \param option Option index, see `OPT_*` macros.
+	 * \param value Pointer to the value to set.
+	 *
+	 * \return true if it succeeds, false if it fails.
 	 */
-	unsigned long delay = 100;
+	bool SetOption(int option, void* value);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.
@@ -53,5 +61,19 @@ public:
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~InternalScanner() override;
+
+private:
+	
+	/*!
+	 * Number of milliseconds to wait for connections to finish.
+	 * Since this scanner uses multiple sub-scanners, this will be the
+	 * applied timeout to each individual scanner, multiplying the final timeout.
+	 */
+	unsigned long timeout = 3000;
+	
+	/*!
+	 * Number of milliseconds to wait between packets sent to the same host.
+	 */
+	unsigned long delay = 100;
 
 };

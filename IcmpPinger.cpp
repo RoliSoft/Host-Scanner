@@ -56,6 +56,13 @@ void* IcmpPinger::initSocket(Service* service)
 
 	getaddrinfo(service->address.c_str(), "echo", &hint, &info);
 
+	if (info == nullptr)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to resolve IP address `" + service->address + "`");
+		return nullptr;
+	}
+
 	service->protocol = info->ai_family == AF_INET6 ? IPPROTO(IPPROTO_ICMPV6) : IPPROTO(IPPROTO_ICMP);
 
 	// create raw socket

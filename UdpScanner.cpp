@@ -84,7 +84,14 @@ void* UdpScanner::initSocket(Service* service)
 
 	auto port = lexical_cast<string>(service->port);
 	getaddrinfo(service->address.c_str(), port.c_str(), &hint, &info);
-	
+
+	if (info == nullptr)
+	{
+		service->reason = AR_ScanFailed;
+		log(ERR, "Failed to resolve IP address `" + service->address + "`");
+		return nullptr;
+	}
+
 	// create socket
 
 	auto sock = socket(info->ai_family, SOCK_DGRAM, IPPROTO_UDP);

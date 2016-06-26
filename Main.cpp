@@ -360,6 +360,13 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 				return hosts;
 			}
 
+			if (addr.find_first_not_of(".0123456789") != string::npos)
+			{
+				log(ERR, "CIDR notation is only available for IPv4 addresses, not '" + addr + "'.");
+				retval = EXIT_FAILURE;
+				return hosts;
+			}
+
 			log(VRB, "Scanning hosts in " + addr + "/" + to_string(cidr) + ".");
 
 			scanner->GenerateCidr(addr.c_str(), cidr, hosts);
@@ -394,8 +401,22 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 				return hosts;
 			}
 
+			if (s_range[0].find_first_not_of(".0123456789") != string::npos)
+			{
+				log(ERR, "Range notation is only available for IPv4 addresses, not '" + s_range[0] + "'.");
+				retval = EXIT_FAILURE;
+				return hosts;
+			}
+
 			string from = s_range[0];
 			string to   = s_range[0].substr(0, lastsep) + "." + s_range[1];
+
+			if (s_range[1].find_first_not_of("0123456789") != string::npos)
+			{
+				log(ERR, "Range notation is only available for IPv4 addresses, not '" + to + "'.");
+				retval = EXIT_FAILURE;
+				return hosts;
+			}
 
 			log(VRB, "Scanning hosts " + from + " to " + to + ".");
 

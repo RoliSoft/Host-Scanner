@@ -8,7 +8,7 @@ using namespace std;
 using namespace boost;
 
 // compiled by going through build logs at https://admin.fedoraproject.org/pkgdb/package/rpms/openssh/
-unordered_map<string, int> FedoraIdentifier::bundledVersions = unordered_map<string, int> {
+const unordered_map<string, int> FedoraIdentifier::BundledVersions = unordered_map<string, int> {
 	{ "7.2p2",   25 },
 	{ "7.2p1",   25 },
 	{ "7.1p2",   25 },
@@ -98,9 +98,9 @@ bool FedoraIdentifier::Scan(Host* host)
 		trim(ver);
 		to_lower(ver);
 
-		auto bver = bundledVersions.find(ver);
+		auto bver = BundledVersions.find(ver);
 
-		if (bver != bundledVersions.end())
+		if (bver != BundledVersions.end())
 		{
 			fedVer = (*bver).second;
 		}

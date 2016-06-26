@@ -9,6 +9,11 @@
 class FedoraIdentifier : public OperatingSystemIdentifier
 {
 public:
+
+	/*!
+	* OpenSSH version numbers mapped to the Fedora version they came with.
+	*/
+	static const std::unordered_map<std::string, int> BundledVersions;
 	
 	/*!
 	 * Processes the specified host.
@@ -24,12 +29,5 @@ public:
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~FedoraIdentifier() override;
-
-private:
-
-	/*!
-	 * OpenSSH version numbers mapped to the Fedora version they came with.
-	 */
-	static std::unordered_map<std::string, int> bundledVersions;
 
 };

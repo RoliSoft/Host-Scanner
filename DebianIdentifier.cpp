@@ -8,7 +8,7 @@ using namespace std;
 using namespace boost;
 
 // https://www.debian.org/releases/
-unordered_map<string, int> DebianIdentifier::versionNames = unordered_map<string, int> {
+const unordered_map<string, int> DebianIdentifier::VersionNames = unordered_map<string, int> {
 	{ "buster",  10 },
 	{ "stretch", 9 },
 	{ "jessie",  8 },
@@ -21,7 +21,7 @@ unordered_map<string, int> DebianIdentifier::versionNames = unordered_map<string
 };
 
 // compiled by browsing changelogs at https://packages.debian.org/ and https://archive.debian.net/
-unordered_map<string, int> DebianIdentifier::bundledVersions = unordered_map<string, int> {
+const unordered_map<string, int> DebianIdentifier::BundledVersions = unordered_map<string, int> {
 	{ "7.2p2",   9 },
 	{ "6.7p1",   8 },
 	{ "6.6p1",   7 }, // backport
@@ -107,9 +107,9 @@ bool DebianIdentifier::Scan(Host* host)
 			trim(rel);
 			to_lower(rel);
 
-			auto rnum = versionNames.find(rel);
+			auto rnum = VersionNames.find(rel);
 
-			if (rnum != versionNames.end())
+			if (rnum != VersionNames.end())
 			{
 				debVer = (*rnum).second;
 			}
@@ -136,9 +136,9 @@ bool DebianIdentifier::Scan(Host* host)
 			trim(ver);
 			to_lower(ver);
 
-			auto bver = bundledVersions.find(ver);
+			auto bver = BundledVersions.find(ver);
 
-			if (bver != bundledVersions.end())
+			if (bver != BundledVersions.end())
 			{
 				debVer = (*bver).second;
 			}

@@ -9,6 +9,11 @@
 class EnterpriseLinuxIdentifier : public OperatingSystemIdentifier
 {
 public:
+
+	/*!
+	* OpenSSH version numbers mapped to the RHEL/CentOS version they came with.
+	*/
+	static const std::unordered_map<std::string, int> BundledVersions;
 	
 	/*!
 	 * Processes the specified host.
@@ -25,11 +30,5 @@ public:
 	 */
 	~EnterpriseLinuxIdentifier() override;
 
-private:
-
-	/*!
-	 * OpenSSH version numbers mapped to the RHEL/CentOS version they came with.
-	 */
-	static std::unordered_map<std::string, int> bundledVersions;
 
 };

@@ -9,6 +9,16 @@
 class DebianIdentifier : public OperatingSystemIdentifier
 {
 public:
+
+	/*!
+	 * Debian distribution names mapped to their version numbers.
+	 */
+	static const std::unordered_map<std::string, int> VersionNames;
+
+	/*!
+	 * OpenSSH version numbers mapped to the Debian version they came with.
+	 */
+	static const std::unordered_map<std::string, int> BundledVersions;
 	
 	/*!
 	 * Processes the specified host.
@@ -24,17 +34,5 @@ public:
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~DebianIdentifier() override;
-
-private:
-
-	/*!
-	 * Debian distribution names mapped to their version numbers.
-	 */
-	static std::unordered_map<std::string, int> versionNames;
-
-	/*!
-	 * OpenSSH version numbers mapped to the Debian version they came with.
-	 */
-	static std::unordered_map<std::string, int> bundledVersions;
 
 };

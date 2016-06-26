@@ -8,7 +8,7 @@ using namespace std;
 using namespace boost;
 
 // compiled from various sources, may be incomplete
-unordered_map<string, int> EnterpriseLinuxIdentifier::bundledVersions = unordered_map<string, int> {
+const unordered_map<string, int> EnterpriseLinuxIdentifier::BundledVersions = unordered_map<string, int> {
 	{ "6.6.1p1", 7 },
 	{ "6.6p1",   6 },
 	{ "5.3",     6 },
@@ -108,9 +108,9 @@ bool EnterpriseLinuxIdentifier::Scan(Host* host)
 		trim(ver);
 		to_lower(ver);
 
-		auto bver = bundledVersions.find(ver);
+		auto bver = BundledVersions.find(ver);
 
-		if (bver != bundledVersions.end())
+		if (bver != BundledVersions.end())
 		{
 			elVer = (*bver).second;
 		}

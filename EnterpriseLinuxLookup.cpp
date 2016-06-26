@@ -8,12 +8,18 @@ using namespace boost;
 
 unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
 {
-	unordered_set<string> pkgs;
+	VendorVulnInfo vuln;
 
 	if (!ValidateCVE(cve))
 	{
 		log(ERR, "Specified CVE identifier '" + cve + "' is not syntactically valid.");
-		return pkgs;
+		return vuln.Packages;
+	}
+
+	if (distrib != EnterpriseLinux && distrib != Fedora)
+	{
+		log(ERR, "Specified distribution is not supported by this instance.");
+		return vuln.Packages;
 	}
 
 	auto resp = getURL("https://bugzilla.redhat.com/show_bug.cgi?ctype=xml&id=" + cve);
@@ -29,7 +35,7 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
 		}
 
-		return pkgs;
+		return vuln.Packages;
 	}
 
 	auto html = get<0>(resp);
@@ -48,6 +54,10 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 	sregex_iterator srit(html.begin(), html.end(), tblrgx);
 	sregex_iterator end;
 
+	auto tdist = string(distrib == EnterpriseLinux ? "rhel" : "fedora");
+	auto tdall = tdist + "-all";
+	auto tdver = ver != 0 ? tdist + "-" + to_string(ver) : tdall;
+
 	for (; srit != end; ++srit)
 	{
 		auto m = *srit;
@@ -56,10 +66,22 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 		auto dist = m["dist"].str();
 		auto sts  = m["status"].str();
 
-		pkgs.emplace(pkg);
+		if (dist != tdall && dist != tdver)
+		{
+			continue;
+		}
+
+		if (sts != "notaffected")
+		{
+			// placeholder for now
+
+			vuln.Fixes.emplace(pkg, "");
+		}
+
+		vuln.Packages.emplace(pkg);
 	}
 
-	/*smatch cfism;
+	smatch cfism;
 
 	if (regex_search(html, cfism, cfirgx))
 	{
@@ -71,11 +93,30 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 		for (auto& str : strs)
 		{
 			trim(str);
-			log(str);
-		}
-	}*/
 
-	return pkgs;
+			auto spc = str.find_last_of(" ");
+
+			if (spc == string::npos)
+			{
+				continue;
+			}
+
+			auto spkg = str.substr(0, spc);
+			auto sver = str.substr(spc + 1);
+
+			for (auto& fix : vuln.Fixes)
+			{
+				if (fix.second != "" || fix.first != spkg)
+				{
+					continue;
+				}
+
+				fix.second = sver;
+			}
+		}
+	}
+
+	return vuln.Packages;
 }
 
 string EnterpriseLinuxLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, double ver)

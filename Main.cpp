@@ -527,7 +527,7 @@ int scan(const po::variables_map& vm)
 
 		if (vm.count("shodan-uri") != 0)
 		{
-			reinterpret_cast<ShodanScanner*>(scanner)->endpoint = vm["shodan-uri"].as<string>();
+			reinterpret_cast<ShodanScanner*>(scanner)->SetEndpoint(vm["shodan-uri"].as<string>());
 		}
 	}
 	else if (scannerstr == "censys")
@@ -550,7 +550,7 @@ int scan(const po::variables_map& vm)
 
 		if (vm.count("censys-uri") != 0)
 		{
-			reinterpret_cast<CensysScanner*>(scanner)->endpoint = vm["censys-uri"].as<string>();
+			reinterpret_cast<CensysScanner*>(scanner)->SetEndpoint(vm["censys-uri"].as<string>());
 		}
 	}
 	else if (scannerstr == "looquer")
@@ -573,7 +573,7 @@ int scan(const po::variables_map& vm)
 
 		if (vm.count("looquer-uri") != 0)
 		{
-			reinterpret_cast<LooquerScanner*>(scanner)->endpoint = vm["looquer-uri"].as<string>();
+			reinterpret_cast<LooquerScanner*>(scanner)->SetEndpoint(vm["looquer-uri"].as<string>());
 		}
 	}
 	else if (scannerstr == "shosys" || scannerstr == "cendan")
@@ -624,17 +624,17 @@ int scan(const po::variables_map& vm)
 
 		if (vm.count("shodan-uri") != 0)
 		{
-			reinterpret_cast<PassiveScanner*>(scanner)->shodan_uri = vm["shodan-uri"].as<string>();
+			reinterpret_cast<PassiveScanner*>(scanner)->SetShodanEndpoint(vm["shodan-uri"].as<string>());
 		}
 
 		if (vm.count("censys-uri") != 0)
 		{
-			reinterpret_cast<PassiveScanner*>(scanner)->censys_uri = vm["censys-uri"].as<string>();
+			reinterpret_cast<PassiveScanner*>(scanner)->SetCensysEndpoint(vm["censys-uri"].as<string>());
 		}
 
 		if (vm.count("looquer-uri") != 0)
 		{
-			reinterpret_cast<PassiveScanner*>(scanner)->looquer_uri = vm["looquer-uri"].as<string>();
+			reinterpret_cast<PassiveScanner*>(scanner)->SetLooquerEndpoint(vm["looquer-uri"].as<string>());
 		}
 	}
 #else

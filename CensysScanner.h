@@ -10,16 +10,6 @@
 class CensysScanner : public HostScanner
 {
 public:
-	
-	/*!
-	 * API username and password to use for the requests.
-	 */
-	std::string auth;
-
-	/*!
-	 * API endpoint location.
-	 */
-	std::string endpoint = "https://censys.io/api/v1";
 
 	/*!
 	 * Initializes a new instance of this class.
@@ -32,6 +22,27 @@ public:
 	 * \param auth API username and password to use for the requests.
 	 */
 	explicit CensysScanner(const std::string& auth);
+
+	/*!
+	 * Sets the specified API key.
+	 *
+	 * \param key API key to set.
+	 */
+	void SetKey(const std::string& key);
+
+	/*!
+	 * Value indicating whether an key was specified.
+	 *
+	 * \return true if key is present, otherwise false.
+	 */
+	bool HasKey();
+
+	/*!
+	 * Sets the specified API endpoint location.
+	 *
+	 * \param uri API location to set.
+	 */
+	void SetEndpoint(const std::string& uri);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.
@@ -64,6 +75,16 @@ public:
 	~CensysScanner() override;
 
 private:
+	
+	/*!
+	 * API username and password to use for the requests.
+	 */
+	std::string auth;
+
+	/*!
+	 * API endpoint location.
+	 */
+	std::string endpoint = "https://censys.io/api/v1";
 
 	/*!
 	 * Gets the information available on the API for the specified host.

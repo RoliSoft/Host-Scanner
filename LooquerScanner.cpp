@@ -18,6 +18,21 @@ LooquerScanner::LooquerScanner(const string& key)
 {
 }
 
+void LooquerScanner::SetKey(const string& key)
+{
+	this->key = key;
+}
+
+bool LooquerScanner::HasKey()
+{
+	return !key.empty();
+}
+
+void LooquerScanner::SetEndpoint(const string& uri)
+{
+	endpoint = uri;
+}
+
 bool LooquerScanner::IsPassive()
 {
 	return true;

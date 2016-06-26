@@ -9,16 +9,6 @@
 class ShodanScanner : public HostScanner
 {
 public:
-	
-	/*!
-	 * API key to use for the requests.
-	 */
-	std::string key;
-
-	/*!
-	 * API endpoint location.
-	 */
-	std::string endpoint = "https://api.shodan.io/shodan";
 
 	/*!
 	 * Initializes a new instance of this class.
@@ -31,6 +21,27 @@ public:
 	 * \param key API key to use for the requests.
 	 */
 	explicit ShodanScanner(const std::string& key);
+
+	/*!
+	 * Sets the specified API key.
+	 *
+	 * \param key API key to set.
+	 */
+	void SetKey(const std::string& key);
+
+	/*!
+	 * Value indicating whether an API key was specified.
+	 *
+	 * \return true if key is present, otherwise false.
+	 */
+	bool HasKey();
+
+	/*!
+	 * Sets the specified API endpoint location.
+	 *
+	 * \param uri API location to set.
+	 */
+	void SetEndpoint(const std::string& uri);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.
@@ -63,6 +74,16 @@ public:
 	~ShodanScanner() override;
 
 private:
+	
+	/*!
+	 * API key to use for the requests.
+	 */
+	std::string key;
+
+	/*!
+	 * API endpoint location.
+	 */
+	std::string endpoint = "https://api.shodan.io/shodan";
 
 	/*!
 	 * Gets the information available on the API for the specified host.

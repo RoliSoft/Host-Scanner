@@ -912,7 +912,7 @@ BOOST_AUTO_TEST_CASE(ShodanPassiveScan)
 {
 	ShodanScanner scan(readKey("shodan-key"));
 
-	if (scan.key.empty())
+	if (!scan.HasKey())
 	{
 		BOOST_FAIL("Failed to get `shodan-key` configuration entry from the persistent store.");
 		return;
@@ -971,7 +971,7 @@ BOOST_AUTO_TEST_CASE(CensysPassiveScan)
 {
 	CensysScanner scan(readKey("censys-key"));
 
-	if (scan.auth.empty())
+	if (!scan.HasKey())
 	{
 		BOOST_FAIL("Failed to get `censys-key` configuration entry from the persistent store.");
 		return;
@@ -1030,7 +1030,7 @@ BOOST_AUTO_TEST_CASE(LooquerIPv6PassiveScan)
 {
 	LooquerScanner scan(readKey("looquer-key"));
 
-	if (scan.key.empty())
+	if (!scan.HasKey())
 	{
 		BOOST_FAIL("Failed to get `looquer-key` configuration entry from the persistent store.");
 		return;
@@ -1095,7 +1095,7 @@ BOOST_AUTO_TEST_CASE(LooquerIPv4PassiveScan)
 {
 	LooquerScanner scan(readKey("looquer-key"));
 
-	if (scan.key.empty())
+	if (!scan.HasKey())
 	{
 		BOOST_FAIL("Failed to get `looquer-key` configuration entry from the persistent store.");
 		return;
@@ -1157,19 +1157,19 @@ BOOST_AUTO_TEST_CASE(AmalgamatedPassiveScan)
 {
 	PassiveScanner scan(readKey("shodan-key"), readKey("censys-key"), readKey("looquer-key"));
 
-	if (scan.shodan_key.empty())
+	if (!scan.HasShodanKey())
 	{
 		BOOST_FAIL("Failed to get `shodan-key` configuration entry from the persistent store.");
 		return;
 	}
 
-	if (scan.censys_auth.empty())
+	if (!scan.HasCensysKey())
 	{
 		BOOST_FAIL("Failed to get `censys-key` configuration entry from the persistent store.");
 		return;
 	}
 
-	if (scan.looquer_key.empty())
+	if (!scan.HasLooquerKey())
 	{
 		BOOST_FAIL("Failed to get `looquer-key` configuration entry from the persistent store.");
 		return;

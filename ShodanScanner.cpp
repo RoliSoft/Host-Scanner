@@ -18,6 +18,21 @@ ShodanScanner::ShodanScanner(const string& key)
 {
 }
 
+void ShodanScanner::SetKey(const string& key)
+{
+	this->key = key;
+}
+
+bool ShodanScanner::HasKey()
+{
+	return !key.empty();
+}
+
+void ShodanScanner::SetEndpoint(const string& uri)
+{
+	endpoint = uri;
+}
+
 bool ShodanScanner::IsPassive()
 {
 	return true;

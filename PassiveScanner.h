@@ -9,36 +9,6 @@
 class PassiveScanner : public HostScanner
 {
 public:
-	
-	/*!
-	 * Shodan API key to use for the requests.
-	 */
-	std::string shodan_key;
-
-	/*!
-	 * API endpoint location of Shodan.
-	 */
-	std::string shodan_uri;
-
-	/*!
-	 * Censys API username and password to use for the requests.
-	 */
-	std::string censys_auth;
-
-	/*!
-	 * API endpoint location of Censys.
-	 */
-	std::string censys_uri;
-	
-	/*!
-	 * Mr Looquer API key to use for the requests.
-	 */
-	std::string looquer_key;
-
-	/*!
-	 * API endpoint location of Mr Looquer.
-	 */
-	std::string looquer_uri;
 
 	/*!
 	 * Initializes a new instance of this class.
@@ -53,6 +23,69 @@ public:
 	 * \param looquer_key Mr Looquer API key to use for the requests.
 	 */
 	PassiveScanner(const std::string& shodan_key, const std::string& censys_auth, const std::string& looquer_key);
+
+	/*!
+	 * Sets the specified API key for the Shodan scanner.
+	 *
+	 * \param key API key to set.
+	 */
+	void SetShodanKey(const std::string& key);
+
+	/*!
+	 * Value indicating whether a Shodan API key was specified.
+	 *
+	 * \return true if key is present, otherwise false.
+	 */
+	bool HasShodanKey();
+
+	/*!
+	 * Sets the specified API endpoint location for the Shodan scanner.
+	 *
+	 * \param uri API location to set.
+	 */
+	void SetShodanEndpoint(const std::string& uri);
+
+	/*!
+	 * Sets the specified API key for the Censys scanner.
+	 *
+	 * \param key API key to set.
+	 */
+	void SetCensysKey(const std::string& key);
+
+	/*!
+	 * Value indicating whether a Censys API key was specified.
+	 *
+	 * \return true if key is present, otherwise false.
+	 */
+	bool HasCensysKey();
+
+	/*!
+	 * Sets the specified API endpoint location for the Censys scanner.
+	 *
+	 * \param uri API location to set.
+	 */
+	void SetCensysEndpoint(const std::string& uri);
+
+	/*!
+	 * Sets the specified API key for the Looquer scanner.
+	 *
+	 * \param key API key to set.
+	 */
+	void SetLooquerKey(const std::string& key);
+
+	/*!
+	* Value indicating whether a Looquer API key was specified.
+	*
+	* \return true if key is present, otherwise false.
+	*/
+	bool HasLooquerKey();
+
+	/*!
+	 * Sets the specified API endpoint location for the Looquer scanner.
+	 *
+	 * \param uri API location to set.
+	 */
+	void SetLooquerEndpoint(const std::string& uri);
 
 	/*!
 	 * Value indicating whether this instance is a passive scanner.
@@ -85,6 +118,36 @@ public:
 	~PassiveScanner() override;
 
 private:
+	
+	/*!
+	 * Shodan API key to use for the requests.
+	 */
+	std::string shodan_key;
+
+	/*!
+	 * API endpoint location of Shodan.
+	 */
+	std::string shodan_uri;
+
+	/*!
+	 * Censys API username and password to use for the requests.
+	 */
+	std::string censys_auth;
+
+	/*!
+	 * API endpoint location of Censys.
+	 */
+	std::string censys_uri;
+	
+	/*!
+	 * Mr Looquer API key to use for the requests.
+	 */
+	std::string looquer_key;
+
+	/*!
+	 * API endpoint location of Mr Looquer.
+	 */
+	std::string looquer_uri;
 
 	/*!
 	 * Merges two host results.

@@ -11,6 +11,51 @@ PassiveScanner::PassiveScanner(const string& shodan_key, const string& censys_au
 {
 }
 
+void PassiveScanner::SetShodanKey(const string& key)
+{
+	shodan_key = key;
+}
+
+bool PassiveScanner::HasShodanKey()
+{
+	return !shodan_key.empty();
+}
+
+void PassiveScanner::SetShodanEndpoint(const string& uri)
+{
+	shodan_uri = uri;
+}
+
+void PassiveScanner::SetCensysKey(const string& key)
+{
+	censys_auth = key;
+}
+
+bool PassiveScanner::HasCensysKey()
+{
+	return !censys_auth.empty();
+}
+
+void PassiveScanner::SetCensysEndpoint(const string& uri)
+{
+	censys_uri = uri;
+}
+
+void PassiveScanner::SetLooquerKey(const string& key)
+{
+	looquer_key = key;
+}
+
+bool PassiveScanner::HasLooquerKey()
+{
+	return !looquer_key.empty();
+}
+
+void PassiveScanner::SetLooquerEndpoint(const string& uri)
+{
+	looquer_uri = uri;
+}
+
 bool PassiveScanner::IsPassive()
 {
 	return true;
@@ -24,17 +69,17 @@ void PassiveScanner::Scan(Host* host)
 
 	if (!shodan_uri.empty())
 	{
-		ss.endpoint = shodan_uri;
+		ss.SetEndpoint(shodan_uri);
 	}
 
 	if (!censys_uri.empty())
 	{
-		cs.endpoint = censys_uri;
+		cs.SetEndpoint(censys_uri);
 	}
 
 	if (!looquer_uri.empty())
 	{
-		ls.endpoint = looquer_uri;
+		ls.SetEndpoint(looquer_uri);
 	}
 
 	auto shost = new Host(*host);

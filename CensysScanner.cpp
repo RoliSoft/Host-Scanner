@@ -22,6 +22,21 @@ CensysScanner::CensysScanner(const string& auth)
 {
 }
 
+void CensysScanner::SetKey(const string& key)
+{
+	auth = key;
+}
+
+bool CensysScanner::HasKey()
+{
+	return !auth.empty();
+}
+
+void CensysScanner::SetEndpoint(const string& uri)
+{
+	endpoint = uri;
+}
+
 bool CensysScanner::IsPassive()
 {
 	return true;

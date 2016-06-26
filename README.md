@@ -40,6 +40,12 @@ The purpose of this project is to implement a network scanner with both active a
     * Debian (oldstable to unstable), Ubuntu (all current and lts versions)
     * Red Hat (5-7), CentOS (5-7), Fedora (all current and rawhide)
 
+* Vulnerability Validation
+  * Use the package manager, security or bug tracker of the identified distribution to check whether a package is vulnerable, whether a vendor patch is available, and whether it is installed or not.
+
+* Estimate System Upgrade Date
+  * Using the changelog of the discovered packages with version numbers and security patch information, estimate the date range of the last system upgrade of the host.
+
 * Reporting
   * Generate a L<sup>A</sup>T<sub>E</sub>X report of the scanned network, which includes open ports, identified services, discovered vulnerabilities and mitigation recommendations.
 
@@ -102,7 +108,12 @@ The purpose of this project is to implement a network scanner with both active a
 	                            0 - 5m, 1 - 15s, 2 - 400ms, 3 - 100ms, 4 - 10ms, 5 - 5ms, 6 - no delay
 
 	  -r [ --resolve ]        Resolves vulnerable CPE names to their actual package names depending on
-							  the automatically detected operating system of the host.
+	                          the automatically detected operating system of the host.
+
+	  -w [ --validate ]       Validate all vulnerabilities with the package manager of the distribution.
+
+	  -e [ --estimate ]       Estimate date range of the last system upgrade based on the installed
+	                          package versions and security patches.
 
 	  -o [ --output-latex ] arg Exports the scan results into a LaTeX file, with all the available
 	                            information gathered during the scan.

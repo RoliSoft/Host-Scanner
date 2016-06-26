@@ -1418,7 +1418,7 @@ int main(int argc, char *argv[])
 		("validate,w",
 			"Validate all vulnerabilities with the package manager of the distribution.")
 		("estimate,e",
-			"Estimate date range of the last system upgrade based on the installed security patches.")
+			"Estimate date range of the last system upgrade based on the installed package versions and security patches.")
 		("output-latex,o", po::value<string>(),
 			"Exports the scan results into a LaTeX file, with all the available information gathered during the scan.")
 		("passive,x",

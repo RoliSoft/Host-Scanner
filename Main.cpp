@@ -405,9 +405,64 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 		{
 			// IP or host
 
-			log(VRB, "Scanning host " + s_target + ".");
+			if (s_target.find_first_not_of(".0123456789") == string::npos
+			 || s_target.find_first_not_of(":0123456789abcdef") == string::npos)
+			{
+				// IPv4 or v6
 
-			hosts->push_back(new Host(s_target.c_str()));
+				log(VRB, "Scanning host " + s_target + ".");
+
+				hosts->push_back(new Host(s_target.c_str()));
+			}
+			else
+			{
+				// hostname
+
+				struct addrinfo hint, *info = nullptr;
+				memset(&hint, 0, sizeof(struct addrinfo));
+				hint.ai_family = AF_UNSPEC; // allow both v4 and v6
+
+				getaddrinfo(s_target.c_str(), 0, &hint, &info);
+
+				if (info == nullptr)
+				{
+					log(ERR, "Failed to DNS resolve hostname '" + s_target + "'.");
+					retval = EXIT_FAILURE;
+					return hosts;
+				}
+
+				auto infoit = info;
+
+				while (infoit != nullptr)
+				{
+					char infostr[INET6_ADDRSTRLEN];
+
+					switch (infoit->ai_family)
+					{
+					case AF_INET:
+						inet_ntop(AF_INET, &reinterpret_cast<struct sockaddr_in*>(infoit->ai_addr)->sin_addr, infostr, INET_ADDRSTRLEN);
+						break;
+
+					case AF_INET6:
+						inet_ntop(AF_INET6, &reinterpret_cast<struct sockaddr_in6*>(infoit->ai_addr)->sin6_addr, infostr, INET6_ADDRSTRLEN);
+						break;
+
+					default:
+						log(ERR, "Failed to DNS resolve hostname '" + s_target + "': unsupported address family of " + to_string(infoit->ai_family) + ".");
+						retval = EXIT_FAILURE;
+						freeaddrinfo(info);
+						return hosts;
+					}
+
+					log(VRB, "Scanning host " + s_target + " at " + string(infostr) + ".");
+
+					hosts->push_back(new Host(infostr));
+
+					infoit = infoit->ai_next;
+				}
+
+				freeaddrinfo(info);
+			}
 		}
 	}
 

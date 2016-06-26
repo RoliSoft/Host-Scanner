@@ -8,7 +8,7 @@ using namespace std;
 using namespace boost;
 
 // https://wiki.ubuntu.com/Releases
-unordered_map<string, double> UbuntuIdentifier::versionNames = unordered_map<string, double> {
+const unordered_map<string, double> UbuntuIdentifier::VersionNames = unordered_map<string, double> {
 	{ "xenial",   16.04 }, // lts
 	{ "wily",     15.10 },
 	{ "vivid",    15.04 },
@@ -30,7 +30,7 @@ unordered_map<string, double> UbuntuIdentifier::versionNames = unordered_map<str
 };
 
 // compiled by browsing changelogs at https://launchpad.net/ubuntu/+source/openssh
-unordered_map<string, double> UbuntuIdentifier::bundledVersions = unordered_map<string, double> {
+const unordered_map<string, double> UbuntuIdentifier::BundledVersions = unordered_map<string, double> {
 	{ "7.2p2",   16.04 },
 	{ "6.9p1",   15.10 },
 	{ "6.7p1",   15.04 },
@@ -42,7 +42,7 @@ unordered_map<string, double> UbuntuIdentifier::bundledVersions = unordered_map<
 	{ "4.2p1",   6.06 },
 };
 
-unordered_set<double> UbuntuIdentifier::ltsVersions = unordered_set<double>{
+const unordered_set<double> UbuntuIdentifier::LtsVersions = unordered_set<double>{
 	16.04, 14.04, 12.04, 10.04, 8.04, 6.06
 };
 
@@ -126,9 +126,9 @@ bool UbuntuIdentifier::Scan(Host* host)
 			trim(ver);
 			to_lower(ver);
 
-			auto bver = bundledVersions.find(ver);
+			auto bver = BundledVersions.find(ver);
 
-			if (bver != bundledVersions.end())
+			if (bver != BundledVersions.end())
 			{
 				debVer = (*bver).second;
 			}
@@ -149,7 +149,7 @@ bool UbuntuIdentifier::Scan(Host* host)
 
 			host->osVer = debVer.get();
 
-			if (ltsVersions.find(debVer.get()) != ltsVersions.end())
+			if (LtsVersions.find(debVer.get()) != LtsVersions.end())
 			{
 				cpe += "-:lts";
 			}

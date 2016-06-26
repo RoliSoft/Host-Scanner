@@ -953,6 +953,21 @@ postScan:
 
 				log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr.substr(2));
 
+				// validate all vulnerabilities, if requested
+
+				if (vm.count("validate") != 0 && service->host->opSys != OpSys::Unidentified)
+				{
+					auto vpl = VendorLookupFactory::Get(service->host->opSys);
+
+					if (vpl != nullptr)
+					{
+						for (auto& cve : vuln.second)
+						{
+							auto pkgs = vpl->FindVulnerability("CVE-" + cve.cve, service->host->opSys, service->host->osVer);
+						}
+					}
+				}
+
 				// resolve CPE name to OS package, if requested
 
 				if (resolve && service->host->opSys != OpSys::Unidentified)
@@ -1331,6 +1346,8 @@ int main(int argc, char *argv[])
 		("resolve,r",
 			"Resolves vulnerable CPE names to their actual package names depending "
 			"on the automatically detected operating system of the host.")
+		("validate,w",
+			"Validate all vulnerabilities with the package manager of the distribution.")
 		("output-latex,o", po::value<string>(),
 			"Exports the scan results into a LaTeX file, with all the available information gathered during the scan.")
 		("passive,x",
@@ -1463,6 +1480,8 @@ int main(int argc, char *argv[])
 #if Windows
 	WSACleanup();
 #endif
+
+	::system("pause");
 
 	return !handled ? EXIT_FAILURE : retval;
 }

@@ -47,7 +47,7 @@ unordered_set<string> DebianLookup::FindVulnerability(const string& cve, OpSys d
 
 		auto pkg  = m["pkg"].str();
 		auto dist = m["dist"].str();
-		auto ver  = m["ver"].str();
+		auto vers = m["ver"].str();
 
 		pkgs.emplace(pkg);
 	}

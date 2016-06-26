@@ -2,6 +2,27 @@
 #include "Stdafx.h"
 #include "Host.h"
 #include <unordered_set>
+#include <unordered_map>
+
+/*!
+ * Structure which contains the information available from the vendor regarding a vulnerability.
+ */
+struct VendorVulnInfo
+{
+
+	/*!
+	 * Map of version numbers which fix the vulnerability associated to
+	 * the operating system distribution they are packaged with, or an empty
+	 * string, if a vulnerability is not yet fixed in the distribution.
+	 */
+	std::unordered_map<std::string, std::string> Fixes;
+
+	/*!
+	 * List of vulnerable packages.
+	 */
+	std::unordered_set<std::string> Packages;
+
+};
 
 /*!
  * Provides the functionality to search vendor repositories.

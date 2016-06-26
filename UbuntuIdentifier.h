@@ -10,6 +10,21 @@
 class UbuntuIdentifier : public OperatingSystemIdentifier
 {
 public:
+
+	/*!
+	 * Ubuntu distribution names mapped to their version numbers.
+	 */
+	static const std::unordered_map<std::string, double> VersionNames;
+
+	/*!
+	 * OpenSSH version numbers mapped to the Ubuntu version they came with.
+	 */
+	static const std::unordered_map<std::string, double> BundledVersions;
+
+	/*!
+	 * List of Long Term Support versions.
+	 */
+	static const std::unordered_set<double> LtsVersions;
 	
 	/*!
 	 * Processes the specified host.
@@ -25,22 +40,5 @@ public:
 	 * Frees up the resources allocated during the lifetime of this instance.
 	 */
 	~UbuntuIdentifier() override;
-
-private:
-
-	/*!
-	 * Ubuntu distribution names mapped to their version numbers.
-	 */
-	static std::unordered_map<std::string, double> versionNames;
-
-	/*!
-	 * OpenSSH version numbers mapped to the Ubuntu version they came with.
-	 */
-	static std::unordered_map<std::string, double> bundledVersions;
-
-	/*!
-	 * List of Long Term Support versions.
-	 */
-	static std::unordered_set<double> ltsVersions;
 
 };

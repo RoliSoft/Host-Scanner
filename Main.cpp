@@ -47,6 +47,7 @@
 #include <boost/program_options/parsers.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/find.hpp>
 #include <boost/core/ignore_unused.hpp>
 #include <boost/regex.hpp>
 
@@ -957,20 +958,81 @@ postScan:
 
 				if (vm.count("validate") != 0 && service->host->opSys != OpSys::Unidentified)
 				{
+					auto vulnconfstr = "cpe:/" + vuln.first + " is confirmed to be vulnerable to ";
+					auto vulnconfany = false;
+
+					vector<CveEntry> vulnconfdel;
+
 					auto vpl = VendorLookupFactory::Get(service->host->opSys);
 
 					if (vpl != nullptr)
 					{
 						for (auto& cve : vuln.second)
 						{
+							log(VRB, "Validating CVE-" + cve.cve + " for " + service->address + "...");
+
 							auto pkgs = vpl->FindVulnerability("CVE-" + cve.cve, service->host->opSys, service->host->osVer);
+
+							if (!pkgs.empty())
+							{
+								auto cver = vuln.first.substr(distance(vuln.first.begin(), find_nth(vuln.first, ":", 2).begin()) + 1);
+								auto fver = (*pkgs.begin()).second;
+
+								if (!fver.empty() && compareVersions(cver, fver) >= 0)
+								{
+									log(DBG, "Vulnerability CVE-" + cve.cve + " has security patch applied on " + service->address + ": installed is " + cver + ", fixed in " + fver + ".");
+									vulnconfdel.push_back(cve);
+									continue;
+								}
+								else
+								{
+									log(DBG, "Vulnerability CVE-" + cve.cve + " affects " + service->address + ": installed is " + cver + ", " + (fver.empty() ? "fix not yet available" : "fixed in " + fver) + ".");
+								}
+
+								if (vulnconfany)
+								{
+									vulnconfstr += ", ";
+								}
+								else
+								{
+									vulnconfany = true;
+								}
+
+								vulnconfstr += "CVE-" + cve.cve;
+							}
+							else
+							{
+								log(DBG, "Vulnerability CVE-" + cve.cve + " does not affect " + service->address + ".");
+								vulnconfdel.push_back(cve);
+							}
 						}
+					}
+
+					for (auto& vulndel : vulnconfdel)
+					{
+						for (auto vit = vuln.second.begin(); vit != vuln.second.end(); ++vit)
+						{
+							if ((*vit).cve == vulndel.cve)
+							{
+								vuln.second.erase(vit);
+								break;
+							}
+						}
+					}
+
+					if (vulnconfany)
+					{
+						log(WRN, vulnconfstr);
+					}
+					else
+					{
+						log(WRN, "cpe:/" + vuln.first + " has no vulnerabilities after validation!");
 					}
 				}
 
 				// resolve CPE name to OS package, if requested
 
-				if (resolve && service->host->opSys != OpSys::Unidentified)
+				if (resolve && service->host->opSys != OpSys::Unidentified && !vuln.second.empty())
 				{
 					auto vpl = VendorLookupFactory::Get(service->host->opSys);
 
@@ -1355,6 +1417,8 @@ int main(int argc, char *argv[])
 			"on the automatically detected operating system of the host.")
 		("validate,w",
 			"Validate all vulnerabilities with the package manager of the distribution.")
+		("estimate,e",
+			"Estimate date range of the last system upgrade based on the installed security patches.")
 		("output-latex,o", po::value<string>(),
 			"Exports the scan results into a LaTeX file, with all the available information gathered during the scan.")
 		("passive,x",
@@ -1488,7 +1552,7 @@ int main(int argc, char *argv[])
 	WSACleanup();
 #endif
 
-	::system("pause");
+	//::system("pause");
 
 	return !handled ? EXIT_FAILURE : retval;
 }

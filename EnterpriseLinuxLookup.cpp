@@ -6,20 +6,20 @@
 using namespace std;
 using namespace boost;
 
-unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
+unordered_map<string, string> EnterpriseLinuxLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
 {
-	VendorVulnInfo vuln;
+	unordered_map<string, string> vuln;
 
 	if (!ValidateCVE(cve))
 	{
 		log(ERR, "Specified CVE identifier '" + cve + "' is not syntactically valid.");
-		return vuln.Packages;
+		return vuln;
 	}
 
 	if (distrib != EnterpriseLinux && distrib != Fedora)
 	{
 		log(ERR, "Specified distribution is not supported by this instance.");
-		return vuln.Packages;
+		return vuln;
 	}
 
 	auto resp = getURL("https://bugzilla.redhat.com/show_bug.cgi?ctype=xml&id=" + cve);
@@ -35,7 +35,7 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
 		}
 
-		return vuln.Packages;
+		return vuln;
 	}
 
 	auto html = get<0>(resp);
@@ -75,10 +75,8 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 		{
 			// placeholder for now
 
-			vuln.Fixes.emplace(pkg, "");
+			vuln.emplace(pkg, "");
 		}
-
-		vuln.Packages.emplace(pkg);
 	}
 
 	smatch cfism;
@@ -104,7 +102,7 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 			auto spkg = str.substr(0, spc);
 			auto sver = str.substr(spc + 1);
 
-			for (auto& fix : vuln.Fixes)
+			for (auto& fix : vuln)
 			{
 				if (fix.second != "" || fix.first != spkg)
 				{
@@ -116,7 +114,7 @@ unordered_set<string> EnterpriseLinuxLookup::FindVulnerability(const string& cve
 		}
 	}
 
-	return vuln.Packages;
+	return vuln;
 }
 
 string EnterpriseLinuxLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, double ver)

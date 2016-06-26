@@ -976,10 +976,17 @@ postScan:
 
 					if (vpl != nullptr)
 					{
-						auto pkgs = vpl->FindVulnerability("CVE-" + (*vuln.second.begin()).cve, service->host->opSys, service->host->osVer);
+						auto vinf = vpl->FindVulnerability("CVE-" + (*vuln.second.begin()).cve, service->host->opSys, service->host->osVer);
 
-						if (pkgs.size() > 0)
+						if (vinf.size() > 0)
 						{
+							unordered_set<string> pkgs;
+
+							for (auto& vi : vinf)
+							{
+								pkgs.emplace(vi.first);
+							}
+
 							servpkgs[service].insert(pkgs.begin(), pkgs.end());
 							hostpkgs[service->host].insert(pkgs.begin(), pkgs.end());
 

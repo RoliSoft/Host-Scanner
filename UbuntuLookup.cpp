@@ -2,24 +2,25 @@
 #include "UbuntuIdentifier.h"
 #include "Utils.h"
 #include <boost/regex.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 using namespace std;
 using namespace boost;
 
-unordered_set<string> UbuntuLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
+unordered_map<string, string> UbuntuLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
 {
-	VendorVulnInfo vuln;
+	unordered_map<string, string> vuln;
 
 	if (!ValidateCVE(cve))
 	{
 		log(ERR, "Specified CVE identifier '" + cve + "' is not syntactically valid.");
-		return vuln.Packages;
+		return vuln;
 	}
 
 	if (distrib != Ubuntu)
 	{
 		log(ERR, "Specified distribution is not supported by this instance.");
-		return vuln.Packages;
+		return vuln;
 	}
 
 	auto resp = getURL("https://people.canonical.com/~ubuntu-security/cve/" + cve.substr(4, 4) + "/" + cve + ".html");
@@ -35,7 +36,7 @@ unordered_set<string> UbuntuLookup::FindVulnerability(const string& cve, OpSys d
 			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
 		}
 
-		return vuln.Packages;
+		return vuln;
 	}
 
 	auto html = get<0>(resp);
@@ -60,17 +61,18 @@ unordered_set<string> UbuntuLookup::FindVulnerability(const string& cve, OpSys d
 
 		if (ver == 0 || UbuntuIdentifier::VersionNames.at(dist) == ver)
 		{
-			vuln.Fixes.emplace(pkg, sts == "safe" ? vers : "");
+			vuln.emplace(pkg, sts == "safe" ? vers : "");
 		}
-
-		vuln.Packages.emplace(pkg);
 	}
 
-	return vuln.Packages;
+	return vuln;
 }
 
 string UbuntuLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, double ver)
 {
+	ignore_unused(distrib);
+	ignore_unused(ver);
+
 	if (pkgs.empty())
 	{
 		return "";

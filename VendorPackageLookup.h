@@ -5,26 +5,6 @@
 #include <unordered_map>
 
 /*!
- * Structure which contains the information available from the vendor regarding a vulnerability.
- */
-struct VendorVulnInfo
-{
-
-	/*!
-	 * Map of version numbers which fix the vulnerability associated to
-	 * the operating system distribution they are packaged with, or an empty
-	 * string, if a vulnerability is not yet fixed in the distribution.
-	 */
-	std::unordered_map<std::string, std::string> Fixes;
-
-	/*!
-	 * List of vulnerable packages.
-	 */
-	std::unordered_set<std::string> Packages;
-
-};
-
-/*!
  * Provides the functionality to search vendor repositories.
  */
 class VendorPackageLookup
@@ -38,9 +18,11 @@ public:
 	 * \param distrib Operating system distribution.
 	 * \param ver Version number of distribution.
 	 *
-	 * \return List of vulnerable packages.
+	 * \return If not affected an empty map, otherwise a map of vulnerable
+	 *         packages associated to the version number that patches it,
+	 *         or empty string if package is not yet fixed.
 	 */
-	virtual std::unordered_set<std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::Unidentified, double ver = 0.0) = 0;
+	virtual std::unordered_map<std::string, std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::Unidentified, double ver = 0.0) = 0;
 
 	/*!
 	 * Generates a command which upgrades the specified vulnerable packages

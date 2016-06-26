@@ -16,9 +16,11 @@ public:
 	 * \param distrib Operating system distribution.
 	 * \param ver Version number of distribution.
 	 *
-	 * \return List of vulnerable packages.
+	 * \return If not affected an empty map, otherwise a map of vulnerable
+	 *         packages associated to the version number that patches it,
+	 *         or empty string if package is not yet fixed.
 	 */
-	std::unordered_set<std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::EnterpriseLinux, double ver = 0.0) override;
+	std::unordered_map<std::string, std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::EnterpriseLinux, double ver = 0.0) override;
 	
 	/*!
 	 * Generates a command which upgrades the specified vulnerable packages

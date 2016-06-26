@@ -2,24 +2,25 @@
 #include "DebianIdentifier.h"
 #include "Utils.h"
 #include <boost/regex.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 using namespace std;
 using namespace boost;
 
-unordered_set<string> DebianLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
+unordered_map<string, string> DebianLookup::FindVulnerability(const string& cve, OpSys distrib, double ver)
 {
-	VendorVulnInfo vuln;
+	unordered_map<string, string> vuln;
 
 	if (!ValidateCVE(cve))
 	{
 		log(ERR, "Specified CVE identifier '" + cve + "' is not syntactically valid.");
-		return vuln.Packages;
+		return vuln;
 	}
 
 	if (distrib != Debian)
 	{
 		log(ERR, "Specified distribution is not supported by this instance.");
-		return vuln.Packages;
+		return vuln;
 	}
 
 	auto resp = getURL("https://security-tracker.debian.org/tracker/" + cve);
@@ -35,7 +36,7 @@ unordered_set<string> DebianLookup::FindVulnerability(const string& cve, OpSys d
 			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
 		}
 
-		return vuln.Packages;
+		return vuln;
 	}
 
 	auto html = get<0>(resp);
@@ -62,24 +63,25 @@ unordered_set<string> DebianLookup::FindVulnerability(const string& cve, OpSys d
 
 		if (ver == 0 || DebianIdentifier::VersionNames.at(dist) == ver)
 		{
-			vuln.Fixes.emplace(pkg, vers);
+			vuln.emplace(pkg, vers);
 		}
-
-		vuln.Packages.emplace(pkg);
 	}
 
-	if (!pkgfx.empty() && vuln.Fixes.empty())
+	if (!pkgfx.empty() && vuln.empty())
 	{
 		// vulnerability is known, but no resolution for distribution
 
-		vuln.Fixes.emplace(pkgfx, "");
+		vuln.emplace(pkgfx, "");
 	}
 
-	return vuln.Packages;
+	return vuln;
 }
 
 string DebianLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, double ver)
 {
+	ignore_unused(distrib);
+	ignore_unused(ver);
+
 	if (pkgs.empty())
 	{
 		return "";

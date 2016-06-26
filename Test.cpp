@@ -34,6 +34,7 @@
 #include "ShodanScanner.h"
 #include "CensysScanner.h"
 #include "LooquerScanner.h"
+#include "PassiveScanner.h"
 #include "HttpTokenizer.h"
 #include "ThreeDigitTokenizer.h"
 #include "ServiceRegexMatcher.h"
@@ -1133,6 +1134,80 @@ BOOST_AUTO_TEST_CASE(LooquerIPv4PassiveScan)
 			BOOST_TEST_CHECK(serv->alive, "Port 443 should be alive.");
 			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 443.");
 			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 443 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+		}
+	}
+
+	if (!exp.empty())
+	{
+		for (auto port : exp)
+		{
+			BOOST_TEST_CHECK(false, "Port " + to_string(port) + " was not in the dataset.");
+		}
+	}
+}
+
+/*!
+ * Tests the amalgamation passive scanner.
+ * 
+ * This scanner uses data from Shodan, Censys and Mr Looquer. As such, it has the
+ * requirements (API keys) of all three components, in order to successfully run.
+ */
+BOOST_AUTO_TEST_CASE(AmalgamatedPassiveScan)
+{
+	PassiveScanner scan(readKey("shodan-key"), readKey("censys-key"), readKey("looquer-key"));
+
+	if (scan.shodan_key.empty())
+	{
+		BOOST_FAIL("Failed to get `shodan-key` configuration entry from the persistent store.");
+		return;
+	}
+
+	if (scan.censys_auth.empty())
+	{
+		BOOST_FAIL("Failed to get `censys-key` configuration entry from the persistent store.");
+		return;
+	}
+
+	if (scan.looquer_key.empty())
+	{
+		BOOST_FAIL("Failed to get `looquer-key` configuration entry from the persistent store.");
+		return;
+	}
+	
+	Host host("188.166.36.214"); // excelsior.rolisoft.net
+
+	unordered_set<unsigned short> exp = { 25, 80 };
+
+	scan.Scan(&host);
+
+	BOOST_TEST_CHECK(host.services->size() != 0, "Failed to find any open ports.");
+
+	for (auto& serv : *host.services)
+	{
+		switch (serv->port)
+		{
+		case 20:
+			exp.erase(20);
+
+			BOOST_TEST_CHECK(!serv->alive, "Port 20 should not be alive.");
+			BOOST_TEST_CHECK((serv->reason == AR_TimedOut || serv->reason == AR_IcmpUnreachable), "Port 20 reason should either be TimedOut or IcmpUnreachable, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 25:
+			exp.erase(25);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 25 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 25.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 25 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
+			break;
+
+		case 80:
+			exp.erase(80);
+
+			BOOST_TEST_CHECK(serv->alive, "Port 80 should be alive.");
+			BOOST_TEST_CHECK(serv->banner.length() > 0, "Failed to grab service banner on port 80.");
+			BOOST_TEST_CHECK(serv->reason == AR_ReplyReceived, "Port 80 reason should be ReplyReceived, it is instead " + Service::ReasonString(serv->reason) + ".");
 			break;
 		}
 	}

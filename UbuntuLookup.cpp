@@ -59,7 +59,9 @@ unordered_map<string, string> UbuntuLookup::FindVulnerability(const string& cve,
 		auto sts  = m["status"].str();
 		auto vers = m["ver"].str();
 
-		if (ver == 0 || UbuntuIdentifier::VersionNames.at(dist) == ver)
+		auto dver = UbuntuIdentifier::VersionNames.find(dist);
+
+		if (ver == 0 || (dver != UbuntuIdentifier::VersionNames.end() && (*dver).second == ver))
 		{
 			vuln.emplace(pkg, sts == "safe" ? vers : "");
 		}

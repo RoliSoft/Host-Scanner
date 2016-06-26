@@ -59,12 +59,14 @@ unordered_map<string, string> DebianLookup::FindVulnerability(const string& cve,
 		auto dist = m["dist"].str();
 		auto vers = m["ver"].str();
 
-		pkgfx = pkg;
+		auto dver = DebianIdentifier::VersionNames.find(dist);
 
-		if (ver == 0 || DebianIdentifier::VersionNames.at(dist) == ver)
+		if (ver == 0 || (dver != DebianIdentifier::VersionNames.end() && (*dver).second == ver))
 		{
 			vuln.emplace(pkg, vers);
 		}
+
+		pkgfx = pkg;
 	}
 
 	if (!pkgfx.empty() && vuln.empty())

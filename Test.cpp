@@ -46,6 +46,9 @@
 #include "EnterpriseLinuxIdentifier.h"
 #include "FedoraIdentifier.h"
 #include "WindowsIdentifier.h"
+#include "DebianLookup.h"
+#include "UbuntuLookup.h"
+#include "EnterpriseLinuxLookup.h"
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -612,6 +615,129 @@ BOOST_AUTO_TEST_CASE(LookupVulnerabilities)
 
 			BOOST_TEST_CHECK(found, "Failed to find vulnerability `" + cve + "` for the CPE `" + entry.first + "`.");
 		}
+	}
+}
+
+/*!
+ * Tests the vendor package lookup mechanism.
+ * 
+ * This test case queries the package manager of Debian Jessie for various vulnerability
+ * information, and compares it to hardcoded historical data, which shouldn't change.
+ */
+BOOST_AUTO_TEST_CASE(LookupDebianVulnerabilities)
+{
+	DebianLookup vl;
+
+	vector<tuple<string, string, string>> refs = {
+		{ "CVE-2016-3142", "php5", "5.6.19+dfsg-0+deb8u1" },
+		{ "CVE-2015-3185", "apache2", "2.4.10-10+deb8u1" },
+		{ "CVE-2014-9583", "", "" } // should not be affected
+	};
+
+	for (auto& ref : refs)
+	{
+		auto vuln = vl.FindVulnerability(get<0>(ref), Debian, 8);
+
+		if (get<1>(ref).empty())
+		{
+			BOOST_TEST_CHECK(vuln.size() == 0, "Found vulnerability `" + get<0>(ref) + "` at the vendor, but should not have.");
+
+			continue;
+		}
+
+		BOOST_TEST_CHECK(vuln.size() > 0, "Failed to find vulnerability `" + get<0>(ref) + "` at the vendor.");
+
+		if (vuln.empty())
+		{
+			continue;
+		}
+
+		auto pkgs = *vuln.begin();
+
+		BOOST_TEST_CHECK((get<1>(ref) == pkgs.first),  "Incorrect package name identified for `" + get<0>(ref) + "`: expected `" + get<1>(ref) + "`, got `" + pkgs.first + "`.");
+		BOOST_TEST_CHECK((get<2>(ref) == pkgs.second), "Incorrect package version identified for `" + get<0>(ref) + "`: expected `" + get<2>(ref) + "`, got `" + pkgs.second + "`.");
+	}
+}
+
+/*!
+ * Tests the vendor package lookup mechanism.
+ * 
+ * This test case queries the package manager of Ubuntu 14.04 for various vulnerability
+ * information, and compares it to hardcoded historical data, which shouldn't change.
+ */
+BOOST_AUTO_TEST_CASE(LookupUbuntuVulnerabilities)
+{
+	UbuntuLookup vl;
+
+	vector<tuple<string, string, string>> refs = {
+		{ "CVE-2016-3142", "php5", "5.5.9+dfsg-1ubuntu4.16" },
+		{ "CVE-2015-3185", "apache2", "2.4.7-1ubuntu4.5" },
+		{ "CVE-2014-9583", "", "" } // should not be affected
+	};
+
+	for (auto& ref : refs)
+	{
+		auto vuln = vl.FindVulnerability(get<0>(ref), Ubuntu, 14.04);
+
+		if (get<1>(ref).empty())
+		{
+			BOOST_TEST_CHECK(vuln.size() == 0, "Found vulnerability `" + get<0>(ref) + "` at the vendor, but should not have.");
+
+			continue;
+		}
+
+		BOOST_TEST_CHECK(vuln.size() > 0, "Failed to find vulnerability `" + get<0>(ref) + "` at the vendor.");
+
+		if (vuln.empty())
+		{
+			continue;
+		}
+
+		auto pkgs = *vuln.begin();
+
+		BOOST_TEST_CHECK((get<1>(ref) == pkgs.first),  "Incorrect package name identified for `" + get<0>(ref) + "`: expected `" + get<1>(ref) + "`, got `" + pkgs.first + "`.");
+		BOOST_TEST_CHECK((get<2>(ref) == pkgs.second), "Incorrect package version identified for `" + get<0>(ref) + "`: expected `" + get<2>(ref) + "`, got `" + pkgs.second + "`.");
+	}
+}
+
+/*!
+ * Tests the vendor package lookup mechanism.
+ * 
+ * This test case queries the package manager of Fedora 23 for various vulnerability
+ * information, and compares it to hardcoded historical data, which shouldn't change.
+ */
+BOOST_AUTO_TEST_CASE(LookupEnterpriseLinuxVulnerabilities)
+{
+	EnterpriseLinuxLookup vl;
+
+	vector<tuple<string, string, string>> refs = {
+		{ "CVE-2016-3142", "php", "5.5.33" },
+		{ "CVE-2015-3185", "httpd", "2.4.16" },
+		{ "CVE-2014-9583", "", "" } // should not be affected
+	};
+
+	for (auto& ref : refs)
+	{
+		auto vuln = vl.FindVulnerability(get<0>(ref), Fedora, 23);
+
+		if (get<1>(ref).empty())
+		{
+			BOOST_TEST_CHECK(vuln.size() == 0, "Found vulnerability `" + get<0>(ref) + "` at the vendor, but should not have.");
+
+			continue;
+		}
+
+		BOOST_TEST_CHECK(vuln.size() > 0, "Failed to find vulnerability `" + get<0>(ref) + "` at the vendor.");
+
+		if (vuln.empty())
+		{
+			continue;
+		}
+
+		auto pkgs = *vuln.begin();
+
+		BOOST_TEST_CHECK((get<1>(ref) == pkgs.first),  "Incorrect package name identified for `" + get<0>(ref) + "`: expected `" + get<1>(ref) + "`, got `" + pkgs.first + "`.");
+		BOOST_TEST_CHECK((get<2>(ref) == pkgs.second), "Incorrect package version identified for `" + get<0>(ref) + "`: expected `" + get<2>(ref) + "`, got `" + pkgs.second + "`.");
 	}
 }
 

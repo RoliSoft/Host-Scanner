@@ -815,6 +815,42 @@ BOOST_AUTO_TEST_CASE(LookupUbuntuChangelogs)
 }
 
 /*!
+ * Tests the vendor package changelog parser mechanism.
+ * 
+ * This test queries the package manager of Fedora 24 for a package's
+ * full changelog and tries to find a hardcoded historical entry in it.
+ */
+BOOST_AUTO_TEST_CASE(LookupEnterpriseLinuxChangelogs)
+{
+	EnterpriseLinuxLookup vl;
+
+	string pkgnam = "openssh-server";
+	string pkgver = "7.2p2-6";
+	string pkgdat = "Fri, 29 Apr 2016";
+
+	auto vers = vl.GetChangelog(pkgnam, Fedora, 24);
+
+	BOOST_TEST_CHECK(vers.size() > 0, "Failed to fetch changelog for `" + pkgnam + "` from the vendor.");
+
+	auto found = false;
+
+	for (auto& ver : vers)
+	{
+		if (ver.first == pkgver)
+		{
+			found = true;
+			auto refdat = dateToUnix(pkgdat);
+
+			BOOST_TEST_CHECK((ver.second == refdat), "Found package `" + pkgnam + " " + pkgver + "`, but publish date is off by " + to_string(refdat - ver.second) + " seconds.");
+
+			break;
+		}
+	}
+
+	BOOST_TEST_CHECK(found, "Failed to find `" + pkgnam + " " + pkgver + "` in fetched changelog.");
+}
+
+/*!
  * Tests the version comparison function.
  * 
  * This function should compare version numbers regardless of style, with the proper

@@ -1,5 +1,7 @@
 #include "EnterpriseLinuxLookup.h"
 #include "Utils.h"
+#include <string>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 
@@ -115,6 +117,90 @@ unordered_map<string, string> EnterpriseLinuxLookup::FindVulnerability(const str
 	}
 
 	return vuln;
+}
+
+vector<pair<string, long>> EnterpriseLinuxLookup::GetChangelog(const string& pkg, OpSys distrib, double ver)
+{
+	vector<pair<string, long>> updates;
+
+	if (distrib != EnterpriseLinux && distrib != Fedora)
+	{
+		log(ERR, "Specified distribution is not supported by this instance.");
+		return updates;
+	}
+
+	auto resp = getURL("https://www.rpmfind.net/linux/rpm2html/search.php?query=" + pkg + "&system=" + (distrib == Fedora ? "fedora" : "centos") + "&arch=x86_64");
+
+	if (get<2>(resp) != 200)
+	{
+		if (get<2>(resp) == -1)
+		{
+			log(ERR, "Failed to send HTTP request: " + get<1>(resp));
+		}
+		else
+		{
+			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
+		}
+
+		return updates;
+	}
+
+	string vertag = distrib == Fedora ? "fc" : "el";
+
+	if (ver == 0)
+	{
+		vertag += distrib == Fedora ? "24" : "7";
+	}
+	else
+	{
+		vertag += to_string(int(floor(ver)));
+	}
+
+	// pkg -> name of the package
+	// url -> location of the latest package changelog
+	regex chlrgx("<a href='(?<url>\\/linux\\/RPM\\/[^']*\\." + vertag + "\\.[^']*)'>(?<pkg>[^<]*)\\.html<\\/a>", regex::icase);
+
+	smatch chlurl;
+
+	if (!regex_search(get<0>(resp), chlurl, chlrgx))
+	{
+		log(ERR, "Failed get changelog location for the package " + pkg + ".");
+		return updates;
+	}
+
+	resp = getURL("https://www.rpmfind.net" + chlurl["url"].str());
+
+	if (get<2>(resp) != 200)
+	{
+		if (get<2>(resp) == -1)
+		{
+			log(ERR, "Failed to send HTTP request: " + get<1>(resp));
+		}
+		else
+		{
+			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
+		}
+
+		return updates;
+	}
+
+	// ver -> version number of the package
+	// date -> publication date of the package
+	static regex verrgx("^(?:<pre>)?\\* (?<date>(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun).*?\\d{4}).*?&gt;(?: \\-)? (?<ver>[^$ ]+)", regex::icase);
+
+	istringstream iss(get<0>(resp));
+
+	for (string line; getline(iss, line); )
+	{
+		smatch verm;
+
+		if (regex_search(line, verm, verrgx))
+		{
+			updates.push_back(make_pair(verm["ver"].str(), dateToUnix(verm["date"].str(), "%a %b %d %Y")));
+		}
+	}
+
+	return updates;
 }
 
 string EnterpriseLinuxLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, double ver)

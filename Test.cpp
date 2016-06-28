@@ -743,6 +743,42 @@ BOOST_AUTO_TEST_CASE(LookupEnterpriseLinuxVulnerabilities)
 }
 
 /*!
+ * Tests the vendor package changelog parser mechanism.
+ * 
+ * This test queries the package manager of Debian Jessie for a package's
+ * full changelog and tries to find a hardcoded historical entry in it.
+ */
+BOOST_AUTO_TEST_CASE(LookupDebianChangelogs)
+{
+	DebianLookup vl;
+
+	string pkgnam = "openssh-server";
+	string pkgver = "6.7p1-5+deb8u1";
+	string pkgdat = "Wed, 13 Jan 2016 22:08:52 +0100";
+
+	auto vers = vl.GetChangelog(pkgnam, Debian, 8);
+
+	BOOST_TEST_CHECK(vers.size() > 0, "Failed to fetch changelog for `" + pkgnam + "` from the vendor.");
+
+	auto found = false;
+
+	for (auto& ver : vers)
+	{
+		if (ver.first == pkgver)
+		{
+			found = true;
+			auto refdat = rfc1123ToUnix(pkgdat);
+
+			BOOST_TEST_CHECK((ver.second == refdat), "Found package `" + pkgnam + " " + pkgver + "`, but publish date is off by " + to_string(refdat - ver.second) + " seconds.");
+
+			break;
+		}
+	}
+
+	BOOST_TEST_CHECK(found, "Failed to find `" + pkgnam + " " + pkgver + "` in fetched changelog.");
+}
+
+/*!
  * Tests the version comparison function.
  * 
  * This function should compare version numbers regardless of style, with the proper

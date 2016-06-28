@@ -626,6 +626,7 @@ int scan(const po::variables_map& vm)
 	unordered_map<string, vector<CveEntry>> cpevulns;
 	unordered_map<Host*, unordered_set<string>> hostpkgs;
 	unordered_map<Service*, unordered_set<string>> servpkgs;
+	unordered_map<Host*, pair<long, long>> hostdate;
 	unordered_map<char, int> stats;
 
 	string latexOut, latexContent, latexTitle, latexAbstract;
@@ -1214,12 +1215,30 @@ postScan:
 
 							if (found)
 							{
-								log(MSG, "$!" + service->address + "$ was last updated between $!" + unixToDate(low, "%d %b %Y") + "$ and $!" + unixToDate(high, "%d %b %Y") + "$!");
+								if (hostdate[service->host].first < low || hostdate[service->host].first == 0)
+								{
+									hostdate[service->host].first = low;
+								}
+
+								if (hostdate[service->host].second < high || hostdate[service->host].second == 0)
+								{
+									hostdate[service->host].second = high;
+								}
 							}
 						}
 					}
 				}
 			}
+		}
+	}
+
+	// print upgrade estimates, if requested
+
+	if (estimate && !hostdate.empty())
+	{
+		for (auto& est : hostdate)
+		{
+			log(MSG, "$!" + est.first->address + "$ was last updated between $!" + unixToDate(est.second.first, "%d %b %Y") + "$ and $!" + unixToDate(est.second.second, "%d %b %Y") + "$!");
 		}
 	}
 
@@ -1229,7 +1248,7 @@ postScan:
 	{
 		if (stats['r'] > 0)
 		{
-			log(MSG, "$R" + pluralize(stats['r'], "service", true) + " remotely exploitable.$");
+			log(MSG, "$!" + to_string(stats['r']) + "$ vulnerabilit" + (stats['r'] > 1 ? "ies are" : "y is") + " $Rremotely exploitable$.");
 		}
 
 		log(MSG, "$R" + to_string(stats['c']) + " critical$, $M" + to_string(stats['h']) + " high$, $Y" + to_string(stats['m']) + " medium$ and $!" + to_string(stats['l']) + " low$ severity vulnerabilities across " + pluralize(services.size(), "service") + " and " + pluralize(hosts->size(), "server") + ".");

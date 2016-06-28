@@ -131,10 +131,20 @@ void log(int level, const string& msg, bool format)
 
 	for (auto i = 0; getline(iss, token, '$'); i++)
 	{
+		if (i == 0)
+		{
+			*os << token;
+			continue;
+		}
+
 		if (seen)
 		{
 			seen = false;
 			*os << Format::Normal << Format::Default;
+		}
+		else if (token.empty())
+		{
+			continue;
 		}
 		else
 		{
@@ -147,6 +157,56 @@ void log(int level, const string& msg, bool format)
 			case '!':
 				token = token.substr(1);
 				*os << Format::Bold;
+				break;
+
+			case 'r':
+				token = token.substr(1);
+				*os << Format::Red;
+				break;
+
+			case 'R':
+				token = token.substr(1);
+				*os << Format::Bold << Format::Red;
+				break;
+
+			case 'y':
+				token = token.substr(1);
+				*os << Format::Yellow;
+				break;
+
+			case 'Y':
+				token = token.substr(1);
+				*os << Format::Bold << Format::Yellow;
+				break;
+
+			case 'm':
+				token = token.substr(1);
+				*os << Format::Magenta;
+				break;
+
+			case 'M':
+				token = token.substr(1);
+				*os << Format::Bold << Format::Magenta;
+				break;
+
+			case 'g':
+				token = token.substr(1);
+				*os << Format::Green;
+				break;
+
+			case 'G':
+				token = token.substr(1);
+				*os << Format::Bold << Format::Green;
+				break;
+
+			case 'b':
+				token = token.substr(1);
+				*os << Format::Blue;
+				break;
+
+			case 'B':
+				token = token.substr(1);
+				*os << Format::Bold << Format::Blue;
 				break;
 
 			default:
@@ -908,7 +968,7 @@ postScan:
 
 		if (res)
 		{
-			log(MSG, host->address + " is running " + host->cpe[0]);
+			log(MSG, "$!" + host->address + "$ is running $!cpe:/" + host->cpe[0] + "$");
 		}
 
 		for (auto service : *host->services)
@@ -947,10 +1007,10 @@ postScan:
 
 			for (auto it = service->cpe.begin(), end = service->cpe.end(); it != end; ++it)
 			{
-				cpestr += ", cpe:/" + *it;
+				cpestr += "$, $!cpe:/" + *it;
 			}
 
-			log(MSG, service->address + ":" + to_string(service->port) + " is running " + cpestr.substr(2));
+			log(MSG, "$!" + service->address + ":" + to_string(service->port) + "$ is running " + cpestr.substr(3) + "$");
 		}
 
 		// perform vulnerability lookup for the names
@@ -972,18 +1032,21 @@ postScan:
 
 				for (auto it = vuln.second.begin(), end = vuln.second.end(); it != end; ++it)
 				{
-					vulnstr += ", CVE-" + (*it).cve + " (" + trim_right_copy_if(to_string((*it).severity), [](char c) { return c == '0' || c == '.'; }) + ")";
+					string op = "!";
 
 					if ((*it).severity >= 9)
 					{
+						op = "R";
 						stats['c']++;
 					}
 					else if ((*it).severity >= 7)
 					{
+						op = "M";
 						stats['h']++;
 					}
 					else if ((*it).severity >= 4)
 					{
+						op = "Y";
 						stats['m']++;
 					}
 					else
@@ -995,15 +1058,17 @@ postScan:
 					{
 						stats['r']++;
 					}
+
+					vulnstr += ", $" + op + "CVE-" + (*it).cve + "$ " + trim_right_copy_if(to_string((*it).severity), [](char c) { return c == '0' || c == '.'; });
 				}
 
-				log(WRN, "cpe:/" + vuln.first + " is vulnerable to " + vulnstr.substr(2));
+				log(WRN, "$!cpe:/" + vuln.first + "$ is vulnerable to " + vulnstr.substr(2));
 
 				// validate all vulnerabilities, if requested
 
 				if (vm.count("validate") != 0 && service->host->opSys != OpSys::Unidentified)
 				{
-					auto vulnconfstr = "cpe:/" + vuln.first + " is confirmed to be vulnerable to ";
+					auto vulnconfstr = "$!cpe:/" + vuln.first + "$ is $!confirmed$ to be vulnerable to ";
 					auto vulnconfany = false;
 
 					vector<CveEntry> vulnconfdel;
@@ -1025,13 +1090,13 @@ postScan:
 
 								if (!fver.empty() && compareVersions(cver, fver) >= 0)
 								{
-									log(DBG, "Vulnerability CVE-" + cve.cve + " has security patch applied on " + service->address + ": installed is " + cver + ", fixed in " + fver + ".");
+									log(DBG, "Vulnerability $!CVE-" + cve.cve + "$ does $Gnot affect$ on $!" + service->address + "$: installed is " + cver + ", fixed in " + fver + ".");
 									vulnconfdel.push_back(cve);
 									continue;
 								}
 								else
 								{
-									log(DBG, "Vulnerability CVE-" + cve.cve + " affects " + service->address + ": installed is " + cver + ", " + (fver.empty() ? "fix not yet available" : "fixed in " + fver) + ".");
+									log(DBG, "Vulnerability $!CVE-" + cve.cve + "$ $Raffects$ $!" + service->address + "$: installed is " + cver + ", " + (fver.empty() ? "fix not yet available" : "fixed in " + fver) + ".");
 								}
 
 								if (vulnconfany)
@@ -1043,11 +1108,11 @@ postScan:
 									vulnconfany = true;
 								}
 
-								vulnconfstr += "CVE-" + cve.cve;
+								vulnconfstr += "$!CVE-" + cve.cve + "$";
 							}
 							else
 							{
-								log(DBG, "Vulnerability CVE-" + cve.cve + " does not affect " + service->address + ".");
+								log(DBG, "Vulnerability $!CVE-" + cve.cve + "$ does $Gnot affect$ $!" + service->address + "$.");
 								vulnconfdel.push_back(cve);
 							}
 						}
@@ -1071,7 +1136,7 @@ postScan:
 					}
 					else
 					{
-						log(WRN, "cpe:/" + vuln.first + " has no vulnerabilities after validation!");
+						log(WRN, "$!cpe:/" + vuln.first + "$ has $Gno vulnerabilities$ after validation!");
 					}
 				}
 
@@ -1101,10 +1166,10 @@ postScan:
 
 							for (auto it = pkgs.begin(), end = pkgs.end(); it != end; ++it)
 							{
-								pkgstr += ", " + *it;
+								pkgstr += ", $!" + *it + "$";
 							}
 
-							log(MSG, service->address + " needs update for " + pkgstr.substr(2));
+							log(MSG, "$!" + service->address + "$ needs update for " + pkgstr.substr(2));
 						}
 					}
 				}
@@ -1118,10 +1183,10 @@ postScan:
 	{
 		if (stats['r'] > 0)
 		{
-			log(MSG, pluralize(stats['r'], "service", true) + " remotely exploitable.");
+			log(MSG, "$R" + pluralize(stats['r'], "service", true) + " remotely exploitable.$");
 		}
 
-		log(MSG, to_string(stats['c']) + " critical, " + to_string(stats['h']) + " high, " + to_string(stats['m']) + " medium and " + to_string(stats['l']) + " low severity vulnerabilities across " + pluralize(services.size(), "service") + " and " + pluralize(hosts->size(), "server") + ".");
+		log(MSG, "$R" + to_string(stats['c']) + " critical$, $M" + to_string(stats['h']) + " high$, $Y" + to_string(stats['m']) + " medium$ and $!" + to_string(stats['l']) + " low$ severity vulnerabilities across " + pluralize(services.size(), "service") + " and " + pluralize(hosts->size(), "server") + ".");
 
 	}
 

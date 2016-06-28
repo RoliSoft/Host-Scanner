@@ -44,7 +44,7 @@ void ServiceScanner::DumpResults(Services* services)
 				}
 			}
 
-			log(VRB, ss.str());
+			log(VRB, ss.str(), false);
 		}
 	}
 }

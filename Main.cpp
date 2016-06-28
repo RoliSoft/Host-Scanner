@@ -1322,7 +1322,7 @@ postScan:
 
 					for (auto it = service->banner.begin(), end = service->banner.end(); it != end; ++it)
 					{
-						if (' ' <= *it && *it <= '~' || *it == '\r' || *it == '\n' || *it == '\t')
+						if ((' ' <= *it && *it <= '~') || *it == '\r' || *it == '\n' || *it == '\t')
 						{
 							banner << *it;
 						}

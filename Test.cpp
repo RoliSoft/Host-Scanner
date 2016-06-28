@@ -110,6 +110,8 @@ void log(int level, const string& msg, bool format)
 	ignore_unused(msg);
 #endif
 
+	ignore_unused(format);
+
 	BOOST_TEST_WARN(false, msg);
 }
 

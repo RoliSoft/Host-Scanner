@@ -96,15 +96,17 @@
  *
  * \param level Message severity level.
  * \param msg Message to log.
+ * \param format Value indicating whether to enable formatting.
  */
-void log(int level, const std::string& msg);
+void log(int level, const std::string& msg, bool format = true);
 
 /*!
  * Logs a message with default severity level.
  *
  * \param msg Message to log.
+ * \param format Value indicating whether to enable formatting.
  */
-inline void log(const std::string& msg)
+inline void log(const std::string& msg, bool format = true)
 {
-	log(MSG, msg);
+	log(MSG, msg, format);
 }

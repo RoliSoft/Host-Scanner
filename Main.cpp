@@ -77,8 +77,9 @@ int logging_level = MSG;
  *
  * \param level The message's severity level.
  * \param msg The message's content.
+ * \param format Value indicating whether to enable formatting.
  */
-void log(int level, const string& msg)
+void log(int level, const string& msg, bool format)
 {
 	if (level < logging_level)
 	{
@@ -94,31 +95,75 @@ void log(int level, const string& msg)
 	{
 	case ERR:
 		os = &cerr;
-		cout << Format::Bold << Format::Red << "[!] " << Format::Default << Format::Normal;
+		*os << Format::Red << "[" << Format::Bold << "!" << Format::Normal << "] " << Format::Default;
 		break;
 	case WRN:
 		os = &cerr;
-		cout << Format::Bold << Format::Yellow << "[!] " << Format::Default << Format::Normal;
+		*os << Format::Yellow << "[" << Format::Bold << "!" << Format::Normal << "] " << Format::Default;
 		break;
 	case VRB:
 		os = &cout;
-		cout << Format::Green << "[-] " << Format::Default;
+		*os << Format::Green << "[" << Format::Bold << "-" << Format::Normal << "] " << Format::Default;
 		break;
 	case DBG:
 		os = &cout;
-		cout << Format::Green << "[.] " << Format::Default;
+		*os << Format::Green << "[" << Format::Bold << "." << Format::Normal << "] " << Format::Default;
 		break;
 	case INT:
 		os = &cout;
-		cout << Format::Green << "[ ] " << Format::Default;
+		*os << Format::Green << "[ ] " << Format::Default;
 		break;
 	default:
 		os = &cout;
-		cout << Format::Green << "[*] " << Format::Default;
+		*os << Format::Green << "[" << Format::Bold << "*" << Format::Normal << "] " << Format::Default;
 		break;
 	}
 
-	*os << msg << endl;
+	if (!format)
+	{
+		*os << msg << endl;
+		return;
+	}
+
+	istringstream iss(msg);
+	string token;
+	auto seen = false;
+
+	for (auto i = 0; getline(iss, token, '$'); i++)
+	{
+		if (seen)
+		{
+			seen = false;
+			*os << Format::Normal << Format::Default;
+		}
+		else
+		{
+			seen = true;
+
+			auto op = token.at(0);
+
+			switch (op)
+			{
+			case '!':
+				token = token.substr(1);
+				*os << Format::Bold;
+				break;
+
+			default:
+				seen = false;
+				break;
+			}
+		}
+
+		*os << token;
+	}
+
+	if (seen)
+	{
+		*os << Format::Normal << Format::Default;
+	}
+
+	*os << endl;
 }
 
 /*!
@@ -863,7 +908,7 @@ postScan:
 
 		if (res)
 		{
-			log(MSG, host->address + " is running cpe:/" + host->cpe[0]);
+			log(MSG, host->address + " is running " + host->cpe[0]);
 		}
 
 		for (auto service : *host->services)
@@ -1552,7 +1597,7 @@ int main(int argc, char *argv[])
 	WSACleanup();
 #endif
 
-	//::system("pause");
+	::system("pause");
 
 	return !handled ? EXIT_FAILURE : retval;
 }

@@ -97,8 +97,9 @@ using namespace boost;
  *
  * \param level The message's severity level.
  * \param msg The message's content.
+ * \param format Value indicating whether to enable formatting.
  */
-void log(int level, const string& msg)
+void log(int level, const string& msg, bool format)
 {
 	if (level < WRN)
 	{

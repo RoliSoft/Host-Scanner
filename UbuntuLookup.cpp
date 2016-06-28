@@ -47,7 +47,7 @@ unordered_map<string, string> UbuntuLookup::FindVulnerability(const string& cve,
 	// dist -> distribution (xenial, trusty, etc)
 	// status -> vulnerability status (safe, vuln)
 	// ver -> if fixed, version which fixes the vulnerability
-	static regex tblrgx("href=\"[^l]+launchpad\\.net\\/ubuntu\\/(?<dist>[^\\/]+)\\/[^\\/]+\\/(?<pkg>[^\"]+)\">[^<]+<\\/a>[^<]*<\\/td><td><span class=\"(?<status>[^\"]+)\">[^<]+<\\/span>(?:\\s*\\((?<ver>[^\\)]+))?", regex::icase);
+	static regex tblrgx("href=\"[^l]+launchpad\\.net\\/ubuntu\\/(?<dist>[^\\/]+)\\/[^\\/]+\\/(?<pkg>[^\"]+)\">[^<]+<\\/a>[^<]*<\\/td><td><span class=\"(?<status>[^\"]+)\">[^<]+<\\/span>(?:\\s*\\((?:\\d:)?(?<ver>[^\\)]+))?", regex::icase);
 
 	sregex_iterator srit(html.begin(), html.end(), tblrgx);
 	sregex_iterator end;
@@ -96,7 +96,14 @@ vector<pair<string, long>> UbuntuLookup::GetChangelog(const string& pkg, OpSys d
 		}
 	}
 
-	auto resp = getURL("http://packages.ubuntu.com/" + dver + "/" + pkg);
+	auto dpkg = pkg;
+
+	if (dpkg == "openssh")
+	{
+		dpkg = "openssh-server";
+	}
+
+	auto resp = getURL("http://packages.ubuntu.com/" + dver + "/" + dpkg);
 
 	if (get<2>(resp) != 200)
 	{
@@ -119,7 +126,7 @@ vector<pair<string, long>> UbuntuLookup::GetChangelog(const string& pkg, OpSys d
 
 	if (!regex_search(get<0>(resp), chlurl, chlrgx))
 	{
-		log(ERR, "Failed get changelog location for the package " + pkg + ".");
+		log(ERR, "Failed get changelog location for the package " + dpkg + ".");
 		return updates;
 	}
 

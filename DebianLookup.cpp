@@ -46,7 +46,7 @@ unordered_map<string, string> DebianLookup::FindVulnerability(const string& cve,
 	// pkg -> name of the package
 	// dist -> distribution (stable, unstable, etc)
 	// ver -> version which fixes the vulnerability
-	static regex tblrgx("href=\"\\/tracker\\/source-package\\/[^\"]+\">(?<pkg>[^<]+)<\\/a><\\/td><td>[^<]*<\\/td><td>\\(?(?<dist>[^<\\)]+)\\)?<\\/td><td>(?<ver>[^<]+)<\\/td>", regex::icase);
+	static regex tblrgx("href=\"\\/tracker\\/source-package\\/[^\"]+\">(?<pkg>[^<]+)<\\/a><\\/td><td>[^<]*<\\/td><td>\\(?(?<dist>[^<\\)]+)\\)?<\\/td><td>(?:\\d:)?(?<ver>[^<]+)<\\/td>", regex::icase);
 
 	sregex_iterator srit(html.begin(), html.end(), tblrgx);
 	sregex_iterator end;
@@ -105,7 +105,14 @@ vector<pair<string, long>> DebianLookup::GetChangelog(const string& pkg, OpSys d
 		}
 	}
 
-	auto resp = getURL("https://packages.debian.org/" + dver + "/" + pkg);
+	auto dpkg = pkg;
+
+	if (dpkg == "openssh")
+	{
+		dpkg = "openssh-server";
+	}
+
+	auto resp = getURL("https://packages.debian.org/" + dver + "/" + dpkg);
 
 	if (get<2>(resp) != 200)
 	{
@@ -128,7 +135,7 @@ vector<pair<string, long>> DebianLookup::GetChangelog(const string& pkg, OpSys d
 
 	if (!regex_search(get<0>(resp), chlurl, chlrgx))
 	{
-		log(ERR, "Failed get changelog location for the package " + pkg + ".");
+		log(ERR, "Failed get changelog location for the package " + dpkg + ".");
 		return updates;
 	}
 

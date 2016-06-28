@@ -1,6 +1,8 @@
 #include "UbuntuLookup.h"
 #include "UbuntuIdentifier.h"
 #include "Utils.h"
+#include <string>
+#include <sstream>
 #include <boost/regex.hpp>
 #include <boost/core/ignore_unused.hpp>
 
@@ -68,6 +70,100 @@ unordered_map<string, string> UbuntuLookup::FindVulnerability(const string& cve,
 	}
 
 	return vuln;
+}
+
+vector<pair<string, long>> UbuntuLookup::GetChangelog(const string& pkg, OpSys distrib, double ver)
+{
+	vector<pair<string, long>> updates;
+
+	if (distrib != Ubuntu)
+	{
+		log(ERR, "Specified distribution is not supported by this instance.");
+		return updates;
+	}
+
+	string dver = "xenial";
+
+	if (ver != 0)
+	{
+		for (auto& name : UbuntuIdentifier::VersionNames)
+		{
+			if (name.second == ver)
+			{
+				dver = name.first;
+				break;
+			}
+		}
+	}
+
+	auto resp = getURL("http://packages.ubuntu.com/" + dver + "/" + pkg);
+
+	if (get<2>(resp) != 200)
+	{
+		if (get<2>(resp) == -1)
+		{
+			log(ERR, "Failed to send HTTP request: " + get<1>(resp));
+		}
+		else
+		{
+			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
+		}
+
+		return updates;
+	}
+
+	// url -> location of the latest package changelog
+	static regex chlrgx("href=\"(?<url>[^\"]*\\/changelog)\">Ubuntu Changelog<\\/a>", regex::icase);
+
+	smatch chlurl;
+
+	if (!regex_search(get<0>(resp), chlurl, chlrgx))
+	{
+		log(ERR, "Failed get changelog location for the package " + pkg + ".");
+		return updates;
+	}
+
+	resp = getURL(chlurl["url"].str());
+
+	if (get<2>(resp) != 200)
+	{
+		if (get<2>(resp) == -1)
+		{
+			log(ERR, "Failed to send HTTP request: " + get<1>(resp));
+		}
+		else
+		{
+			log(ERR, "Failed to get reply: HTTP response code was " + to_string(get<2>(resp)) + ".");
+		}
+
+		return updates;
+	}
+
+	// pkg -> name of the package
+	// ver -> version number of the package
+	static regex verrgx("^(?<pkg>[a-z0-9\\-\\._]+)\\s+\\((?:\\d:)?(?<ver>[^\\)]+)\\)", regex::icase);
+
+	// date -> publication date of the package
+	static regex datrgx("^ -- .*?(?<date>(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\\s+\\d+.+)", regex::icase);
+
+	string pver;
+	istringstream iss(get<0>(resp));
+
+	for (string line; getline(iss, line); )
+	{
+		smatch verm, datm;
+
+		if (regex_search(line, verm, verrgx))
+		{
+			pver = verm["ver"].str();
+		}
+		else if (regex_search(line, datm, datrgx) && !pver.empty())
+		{
+			updates.push_back(make_pair(pver, rfc1123ToUnix(datm["date"].str())));
+		}
+	}
+
+	return updates;
 }
 
 string UbuntuLookup::GetUpgradeCommand(const unordered_set<string>& pkgs, OpSys distrib, double ver)

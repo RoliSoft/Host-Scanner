@@ -99,7 +99,17 @@ std::string getNetErrStr(boost::optional<int> code = boost::none);
  * \return Number of seconds elapsed until specified date
  * 		   since Unix epoch.
  */
-long dateToUnix(const std::string& datetime, const std::string& format = "%a, %d %b %Y %H:%M:%S %q");
+long dateToUnix(const std::string& datetime, const std::string& format = "%a, %d %b %Y %H:%M:%S");
+
+/*!
+ * Converts Unix timestamps to textual dates.
+ * 
+ * \param datetime Textual date.
+ * \param format Format string, RFC1123 by default.
+ *
+ * \return Unix timestamp formatted as specified.
+ */
+std::string unixToDate(long datetime, const std::string& format = "%a, %d %b %Y %H:%M:%S");
 
 /*!
  * Escapes the specified input in order to be used in a regular expression.

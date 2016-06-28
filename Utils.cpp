@@ -193,6 +193,23 @@ long dateToUnix(const string& datetime, const string& format)
 	return (dt.utc_time() - epoch).total_seconds();
 }
 
+string unixToDate(long datetime, const string& format)
+{
+	using namespace gregorian;
+	using namespace local_time;
+	using namespace posix_time;
+
+	ptime epoch(date(1970, 1, 1));
+	auto lf(new date_facet(format.c_str()));
+
+	stringstream ss;
+	ss.imbue(locale(locale::classic(), lf));
+
+	ss << (epoch + seconds(datetime)).date();
+
+	return ss.str();
+}
+
 string escapeRegex(const string& input)
 {
 	static const regex  escape("[.^$|()\\[\\]{}*+?\\\\]");

@@ -116,6 +116,7 @@ tuple<string, string, int> getURL(const string& url, const function<void(CURL*)>
 
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
 
 	string buffer, error;
 

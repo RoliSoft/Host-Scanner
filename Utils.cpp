@@ -174,7 +174,7 @@ string getNetErrStr(optional<int> code)
 #endif
 }
 
-long rfc1123ToUnix(const string& datetime)
+long dateToUnix(const string& datetime, const string& format)
 {
 	using namespace gregorian;
 	using namespace local_time;
@@ -183,7 +183,7 @@ long rfc1123ToUnix(const string& datetime)
 	ptime epoch(date(1970, 1, 1));
 
 	auto dt(local_sec_clock::local_time(time_zone_ptr()));
-	auto lf(new local_time_input_facet("%a, %d %b %Y %H:%M:%S %q"));
+	auto lf(new local_time_input_facet(format));
 
 	stringstream ss(datetime);
 	ss.imbue(locale(locale::classic(), lf));
@@ -203,8 +203,8 @@ string escapeRegex(const string& input)
 
 int compareDates(const string& a, const string& b)
 {
-	auto al = rfc1123ToUnix(a);
-	auto bl = rfc1123ToUnix(b);
+	auto al = dateToUnix(a);
+	auto bl = dateToUnix(b);
 
 	if (al < bl)
 	{

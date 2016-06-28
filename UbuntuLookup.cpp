@@ -159,7 +159,7 @@ vector<pair<string, long>> UbuntuLookup::GetChangelog(const string& pkg, OpSys d
 		}
 		else if (regex_search(line, datm, datrgx) && !pver.empty())
 		{
-			updates.push_back(make_pair(pver, rfc1123ToUnix(datm["date"].str())));
+			updates.push_back(make_pair(pver, dateToUnix(datm["date"].str())));
 		}
 	}
 

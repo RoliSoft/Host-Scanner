@@ -767,7 +767,7 @@ BOOST_AUTO_TEST_CASE(LookupDebianChangelogs)
 		if (ver.first == pkgver)
 		{
 			found = true;
-			auto refdat = rfc1123ToUnix(pkgdat);
+			auto refdat = dateToUnix(pkgdat);
 
 			BOOST_TEST_CHECK((ver.second == refdat), "Found package `" + pkgnam + " " + pkgver + "`, but publish date is off by " + to_string(refdat - ver.second) + " seconds.");
 
@@ -803,7 +803,7 @@ BOOST_AUTO_TEST_CASE(LookupUbuntuChangelogs)
 		if (ver.first == pkgver)
 		{
 			found = true;
-			auto refdat = rfc1123ToUnix(pkgdat);
+			auto refdat = dateToUnix(pkgdat);
 
 			BOOST_TEST_CHECK((ver.second == refdat), "Found package `" + pkgnam + " " + pkgver + "`, but publish date is off by " + to_string(refdat - ver.second) + " seconds.");
 

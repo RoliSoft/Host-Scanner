@@ -31,7 +31,7 @@ public:
 	 * 
 	 * \return List of version numbers and their release dates.
 	 */
-	std::vector<std::pair<std::string, long>> GetChangelog(const std::string& pkg, OpSys distrib = OpSys::Ubuntu, double ver = 0.0);
+	std::vector<std::pair<std::string, long>> GetChangelog(const std::string& pkg, OpSys distrib = OpSys::Ubuntu, double ver = 0.0) override;
 	
 	/*!
 	 * Generates a command which upgrades the specified vulnerable packages

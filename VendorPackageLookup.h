@@ -25,6 +25,17 @@ public:
 	virtual std::unordered_map<std::string, std::string> FindVulnerability(const std::string& cve, OpSys distrib = OpSys::Unidentified, double ver = 0.0) = 0;
 
 	/*!
+	 * Gets the changelog of a package from the vendor's repository.
+	 *
+	 * \param pkg Name of the package.
+	 * \param distrib Operating system distribution.
+	 * \param ver Version number of distribution.
+	 * 
+	 * \return List of version numbers and their release dates.
+	 */
+	virtual std::vector<std::pair<std::string, long>> GetChangelog(const std::string& pkg, OpSys distrib = OpSys::Unidentified, double ver = 0.0) = 0;
+
+	/*!
 	 * Generates a command which upgrades the specified vulnerable packages
 	 * on the host system.
 	 *

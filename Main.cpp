@@ -622,7 +622,7 @@ int scan(const po::variables_map& vm)
 	Hosts *hosts = nullptr;
 	set<unsigned short> *ports = nullptr, *udports = nullptr;
 
-	bool resolve;
+	bool resolve, estimate;
 	unordered_map<string, vector<CveEntry>> cpevulns;
 	unordered_map<Host*, unordered_set<string>> hostpkgs;
 	unordered_map<Service*, unordered_set<string>> servpkgs;
@@ -982,7 +982,8 @@ postScan:
 
 	// start CPE detection
 
-	resolve = vm.count("resolve") != 0;
+	resolve  = vm.count("resolve")  != 0;
+	estimate = vm.count("estimate") != 0;
 
 	log("Initiating identification of " + pluralize(services.size(), "service banner") + "...");
 
@@ -1079,7 +1080,7 @@ postScan:
 					{
 						for (auto& cve : vuln.second)
 						{
-							log(VRB, "Validating CVE-" + cve.cve + " for " + service->address + "...");
+							log(VRB, "Validating $!CVE-" + cve.cve + "$ for $!" + service->address + "$...");
 
 							auto pkgs = vpl->FindVulnerability("CVE-" + cve.cve, service->host->opSys, service->host->osVer);
 
@@ -1142,16 +1143,22 @@ postScan:
 
 				// resolve CPE name to OS package, if requested
 
-				if (resolve && service->host->opSys != OpSys::Unidentified && !vuln.second.empty())
+				string cpepkg;
+
+				if ((resolve || estimate) && service->host->opSys != OpSys::Unidentified && !vuln.second.empty())
 				{
 					auto vpl = VendorLookupFactory::Get(service->host->opSys);
 
 					if (vpl != nullptr)
 					{
+						log(VRB, "Resolving $!cpe:/" + vuln.first + "$ to a package name...");
+
 						auto vinf = vpl->FindVulnerability("CVE-" + (*vuln.second.begin()).cve, service->host->opSys, service->host->osVer);
 
 						if (vinf.size() > 0)
 						{
+							cpepkg = (*vinf.begin()).first;
+
 							unordered_set<string> pkgs;
 
 							for (auto& vi : vinf)
@@ -1169,7 +1176,46 @@ postScan:
 								pkgstr += ", $!" + *it + "$";
 							}
 
-							log(MSG, "$!" + service->address + "$ needs update for " + pkgstr.substr(2));
+							log(MSG, "$!cpe:/" + vuln.first + "$ is packaged as " + pkgstr.substr(2));
+						}
+					}
+				}
+
+				// estimate last update of system, if requested
+
+				if (estimate && !cpepkg.empty() && service->host->opSys != OpSys::Unidentified)
+				{
+					auto vpl = VendorLookupFactory::Get(service->host->opSys);
+
+					if (vpl != nullptr)
+					{
+						log(VRB, "Fetching changelog for $!" + cpepkg + "$...");
+
+						auto vinf = vpl->GetChangelog(cpepkg, service->host->opSys, service->host->osVer);
+
+						if (vinf.size() > 0)
+						{
+							auto cver = vuln.first.substr(distance(vuln.first.begin(), find_nth(vuln.first, ":", 2).begin()) + 1);
+
+							long high, low;
+							bool found = false;
+
+							for (auto& vi : vinf)
+							{
+								if (compareVersions(cver, vi.first) >= 0)
+								{
+									low = vi.second;
+									found = true;
+									break;
+								}
+
+								high = vi.second;
+							}
+
+							if (found)
+							{
+								log(MSG, "$!" + service->address + "$ was last updated between $!" + unixToDate(low, "%d %b %Y") + "$ and $!" + unixToDate(high, "%d %b %Y") + "$!");
+							}
 						}
 					}
 				}
@@ -1385,7 +1431,7 @@ postScan:
 
 			auto cmd = vpl->GetUpgradeCommand(pkgs.second);
 
-			log(MSG, pkgs.first->address + " -> " + cmd);
+			log(MSG, "$!" + pkgs.first->address + "$ -> $G" + cmd + "$");
 
 			if (!latexOut.empty())
 			{
@@ -1430,7 +1476,7 @@ postScan:
 			out << latexContent;
 			out.close();
 
-			log(MSG, "LaTeX report saved to file '" + latexOut + "'.");
+			log(MSG, "LaTeX report saved to file $!'" + latexOut + "'$.");
 		}
 		else
 		{
@@ -1662,7 +1708,7 @@ int main(int argc, char *argv[])
 	WSACleanup();
 #endif
 
-	::system("pause");
+	//::system("pause");
 
 	return !handled ? EXIT_FAILURE : retval;
 }

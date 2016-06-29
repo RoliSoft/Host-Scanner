@@ -95,19 +95,19 @@ void log(int level, const string& msg, bool format)
 	{
 	case ERR:
 		os = &cerr;
-		*os << Format::Red << "[" << Format::Bold << "!" << Format::Normal << "] " << Format::Default;
+		*os << Format::Red << "[" << Format::Bold << "!" << Format::Normal << Format::Red << "] " << Format::Default;
 		break;
 	case WRN:
 		os = &cerr;
-		*os << Format::Yellow << "[" << Format::Bold << "!" << Format::Normal << "] " << Format::Default;
+		*os << Format::Yellow << "[" << Format::Bold << "!" << Format::Normal << Format::Yellow << "] " << Format::Default;
 		break;
 	case VRB:
 		os = &cout;
-		*os << Format::Green << "[" << Format::Bold << "-" << Format::Normal << "] " << Format::Default;
+		*os << Format::Green << "[" << Format::Bold << "-" << Format::Normal << Format::Green << "] " << Format::Default;
 		break;
 	case DBG:
 		os = &cout;
-		*os << Format::Green << "[" << Format::Bold << "." << Format::Normal << "] " << Format::Default;
+		*os << Format::Green << "[" << Format::Bold << "." << Format::Normal << Format::Green << "] " << Format::Default;
 		break;
 	case INT:
 		os = &cout;
@@ -115,7 +115,7 @@ void log(int level, const string& msg, bool format)
 		break;
 	default:
 		os = &cout;
-		*os << Format::Green << "[" << Format::Bold << "*" << Format::Normal << "] " << Format::Default;
+		*os << Format::Green << "[" << Format::Bold << "*" << Format::Normal << Format::Green << "] " << Format::Default;
 		break;
 	}
 

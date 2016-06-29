@@ -1070,7 +1070,7 @@ postScan:
 
 				if (vm.count("validate") != 0 && service->host->opSys != OpSys::Unidentified)
 				{
-					auto vulnconfstr = "$!cpe:/" + vuln.first + "$ is $!confirmed$ to be vulnerable to ";
+					auto vulnconfstr = "$!cpe:/" + vuln.first + "$ is $Rconfirmed vulnerable$ to ";
 					auto vulnconfany = false;
 
 					vector<CveEntry> vulnconfdel;
@@ -1215,14 +1215,10 @@ postScan:
 
 							if (found)
 							{
-								if (hostdate[service->host].first < low || hostdate[service->host].first == 0)
+								if (hostdate[service->host].first == 0 || hostdate[service->host].second == 0 || abs(high - low) < abs(hostdate[service->host].second - hostdate[service->host].first))
 								{
-									hostdate[service->host].first = low;
-								}
-
-								if (hostdate[service->host].second < high || hostdate[service->host].second == 0)
-								{
-									hostdate[service->host].second = high;
+									hostdate[service->host].first  = min(low, high);
+									hostdate[service->host].second = max(low, high);
 								}
 							}
 						}

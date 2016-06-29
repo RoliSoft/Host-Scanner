@@ -558,6 +558,8 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 					return hosts;
 				}
 
+				unordered_set<string> dnshosts;
+
 				auto infoit = info;
 
 				while (infoit != nullptr)
@@ -581,14 +583,18 @@ Hosts* parse_hosts(const vector<string>& hoststrs, HostScanner* scanner, int& re
 						return hosts;
 					}
 
-					log(VRB, "Scanning host " + s_target + " at " + string(infostr) + ".");
-
-					hosts->push_back(new Host(infostr));
+					dnshosts.emplace(string(infostr));
 
 					infoit = infoit->ai_next;
 				}
 
 				freeaddrinfo(info);
+
+				for (auto& dnshost : dnshosts)
+				{
+					log(VRB, "Scanning host " + s_target + " at " + dnshost + ".");
+					hosts->push_back(new Host(dnshost));
+				}
 			}
 		}
 	}

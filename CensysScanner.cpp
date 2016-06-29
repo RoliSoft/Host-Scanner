@@ -106,11 +106,11 @@ void CensysScanner::getHostInfo(Host* host)
 		{
 			if (get<2>(req) == -1)
 			{
-				log(ERR, "Failed to send HTTP request: " + get<1>(req));
+				log(ERR, "Failed to send HTTP request to Censys for " + host->address + ": " + get<1>(req));
 			}
 			else
 			{
-				log(ERR, "Failed to get JSON reply: HTTP response code was " + to_string(get<2>(req)) + ".");
+				log(ERR, "Failed to get JSON reply from Censys for " + host->address + ": HTTP response code was " + to_string(get<2>(req)) + ".");
 			}
 
 			return;

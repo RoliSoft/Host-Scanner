@@ -133,7 +133,7 @@ void* IcmpPinger::initSocket(Service* service)
 		res < 0
 #if Windows
 		&& WSAGetLastError() != WSAEWOULDBLOCK
-#elif BSD
+#else
 		&& errno != EINPROGRESS
 #endif
 		)

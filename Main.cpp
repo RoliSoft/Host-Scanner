@@ -1093,7 +1093,7 @@ postScan:
 
 							if (!pkgs.empty())
 							{
-								auto cver = vuln.first.substr(distance(vuln.first.begin(), find_nth(vuln.first, ":", 2).begin()) + 1);
+								auto cver = vuln.first.substr(std::distance(vuln.first.begin(), find_nth(vuln.first, ":", 2).begin()) + 1);
 								auto fver = (*pkgs.begin()).second;
 
 								if (!fver.empty() && compareVersions(cver, fver) >= 0)
@@ -1202,7 +1202,7 @@ postScan:
 
 						if (vinf.size() > 0)
 						{
-							auto cver = vuln.first.substr(distance(vuln.first.begin(), find_nth(vuln.first, ":", 2).begin()) + 1);
+							auto cver = vuln.first.substr(std::distance(vuln.first.begin(), find_nth(vuln.first, ":", 2).begin()) + 1);
 
 							long high, low;
 							bool found = false;

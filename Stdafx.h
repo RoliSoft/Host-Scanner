@@ -4,7 +4,7 @@
 
 	#define Windows 1
 
-#elif __unix__
+#elif __unix__ || __APPLE__ || __MACH__
 
 	#define Unix 1
 

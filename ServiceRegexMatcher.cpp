@@ -91,7 +91,7 @@ vector<string> ServiceRegexMatcher::Scan(const string& banner, bool processVendo
 				// remove vendor patch level from CPE version
 
 				patch = what["tag"].str();
-				cpe   = cpe.substr(0, distance(cpe.cbegin(), what["sep"].first));
+				cpe   = cpe.substr(0, std::distance(cpe.cbegin(), what["sep"].first));
 			}
 		}
 
